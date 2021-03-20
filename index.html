@@ -4,7 +4,7 @@
   <link href="/Rumba/CSS/Default" rel="stylesheet" type="text/css"/>
   <meta charset="utf-8"/>
   <script src="https://unpkg.com/htmx.org@0.1.2"> </script>
-  <link href="default.css" rel="stylesheet" type="text/css"/>
+  <link href="/default.css" rel="stylesheet" type="text/css"/>
  </head>
  <body>
   <header>
@@ -27,17 +27,15 @@
    <nav id="mainmenu">
     <a href="/">Home</a>
     <a href="/posts">Posts</a>
+    <a href="/projects">Projects</a>
     <a href="/links">Links</a>
     <a href="/about">About</a>
-   </nav>
-   <nav class="breadcrumbs">
-    <a href="  ">  </a>
    </nav>
   </header>
   <main>
    <article>
     <h1>Third Post</h1>
-    <h3>Posted 3/12/2021</h3>
+    <h4>March 17 2021</h4>
     <p>This is <strong>bold</strong>, this is <em>italics</em> and this is <strong><em>both</em></strong>. <strong>And this is all bold <em>with italics</em> in the middle.</strong>  This is the Third post. Check this out, via Marshall: This is a link to search site <a href="https://duckduckgo.com">Duck Duck Go</a>. </p>
     <pre>
      <code>∪⍳⊢
@@ -48,7 +46,7 @@
 </code></pre></article>
    <article>
     <h1>Second Post</h1>
-    <h3>Posted 3/12/2021</h3>
+    <h4>March 12, 2021</h4>
     <p>This is the second post. Here is an interesting line of code from the inimitable ngn over at the APL Orchard:</p>
     <pre>
      <code>r[x⍳k],←v
@@ -56,15 +54,40 @@
     <p>This bears further study for three reasons. I am always befuddled by modified assignent. I am  furhter befuddled when the fuction is not scalar. I am further befuddled by the indexing, and then even further by the fact there are repeated indices and the function is catenate. Ok that's four reasons.</p></article>
    <article>
     <h1><a href="/Posts/First_Post">First Post</a></h1>
-    <h3>2/26/2021 What is this junk?</h3>
+    <h4>January 24, 2021</h4>
     <p>This is the first post. First paragraph is spread across multiple lines. Let's see how to add some APL code:</p>
     <pre>
      <code>f←{+\⍺+⍳⍵} 
+⍝ Blank line ↓↓↓
+⍝ Blank line ↑↑↑
 g←{⌽⍋⍵}
 </code></pre>
-    <p>How do the symbols look?</p>
+    <p>How do the symbols look? This is some inline code: <code>{(+⌿⍵)÷≢⍵}</code> How does it look? How about multiple lines of text with inline code like this <code>a←+/∧\b</code>. Does it look ok? </p>
     <p>This is a table:</p>
-    <table/>
+    <table>
+     <thead>
+      <tr>
+       <th class="left">Left</th>
+       <th class="center">Center</th>
+       <th class="right">Right</th>
+       <th class="left">Code</th></tr></thead>
+     <tbody>
+      <tr>
+       <td class="left">Paul</td>
+       <td class="center">1</td>
+       <td class="right">$123.40</td>
+       <td class="left code">∧\⍵</td></tr>
+      <tr>
+       <td class="left">Bob</td>
+       <td class="center">123456</td>
+       <td class="right">$100,000.45</td>
+       <td class="left code">⍱\⍵</td></tr>
+      <tr>
+       <td class="left">Alexandra</td>
+       <td class="center">2</td>
+       <td class="right">$789.00</td>
+       <td class="left code">+/∧\⍵</td></tr></tbody></table>
+    <p>We need a way to specify </p>
     <p>This is the last paragraph.</p></article></main>
   <p class="forceclear"/>
   <footer>
