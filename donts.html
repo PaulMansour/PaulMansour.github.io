@@ -100,13 +100,3 @@
   </footer>
  </body>
 </html>
-
-   <h2>Don't comment lines of code You read that correctly. Carefully choose the name of your function, its arguments, and its result. Provide a comment line or two or three at the top of the function describing the arguments and the result.  </h2>
-   <h2>Don't use the result of <code>⎕DQ</code> Or of the <code>Wait</code> method. Use callbacks on your GUI objects. Do not exit <code>⎕DQ</code> and inspect the result and take action based it. If you do this, you will be unable to write automated GUI tests. If you need to run <code>⎕DQ</code> to make a form modal, it must be on the last line of the function, and the result thrown away. There should be a guard or a no-op in cover function that bypasses the <code>Wait</code> when running tests.  </h2>
-   <h2>Don't write tests that look at the internals of your project Tests should be code that is useful as documentation for a user of the API. Tests should exercise the API, making sure results are appropriate given inputs. Tests should not test and expose internal architecture or data structures that are not exposed by the API.</h2></main>
-  <p class="forceclear"/>
-  <footer>
-   <p>Tool Of Thought - Copyright 2021 Paul S. Mansour</p>
-  </footer>
- </body>
-</html>
