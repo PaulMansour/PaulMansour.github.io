@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <link href="/default.css" rel="stylesheet" type="text/css"/>
+ </head>
+ <body>
+  <header>
+   <div id="logo">
+    <span class="logoletterleft logolettergreen">T</span>
+    <span class="logoletterright logoletterblue">o</span>
+    <span class="logoletterleft logoletterred">o</span>
+    <span class="logoletterright logoletteryellow">l</span>
+    <span class="logoletterleft logolettergreen">O</span>
+    <span class="logoletterright logoletterblue">f</span>
+    <span class="logoletterleft logoletterred">T</span>
+    <span class="logoletterright logoletteryellow">h</span>
+    <span class="logoletterleft logolettergreen">o</span>
+    <span class="logoletterright logoletterblue">u</span>
+    <span class="logoletterleft logoletterred">g</span>
+    <span class="logoletterright logoletteryellow">h</span>
+    <span class="logoletterleft logolettergreen">t</span>
+    <p><em>APL</em> for the Practical Man</p>
+   </div>
+   <nav id="mainmenu">
+    <a href="/">Home</a>
+    <a href="/posts">Posts</a>
+    <a href="/projects">Projects</a>
+    <a href="/donts">Don'ts</a>
+    <a href="/links">Links</a>
+    <a href="/about">About</a>
+   </nav>
+  </header>
+  <main>
+   <article>
+    <h1><a href="/posts/the-problem-with-namespace-scripts">The Problem with Namespace Scripts</a></h1>
+    <h4>January 24, 2021</h4>
+    <p>In my list of <a href="/donts">Dyalog APL Don'ts</a> I have <strong><em>Don't use namespace scripts</em></strong>. Why? Namespace scripts are strange beasts. Like classes, they are a combination of  code and stuff that gets executed and who knows what else. </p>
+    <p>However, I would like to use namespace scripts to have a text file that represents a ..., wait for it..., a namespace! Ideally a textual representation of an entire workspace. Unfortunately, this does not work.</p>
+    <p>Consider the following script:</p>
+    <pre>
+     <code>:Namespace Parent
+      ParentFoo←{
+          Child1.Child1Foo ⍵
+      }
+    :Namespace Child1
+          Child1Foo←{
+              GrandChild.GrandChildFoo ⍵
+          }
+        :Namespace GrandChild
+              GrandChildFoo←{
+                  +/⍵
+              }
+        :EndNamespace
+    :EndNamespace
+    :Namespace Child2 
+          Child2Foo←{
+              GrandChild.GrandChildFoo ⍵
+          }
+    :EndNamespace
+:EndNamespace
+</code></pre>
+    <p>Here we have a namespace, with two child namespaces, one of which has a child itself. All well and good. When this is fixed, however, references are injected  all over the place:</p>
+    <pre>
+     <code>      Parent.GrandChild
+#.Parent.Child1.GrandChild
+      Parent.Child1.Child2
+#.Parent.Child2 
+</code></pre>
+    <p>By inspection we can see that every namespace has a reference to it injected  into every sibling and direct ancestor (grandparent, great grandparent, etc.) </p>
+    <p>And indeed, the Dyalog documentation somewhat incompletely, and I think incorrectly, and definitely unclearly, states this as:</p>
+    <blockquote>
+     <p>The names of Classes defined within a Namespace Script which are parents, children, or siblings are visible both to one another and to code and expressions defined  in the same script, regardless of the namespace hierarchy within it. Names of Classes which are nieces or nephews and their descendants  are however not visible.</p></blockquote>
+    <p>Classes rather than plain namespace scripts were probably the motivating factor to this design (See <strong><em>Don't use a naked <code>⎕NEW</code></em></strong>, another <a href="/donts">APL Don't</a>. Regardless, the interpreter should not be injecting references to things when fixing. </p>
+    <p>I cannot imagine that anyone relies on this behavior, but a simple non-breaking fix  would be to allow some additional values as the left argument of <code>⎕FIX</code>, which already allows 0, 1 or 2. </p>
+    <p>I would propose that a value of 3 would fix the namespace as 1 does now, with the exception that is does no reference injection. Even more useful, and perhaps in addition or instead, a value of 4 would fix everthing, do no reference injection, and then <strong><em>disassociate the code from the script</em></strong>.  In other words, after fixing the namespace script, the workspace contains  regular namespaces, not a namespace script. </p>
+    <p> </p>
+    <p>             </p></article></main>
+  <p class="forceclear"/>
+  <footer>
+   <p>Tool Of Thought - Copyright 2021 Paul S. Mansour</p>
+  </footer>
+ </body>
+</html>

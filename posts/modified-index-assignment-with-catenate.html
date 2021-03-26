@@ -26,15 +26,40 @@
     <a href="/">Home</a>
     <a href="/posts">Posts</a>
     <a href="/projects">Projects</a>
-    <a href="/donts">Dont's</a>
+    <a href="/donts">Don'ts</a>
     <a href="/links">Links</a>
     <a href="/about">About</a>
    </nav>
   </header>
   <main>
    <article>
-    <h1>Second Post</h1>
+    <h1><a href="/posts/modified-index-assignment-with-catenate">Modified Index Assignment with Catenate</a></h1>
     <h4>March 12, 2021</h4>
+    <p>DRAFT!!!!</p>
+    <p>xpqz writes:</p>
+    <blockquote>
+     <p>Can anyone suggest a clever way of achieving the following "left join":</p>
+     <p>Given two vectors, the first a vector of char vecs, the second a vector of two-element vectors, group the second based on the first component, returning the second components per group, inserting the empty vectors for groups not present. e.g</p>
+     <pre>
+      <code>      X←'one' 'two' 'three' 'four'
+      Y←('one' 1)('one' 2)('three' 1)('four' 2)('four' 3)
+      R←⎕←X f Y
+┌───┬┬─┬───┐
+│1 2││1│2 3│
+└───┴┴─┴───┘
+      R≡(1 2)(,⍬)(,1)(2 3)
+1
+</code></pre></blockquote>
+    <p>Adam write:</p>
+    <pre>
+     <code>(⊃¨{⊂1↓⊢/¨⍵}⌸⊢)(X,⍥⊂¨0),Y
+</code></pre>
+    <p>ngn writes</p>
+    <pre>
+     <code>K V←↓⍉↑Y
+R←⍬⍨¨X
+R[X⍳K],←V
+</code></pre>
     <p>This is the second post. Here is an interesting line of code from the inimitable ngn over at the APL Orchard:</p>
     <pre>
      <code>r[x⍳k],←v

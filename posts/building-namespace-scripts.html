@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <link href="/default.css" rel="stylesheet" type="text/css"/>
+ </head>
+ <body>
+  <header>
+   <div id="logo">
+    <span class="logoletterleft logolettergreen">T</span>
+    <span class="logoletterright logoletterblue">o</span>
+    <span class="logoletterleft logoletterred">o</span>
+    <span class="logoletterright logoletteryellow">l</span>
+    <span class="logoletterleft logolettergreen">O</span>
+    <span class="logoletterright logoletterblue">f</span>
+    <span class="logoletterleft logoletterred">T</span>
+    <span class="logoletterright logoletteryellow">h</span>
+    <span class="logoletterleft logolettergreen">o</span>
+    <span class="logoletterright logoletterblue">u</span>
+    <span class="logoletterleft logoletterred">g</span>
+    <span class="logoletterright logoletteryellow">h</span>
+    <span class="logoletterleft logolettergreen">t</span>
+    <p><em>APL</em> for the Practical Man</p>
+   </div>
+   <nav id="mainmenu">
+    <a href="/">Home</a>
+    <a href="/posts">Posts</a>
+    <a href="/projects">Projects</a>
+    <a href="/donts">Don'ts</a>
+    <a href="/links">Links</a>
+    <a href="/about">About</a>
+   </nav>
+  </header>
+  <main>
+   <article>
+    <h1><a href="/posts/building-namespace-scripts">Building Namespace Scripts</a></h1>
+    <h4>March 26, 2021</h4>
+    <p>DRAFT!!!!     Keeping source in text files is good. It lets us keep  Maintaining source in large classes or namespace scripts is not so good. When collaborating on a project,  Many small files versus few large files. Having many small files, however, also has problems. Distributing code is not so good, In APL, the function is the most important unit of code.</p>
+    <p>The solution to this is the namespace script. Here is a first attempt at  building a single namespace script from an arbitrary namespace residing in a workspace:</p>
+    <pre>
+     <code>  BuildNSS←{
+     ⍝ ⍺ ←→ Named namespace
+     ⍺←1
+     n←↑⌽{⍵⊆⍨'.'≠⍵}⍕⍵
+     '['=↑n:''
+     t←{16::'' ⋄ ⎕SRC ⍵}⍵
+     0<≢t:t
+     r←⊂':Namespace ',⍺/n
+     r,←⊂'⎕IO ⎕ML←',⍕⍵.⎕IO ⍵.⎕ML
+     q←{(⊂'∇',↑⍵),(1↓⍵),⊂,'∇'}
+     r,←↑,/q¨⍵.⎕NR¨⍵.⎕NL-3.1 4.1
+     r,←↑,/⍵.⎕NR¨⍵.⎕NL-3.2 4.2
+     s←⍵{⍵[⍋⍺.⎕NC ⍵]}⍵.⎕NL-9.1 9.4 9.5
+     0=≢s:r,⊂':EndNamespace'
+     r,←↑,/∇¨⍵⍎¨s
+     r,⊂':EndNamespace'
+ }
+</code></pre>
+    <p>Alternatively, it should be possible to build this script directly from source  files on disk. Will try that later.</p></article></main>
+  <p class="forceclear"/>
+  <footer>
+   <p>Tool Of Thought - Copyright 2021 Paul S. Mansour</p>
+  </footer>
+ </body>
+</html>

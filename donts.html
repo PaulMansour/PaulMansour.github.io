@@ -26,13 +26,13 @@
     <a href="/">Home</a>
     <a href="/posts">Posts</a>
     <a href="/projects">Projects</a>
-    <a href="/donts">Dont's</a>
+    <a href="/donts">Don'ts</a>
     <a href="/links">Links</a>
     <a href="/about">About</a>
    </nav>
   </header>
   <main>
-   <h1>Dont's</h1>
+   <h1>Don'ts</h1>
    <p>Or how not to program in Dyalog APL.</p>
    <h2>Don't use trad functions and control structures</h2>
    <p>There is almost never a reason to use a trad function.  First, naming things is difficult (one of the hardest tasks in programming someone famous once said). Dfns name your arguments for you, and do not require you to name your result. That is three difficult decisions that are made for you, every time you write a function, by the wisdom of our ancestors. </p>
@@ -41,14 +41,35 @@
    <p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>. But if you must, don't nest them.</p>
    <h2>Don't mix code golf with control structures</h2>
    <p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>, But if you do,  don't write a long string of jots and tacks, with a tilda diaresis thrown in for good measure, all dangling off the end of an :If statement in the middle of a 100 line function full of loops and case statements. Write functions at the same level of abstraction. Functions should be mostly primitives, or mostly calls to other functions. Functions should be mostly readable in English, or in APL.</p>
+   <h2>Don't dangle major functionality off the end of an <code>:If</code> clause </h2>
+   <p>Don't use control structures, but if you do, keep it simple. Don't do this:</p>
+   <pre>
+    <code>:If 0=⊃r←ThisReallyBigTask x
+       blah blah flah
+:EndIf
+</code></pre>
+   <p>I mean, you are already using control structures. Why are you trying to save  a line of code? ThisReallyBigTask is important, and deserves a line of its own. Do this:</p>
+   <pre>
+    <code>r←ThisReallyBigTask x
+:If 0=⊃r
+      blah blah flah
+:EndIf
+</code></pre>
    <h2>Don't nest parentheses</h2>
    <p>One level is fine. Even multiple non-nested pairs on a line is OK. There is nothing wrong with using parenthesis to change the order of execution (that's what they are for):</p>
    <pre>
     <code>(+/⍵)÷⍴⍵
 </code></pre>
    <h2>Don't use namespace scripts</h2>
+   <p>Does anyone know exactly what these things really are? <a href="/posts/the-problem-with-namespace-scripts">Here is the problem</a>.</p>
    <h2>Don't use <code>⎕CS</code></h2>
+   <p>I have forgotten exactly why, but I'm pretty sure there is simply no need to.</p>
    <h2>Don't use <code>⎕PATH</code></h2>
+   <p>To make functions in other namespaces easily accessible, simply assign a reference in the function, or even in the namepace:</p>
+   <pre>
+    <code>      R←#.This.That.TheOtherSpace
+      z←R.Foo x
+</code></pre>
    <h2>Don't embed assignment</h2>
    <p>Unless you are doing code golf. </p>
    <h2>Don't use classes</h2>
@@ -85,8 +106,9 @@
    <p>Keep your functions thin. If you need to scroll to the right, your lines of code are too damn long! </p>
    <h2>Don't write long functions</h2>
    <p>Keep your functions short. If you need to scroll down, or use collapsing tree views, or control structures to divide it into sections, or an Uber car to get from one end to the other, your function is too damn long! </p>
-   <h2>Don't require multiple, ordered arguments </h2>
-   <p>Use a namespace to pass multiple named arguments to a function.  Order is then unimportant, and it is easier to default specific items.    ## Don't trap errors in utility or low-level functions </p>
+   <h2>Don't require multiple, ordered arguments</h2>
+   <p>Use a namespace to pass multiple named arguments to a function. Order is then unimportant, and it is easier to default specific items.</p>
+   <h2>Don't trap errors in utility or low-level functions</h2>
    <p>Expect the arguments to be valid. Trap as high up the stack as possible.</p>
    <h2>Don't comment lines of code</h2>
    <p>You read that correctly. Carefully choose the name of your function, its arguments, and its result. Provide a comment line or two or three at the top of the function describing the arguments and the result.  </p>
