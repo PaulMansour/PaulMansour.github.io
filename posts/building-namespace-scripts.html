@@ -1,52 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <link href="/default.css" rel="stylesheet" type="text/css"/>
- </head>
- <body>
-  <header>
-   <div id="logo">
-    <span class="logoletterleft logolettergreen">T</span>
-    <span class="logoletterright logoletterblue">o</span>
-    <span class="logoletterleft logoletterred">o</span>
-    <span class="logoletterright logoletteryellow">l</span>
-    <span class="logoletterleft logolettergreen">O</span>
-    <span class="logoletterright logoletterblue">f</span>
-    <span class="logoletterleft logoletterred">T</span>
-    <span class="logoletterright logoletteryellow">h</span>
-    <span class="logoletterleft logolettergreen">o</span>
-    <span class="logoletterright logoletterblue">u</span>
-    <span class="logoletterleft logoletterred">g</span>
-    <span class="logoletterright logoletteryellow">h</span>
-    <span class="logoletterleft logolettergreen">t</span>
-    <p><em>APL</em> for the Practical Man</p>
-   </div>
-   <nav id="mainmenu">
-    <a href="/">Home</a>
-    <a href="/posts">Posts</a>
-    <a href="/projects">Projects</a>
-    <a href="/donts">Don'ts</a>
-    <a href="/links">Links</a>
-    <a href="/about">About</a>
-   </nav>
-  </header>
-  <main>
-   <article>
-    <h1><a href="/posts/building-namespace-scripts">Building Namespace Scripts</a></h1>
-    <h4>March 26, 2021</h4>
-    <p>Keeping APL source code in text files is good for many obvious reasons. Maintaining APL source code in large classes or namespace scripts is not good for  less obvious reasons. In APL, the <strong><em>function</em></strong> is the most  import unit of work and thought. Classes and large namespace scripts obscure this. </p>
-    <p>When working day-to-day on an APL project, the first thing we want to know in the morning is what functions have been recently changed?  It is much less useful to know that a 3,000 line class has changed. We then need special APL aware tools to tell us which functions in the class are the ones that have contributed to the change in the overall class. When we keep each function in a separate file,  the basic features of Git do the work for us.                                         Having many small files, however, also has problems. Operating systems don't like many small files. Innefficiences arise. Distributing source code is difficult.</p>
-    <p>Thus there are various trade-offs between few large files and many small files. Is there a way to have the advantages of many small files for development and  few (or one) large files for distribution?</p>
-    <p>A solution to this is the namespace script. Here is a first attempt at  building a single namespace script from an arbitrary namespace residing in a workspace:</p>
-    <pre>
-     <code>  BuildNSS←{
+<html lang="en"><head><meta charset="utf-8"></meta><link href="/ThorntonMelon.css" rel="stylesheet" type="text/css"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/building-namespace-scripts">Building Namespace Scripts</a></h1><time>March 26, 2021</time></header><p>Keeping APL source code in text files is good for many obvious reasons. Maintaining APL source code in large classes or namespace scripts is not good for  less obvious reasons. In APL, the <strong><em>function</em></strong> is the most  import unit of work and thought. Classes and large namespace scripts obscure this. </p><p>When working day-to-day on an APL project, the first thing we want to know in the morning is what functions have been recently changed?  It is much less useful to know that a 3,000 line class has changed. We then need special APL aware tools to tell us which functions in the class are the ones that have contributed to the change in the overall class. When we keep each function in a separate file,  the basic features of Git do the work for us.                                         Having many small files, however, also has problems. Operating systems don't like many small files. Innefficiences arise. Distributing source code is difficult.</p><p>Thus there are various trade-offs between few large files and many small files. Is there a way to have the advantages of many small files for development and  few (or one) large files for distribution?</p><p>A solution to this is the namespace script. Here is a first attempt at  building a single namespace script from an arbitrary namespace residing in a workspace:</p><pre><code>  BuildNSS←{
      ⍝ ⍺ ←→ Named namespace
      ⍺←1
      n←↑⌽{⍵⊆⍨'.'≠⍵}⍕⍵
      '['=↑n:''
      t←{16::'' ⋄ ⎕SRC ⍵}⍵
-     0<≢t:t
+     0&lt;≢t:t
      r←⊂':Namespace ',⍺/n
      r,←⊂'⎕IO ⎕ML←',⍕⍵.⎕IO ⍵.⎕ML
      q←{(⊂'∇',↑⍵),(1↓⍵),⊂,'∇'}
@@ -57,14 +16,4 @@
      r,←↑,/∇¨⍵⍎¨s
      r,⊂':EndNamespace'
  }
-</code></pre>
-    <p>With this we can take a project that contains thousands of functions across many nested namespaces and create a single text file, easily zipped, emailed, and then almost instantaneously fixed in the interpreter version of choice.</p>
-    <blockquote>
-     <p>N.B. It should also be possible to build this script directly from source  files on disk, but not sure that is worth the effort, given that we already have tools like Acre and Link to check, verify and fix code into the workspace.</p></blockquote>
-    <p>Some rough stats: For an application containing just over 6,700 functions spread across 5 packages, it takes about 120 milliseconds to  create a 114,000 line vector of vectors containing a namespace script, and then about 1.5 seconds to <code>⎕FIX</code> it. The script takes about 3 MB on disk, and zips down to 750 KB. An equivalent saved workspace is about 13 MB.           Unfortunately, there are <a href="/posts/the-problem-with-namespace-scripts">currently problems with namespace scripts</a> that prevent this from working perfectly.  </p></article></main>
-  <p class="forceclear"/>
-  <footer>
-   <p>Tool Of Thought - Copyright 2021 Paul S. Mansour</p>
-  </footer>
- </body>
-</html>
+</code></pre><p>With this we can take a project that contains thousands of functions across many nested namespaces and create a single text file, easily zipped, emailed, and then almost instantaneously fixed in the interpreter version of choice.</p><blockquote><p>N.B. It should also be possible to build this script directly from source  files on disk, but not sure that is worth the effort, given that we already have tools like Acre and Link to check, verify and fix code into the workspace.</p></blockquote><p>Some rough stats: For an application containing just over 6,700 functions spread across 5 packages, it takes about 120 milliseconds to  create a 114,000 line vector of vectors containing a namespace script, and then about 1.5 seconds to <code>⎕FIX</code> it. The script takes about 3 MB on disk, and zips down to 750 KB. An equivalent saved workspace is about 13 MB.           Unfortunately, there are <a href="/posts/the-problem-with-namespace-scripts">currently problems with namespace scripts</a> that prevent this from working perfectly.  </p></article></main><footer><p>Copyright 2021 Paul S. Mansour</p></footer></body></html>
