@@ -1,5 +1,58 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><link href="/ThorntonMelon.css" rel="stylesheet" type="text/css"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/the-problem-with-namespace-scripts">The Problem with Namespace Scripts</a></h1><time>April 6, 2021</time></header><p>In my list of <a href="/donts">Dyalog APL Don'ts</a> I have <strong><em>Don't use namespace scripts</em></strong>. Why? Namespace scripts are strange beasts. Like classes, they are a combination of  code and stuff that gets executed and who knows what else. It's even hard to talk about namespace scripts - you would thinks they would be scripts that define a namespace, but they define a namespace script, not a namespace. Maybe they are not really scripts at all.</p><p>However, I would like to use namespace scripts to have a  <a href="/posts/building-namespace-scripts">text file that represents an arbitrary namepace</a> or even an entire workspace. Unfortunately, this does not quite work for a number of reasons.</p><p>Consider the following script:</p><pre><code>:Namespace Parent
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet" type="text/css"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/Reference ">Reference</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/Elements">Elements</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/the-problem-with-namespace-scripts">The Problem
+            with Namespace Scripts</a>
+          </h1>
+          <time>April 6, 2021</time>
+        </header>
+        <p>
+          In my list of
+          <a href="/donts">Dyalog APL Don'ts</a>
+          I have
+          <strong>
+            <em>Don't use namespace scripts</em>
+          </strong>
+          . Why? Namespace scripts are strange beasts. Like classes, they
+          are a combination of code and stuff that gets executed and who
+          knows what else. It's even hard to talk about namespace scripts
+          - you would thinks they would be scripts that define a namespace,
+          but they define a namespace script, not a namespace. Maybe they
+          are not really scripts at all.
+        </p>
+        <p>
+          However, I would like to use namespace scripts to have a
+          <a href="/posts/building-namespace-scripts">text file that represents
+          an arbitrary namepace</a>
+          or even an entire workspace. Unfortunately, this does not quite
+          work for a number of reasons.
+        </p>
+        <p>Consider the following script:</p>
+        <pre>
+          <code>:Namespace Parent
       ParentFoo←{
           Child1.Child1Foo ⍵
       }
@@ -19,11 +72,68 @@
           }
     :EndNamespace
 :EndNamespace
-</code></pre><p>Here we have a namespace, with two child namespaces, one of which has a child itself. All well and good. When this is fixed, however, references are injected  all over the place:</p><pre><code>      Parent.GrandChild
+</code>
+        </pre>
+        <p>Here we have a namespace, with two child namespaces, one of
+        which has a child itself. All well and good. When this is fixed,
+        however, references are injected all over the place:</p>
+        <pre>
+          <code>      Parent.GrandChild
 #.Parent.Child1.GrandChild
       Parent.Child1.Child2
 #.Parent.Child2 
-</code></pre><p>By inspection we can see that every namespace has a reference to it injected  into every sibling and direct ancestor (grandparent, great grandparent, etc.) </p><p>And indeed, the Dyalog documentation somewhat incompletely, and I think incorrectly, and definitely unclearly, states this as:</p><blockquote><p>The names of Classes defined within a Namespace Script which are parents, children, or siblings are visible both to one another and to code and expressions defined  in the same script, regardless of the namespace hierarchy within it. Names of Classes which are nieces or nephews and their descendants  are however not visible.</p></blockquote><p>Classes rather than plain namespace scripts were probably the motivating factor to this design (See <strong><em>Don't use a naked <code>⎕NEW</code></em></strong>, another <a href="/donts">APL Don't</a>.) Regardless, the interpreter should not be injecting references to things when fixing. </p><p>I cannot imagine that anyone relies on this behavior, but a simple non-breaking fix  would be to allow some additional values as the left argument of <code>⎕FIX</code>, which already allows 0, 1 or 2. </p><p>I would propose that a value of 3 would fix the namespace as 1 does now, with the exception that is does no reference injection. Even more useful, and perhaps in addition or instead, a value of 4 would fix everthing, do no reference injection, and then <strong><em>disassociate the code from the script</em></strong>.  In other words, after fixing the namespace script, the workspace contains  regular namespaces, not a namespace script.</p><p>In addition, we should be able to specifiy the root, currently illegal, so an entire worksapce may be represented in a single file:</p><pre><code>:Namespace #
+</code>
+        </pre>
+        <p>By inspection we can see that every namespace has a reference
+        to it injected into every sibling and direct ancestor (grandparent,
+        great grandparent, etc.)</p>
+        <p>And indeed, the Dyalog documentation somewhat incompletely,
+        and I think incorrectly, and definitely unclearly, states this
+        as:</p>
+        <blockquote>
+          <p>The names of Classes defined within a Namespace Script which
+          are parents, children, or siblings are visible both to one another
+          and to code and expressions defined in the same script, regardless
+          of the namespace hierarchy within it. Names of Classes which
+          are nieces or nephews and their descendants are however not visible.</p>
+        </blockquote>
+        <p>
+          Classes rather than plain namespace scripts were probably the
+          motivating factor to this design (See
+          <strong>
+            <em>
+              Don't use a naked
+              <code>⎕NEW</code>
+            </em>
+          </strong>
+          , another
+          <a href="/donts">APL Don't</a>
+          .) Regardless, the interpreter should not be injecting references
+          to things when fixing.
+        </p>
+        <p>
+          I cannot imagine that anyone relies on this behavior, but a simple
+          non-breaking fix would be to allow some additional values as
+          the left argument of
+          <code>⎕FIX</code>
+          , which already allows 0, 1 or 2.
+        </p>
+        <p>
+          I would propose that a value of 3 would fix the namespace as
+          1 does now, with the exception that is does no reference injection.
+          Even more useful, and perhaps in addition or instead, a value
+          of 4 would fix everthing, do no reference injection, and then
+          <strong>
+            <em>disassociate the code from the script</em>
+          </strong>
+          . In other words, after fixing the namespace script, the workspace
+          contains regular namespaces, not a namespace script.
+        </p>
+        <p>In addition, we should be able to specifiy the root, currently
+        illegal, so an entire worksapce may be represented in a single
+        file:</p>
+        <pre>
+          <code>:Namespace #
   ⎕IO←0 
   ⎕ML←1
     :Namespace Rumba
@@ -33,7 +143,65 @@
         ...
     :EndNamespace
 :EndNamespace
-</code></pre><p>A few other issues arise as well.  There are at least two conditions where a function that happily exists in a namespace is unhappy to be in a namespace script. First, if the function has unmatched quotes. Second, if the function has <code>:Implements Constructor</code>, but <strong>not</strong> <code>:Access Public</code>. The interpreter is happy to fix these functions all by themselves, but not within a namespace script. Thus the rules for fixing functions within a script are different and tighter than fixing normal functions in the workspace.</p><p>With these enhancements and fixes to <code>⎕FIX</code>, namespace scripts can fulfill their proper purpose.</p><p>             </p></article><article><header><h1><a href="/posts/building-namespace-scripts">Building Namespace Scripts</a></h1><time>March 26, 2021</time></header><p>Keeping APL source code in text files is good for many obvious reasons. Maintaining APL source code in large classes or namespace scripts is not good for  less obvious reasons. In APL, the <strong><em>function</em></strong> is the most  import unit of work and thought. Classes and large namespace scripts obscure this. </p><p>When working day-to-day on an APL project, the first thing we want to know in the morning is what functions have been recently changed?  It is much less useful to know that a 3,000 line class has changed. We then need special APL aware tools to tell us which functions in the class are the ones that have contributed to the change in the overall class. When we keep each function in a separate file,  the basic features of Git do the work for us.                                         Having many small files, however, also has problems. Operating systems don't like many small files. Innefficiences arise. Distributing source code is difficult.</p><p>Thus there are various trade-offs between few large files and many small files. Is there a way to have the advantages of many small files for development and  few (or one) large files for distribution?</p><p>A solution to this is the namespace script. Here is a first attempt at  building a single namespace script from an arbitrary namespace residing in a workspace:</p><pre><code>  BuildNSS←{
+</code>
+        </pre>
+        <p>
+          A few other issues arise as well. There are at least two conditions
+          where a function that happily exists in a namespace is unhappy
+          to be in a namespace script. First, if the function has unmatched
+          quotes. Second, if the function has
+          <code>:Implements Constructor</code>
+          , but
+          <strong>not</strong>
+          <code>:Access Public</code>
+          . The interpreter is happy to fix these functions all by themselves,
+          but not within a namespace script. Thus the rules for fixing
+          functions within a script are different and tighter than fixing
+          normal functions in the workspace.
+        </p>
+        <p>
+          With these enhancements and fixes to
+          <code>⎕FIX</code>
+          , namespace scripts can fulfill their proper purpose.
+        </p>
+        <p></p>
+      </article>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/building-namespace-scripts">Building Namespace
+            Scripts</a>
+          </h1>
+          <time>March 26, 2021</time>
+        </header>
+        <p>
+          Keeping APL source code in text files is good for many obvious
+          reasons. Maintaining APL source code in large classes or namespace
+          scripts is not good for less obvious reasons. In APL, the
+          <strong>
+            <em>function</em>
+          </strong>
+          is the most import unit of work and thought. Classes and large
+          namespace scripts obscure this.
+        </p>
+        <p>When working day-to-day on an APL project, the first thing we
+        want to know in the morning is what functions have been recently
+        changed? It is much less useful to know that a 3,000 line class
+        has changed. We then need special APL aware tools to tell us which
+        functions in the class are the ones that have contributed to the
+        change in the overall class. When we keep each function in a separate
+        file, the basic features of Git do the work for us. Having many
+        small files, however, also has problems. Operating systems don't
+        like many small files. Innefficiences arise. Distributing source
+        code is difficult.</p>
+        <p>Thus there are various trade-offs between few large files and
+        many small files. Is there a way to have the advantages of many
+        small files for development and few (or one) large files for distribution?</p>
+        <p>A solution to this is the namespace script. Here is a first
+        attempt at building a single namespace script from an arbitrary
+        namespace residing in a workspace:</p>
+        <pre>
+          <code>  BuildNSS←{
      ⍝ ⍺ ←→ Named namespace
      ⍺←1
      n←↑⌽{⍵⊆⍨'.'≠⍵}⍕⍵
@@ -50,18 +218,84 @@
      r,←↑,/∇¨⍵⍎¨s
      r,⊂':EndNamespace'
  }
-</code></pre><p>With this we can take a project that contains thousands of functions across many nested namespaces and create a single text file, easily zipped, emailed, and then almost instantaneously fixed in the interpreter version of choice.</p><blockquote><p>N.B. It should also be possible to build this script directly from source  files on disk, but not sure that is worth the effort, given that we already have tools like Acre and Link to check, verify and fix code into the workspace.</p></blockquote><p>Some rough stats: For an application containing just over 6,700 functions spread across 5 packages, it takes about 120 milliseconds to  create a 114,000 line vector of vectors containing a namespace script, and then about 1.5 seconds to <code>⎕FIX</code> it. The script takes about 3 MB on disk, and zips down to 750 KB. An equivalent saved workspace is about 13 MB.           Unfortunately, there are <a href="/posts/the-problem-with-namespace-scripts">currently problems with namespace scripts</a> that prevent this from working perfectly.  </p></article><article><header><h1><a href="/posts/the-constant-operator">The Constant Operator</a></h1><time>March 21, 2021</time></header><p>Having neglected moving to version 18 for obvious reasons I was surprised by this expression from ngn over at the APL Orchard: </p><pre><code>⍬⍨¨v
-</code></pre><p>The new constant operator, which simply returns it's left operand. I think it is exaclty equivalent to:</p><pre><code>{⍺⍺}
-</code></pre><p>Comparing to creating a vector of empty vectors in more traditional ways, the contstant operator is certainly the shortest, and more or less as fast as most of the others:</p><pre><code>      v←⍳10000000
+</code>
+        </pre>
+        <p>With this we can take a project that contains thousands of functions
+        across many nested namespaces and create a single text file, easily
+        zipped, emailed, and then almost instantaneously fixed in the interpreter
+        version of choice.</p>
+        <blockquote>
+          <p>N.B. It should also be possible to build this script directly
+          from source files on disk, but not sure that is worth the effort,
+          given that we already have tools like Acre and Link to check,
+          verify and fix code into the workspace.</p>
+        </blockquote>
+        <p>
+          Some rough stats: For an application containing just over 6,700
+          functions spread across 5 packages, it takes about 120 milliseconds
+          to create a 114,000 line vector of vectors containing a namespace
+          script, and then about 1.5 seconds to
+          <code>⎕FIX</code>
+          it. The script takes about 3 MB on disk, and zips down to 750
+          KB. An equivalent saved workspace is about 13 MB. Unfortunately,
+          there are
+          <a href="/posts/the-problem-with-namespace-scripts">currently
+          problems with namespace scripts</a>
+          that prevent this from working perfectly.
+        </p>
+      </article>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/the-constant-operator">The Constant Operator</a>
+          </h1>
+          <time>March 21, 2021</time>
+        </header>
+        <p>Having neglected moving to version 18 for obvious reasons I
+        was surprised by this expression from ngn over at the APL Orchard:</p>
+        <pre>
+          <code>⍬⍨¨v
+</code>
+        </pre>
+        <p>The new constant operator, which simply returns it's left operand.
+        I think it is exaclty equivalent to:</p>
+        <pre>
+          <code>{⍺⍺}
+</code>
+        </pre>
+        <p>Comparing to creating a vector of empty vectors in more traditional
+        ways, the contstant operator is certainly the shortest, and more
+        or less as fast as most of the others:</p>
+        <pre>
+          <code>      v←⍳10000000
       cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' '{⍬}¨v'  '⍬∘⊣¨v' 'v⊢¨⊂⍬'
   (≢v)⍴⊂⍬ → 2.7E¯2 |     0% ⎕⎕                                      
   ⍬⍨¨v    → 2.8E¯2 |    +4% ⎕⎕                                      
   {⍬}¨v   → 4.4E¯1 | +1569% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
   ⍬∘⊣¨v   → 2.6E¯2 |    -4% ⎕⎕                                      
   v⊢¨⊂⍬   → 2.6E¯2 |    -1% ⎕⎕
-</code></pre><blockquote><p>NB. That Dfn is very expensive!</p></blockquote><p>However:</p><pre><code>        v←⍳10000000 ⋄ r←v    
+</code>
+        </pre>
+        <blockquote>
+          <p>NB. That Dfn is very expensive!</p>
+        </blockquote>
+        <p>However:</p>
+        <pre>
+          <code>        v←⍳10000000 ⋄ r←v    
         cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' 'r⊣r[]←⊂⍬'
   (≢v)⍴⊂⍬  → 2.7E¯2 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
   ⍬⍨¨v     → 2.6E¯2 |  -2% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕ 
   r⊣r[]←⊂⍬ → 2.4E¯2 | -11% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕    
-</code></pre><p>Never underestimate the usefulness of bracket indexing.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021 Paul S. Mansour</p></footer></body></html>
+</code>
+        </pre>
+        <p>Never underestimate the usefulness of bracket indexing.</p>
+      </article>
+      <h2>
+        <a href="/posts">More posts...</a>
+      </h2>
+    </main>
+    <footer>
+      <p>Copyright 2021 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>

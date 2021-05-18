@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet" type="text/css"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/Reference ">Reference</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/Elements">Elements</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/reference/maps-to-poles">Maps to Poles</a>
+          </h1>
+          <time>April 21, 2021</time>
+        </header>
+        <p>
+          This table is copied directly from Gary Berquist's
+          <strong>APL Advanced Techniques and Utilities</strong>
+          , page 236:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Expression</th>
+              <th class="left">Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">
+                <code>R≠¯1↓0,R</code>
+              </td>
+              <td class="left">1-maps to leading 1-poles</td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>R=¯1↓1,R</code>
+              </td>
+              <td class="left">0-maps to leading 0-poles</td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>R&gt;¯1↓0,R</code>
+              </td>
+              <td class="left">1-maps to first 1 bits</td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>R≥¯1↓1,R</code>
+              </td>
+              <td class="left">0-maps to first 0 bits</td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>R∨¯1↓0,R</code>
+              </td>
+              <td class="left">extend 1-maps to right by 1</td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>R∧¯1↓1,R</code>
+              </td>
+              <td class="left">extend 0-maps to right by 1</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2021 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
