@@ -24,6 +24,175 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/htmlrenderer-required-files">HTMLRenderer Required
+            Files</a>
+          </h1>
+          <time>May 19, 2021</time>
+        </header>
+        <p>
+          The Dyalog documentation lists the required CEF files for distributing
+          the HTMLRenderer. It is not entirely accurate. This list below
+          is what Dyalog gives (I have added the
+          <em>Required</em>
+          ,
+          <em>Size</em>
+          , and
+          <em>Comment</em>
+          columns):
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th class="left">File/Folder</th>
+              <th class="right">Size(kb)</th>
+              <th class="left">Required</th>
+              <th class="left">Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">htmlrenderer.dll</td>
+              <td class="right">3,364</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">cef.pak</td>
+              <td class="right">2,734</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">cef_100_percent.pak</td>
+              <td class="right">642</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">cef_200_percent.pak</td>
+              <td class="right">739</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">cef_extensions.pak</td>
+              <td class="right">1,679</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">cef_sandbox.lib</td>
+              <td class="right">90,176</td>
+              <td class="left">No!!!</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">chrome_elf.dll</td>
+              <td class="right">947</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">d3dcompiler_43.dll</td>
+              <td class="right">0</td>
+              <td class="left">No</td>
+              <td class="left">HTML5 accelerated content</td>
+            </tr>
+            <tr>
+              <td class="left">d3dcompiler_47.dll</td>
+              <td class="right">4,245</td>
+              <td class="left">No</td>
+              <td class="left">HTML5 accelerated content</td>
+            </tr>
+            <tr>
+              <td class="left">devtools_resources.pak</td>
+              <td class="right">6,281</td>
+              <td class="left">No</td>
+              <td class="left">For developer tools like inspect, etc.</td>
+            </tr>
+            <tr>
+              <td class="left">icudtl.dat</td>
+              <td class="right">10,183</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">libEGL.dll</td>
+              <td class="right">365</td>
+              <td class="left">No</td>
+              <td class="left">HTML5 accelerated content</td>
+            </tr>
+            <tr>
+              <td class="left">libGLESv2.dll</td>
+              <td class="right">7,818</td>
+              <td class="left">No</td>
+              <td class="left">HTML5 accelerated content</td>
+            </tr>
+            <tr>
+              <td class="left">libcef.dll</td>
+              <td class="right">114,124</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">libcef.lib</td>
+              <td class="right">37</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">locales</td>
+              <td class="right">15,600</td>
+              <td class="left">Yes</td>
+              <td class="left">This is a folder</td>
+            </tr>
+            <tr>
+              <td class="left">natives_blob.bin</td>
+              <td class="right">1</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">snapshot_blob.bin</td>
+              <td class="right">227</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+            <tr>
+              <td class="left">swiftshader</td>
+              <td class="right">3,970</td>
+              <td class="left">No</td>
+              <td class="left">This is a folder, for HTML5 accelerated
+              content</td>
+            </tr>
+            <tr>
+              <td class="left">v8_context_snapshot.bin</td>
+              <td class="right">619</td>
+              <td class="left">Yes</td>
+              <td class="left"></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The most important thing to note is that the 90 MB file
+          <strong>cef_sandbox.lib</strong>
+          is
+          <strong>
+            <em>not</em>
+          </strong>
+          required, and it appears (and I have asked Dyalog to verify)
+          that there is no functionality lost by omitting it.
+        </p>
+        <p>The comment regarding HTML5 accelerated content refers to 2D
+        canvas, 3D CSS and WebGL. Presumably this functionality will be
+        lost by not including these files/folders. Many business apps probably
+        don't this functionality and can so safely omit another 15 MB from
+        the distribution.</p>
+        <p></p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/the-problem-with-namespace-scripts">The Problem
             with Namespace Scripts</a>
           </h1>
@@ -243,52 +412,6 @@
           problems with namespace scripts</a>
           that prevent this from working perfectly.
         </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/the-constant-operator">The Constant Operator</a>
-          </h1>
-          <time>March 21, 2021</time>
-        </header>
-        <p>Having neglected moving to version 18 for obvious reasons I
-        was surprised by this expression from ngn over at the APL Orchard:</p>
-        <pre>
-          <code>⍬⍨¨v
-</code>
-        </pre>
-        <p>The new constant operator, which simply returns it's left operand.
-        I think it is exaclty equivalent to:</p>
-        <pre>
-          <code>{⍺⍺}
-</code>
-        </pre>
-        <p>Comparing to creating a vector of empty vectors in more traditional
-        ways, the contstant operator is certainly the shortest, and more
-        or less as fast as most of the others:</p>
-        <pre>
-          <code>      v←⍳10000000
-      cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' '{⍬}¨v'  '⍬∘⊣¨v' 'v⊢¨⊂⍬'
-  (≢v)⍴⊂⍬ → 2.7E¯2 |     0% ⎕⎕                                      
-  ⍬⍨¨v    → 2.8E¯2 |    +4% ⎕⎕                                      
-  {⍬}¨v   → 4.4E¯1 | +1569% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-  ⍬∘⊣¨v   → 2.6E¯2 |    -4% ⎕⎕                                      
-  v⊢¨⊂⍬   → 2.6E¯2 |    -1% ⎕⎕
-</code>
-        </pre>
-        <blockquote>
-          <p>NB. That Dfn is very expensive!</p>
-        </blockquote>
-        <p>However:</p>
-        <pre>
-          <code>        v←⍳10000000 ⋄ r←v    
-        cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' 'r⊣r[]←⊂⍬'
-  (≢v)⍴⊂⍬  → 2.7E¯2 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-  ⍬⍨¨v     → 2.6E¯2 |  -2% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕ 
-  r⊣r[]←⊂⍬ → 2.4E¯2 | -11% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕    
-</code>
-        </pre>
-        <p>Never underestimate the usefulness of bracket indexing.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
