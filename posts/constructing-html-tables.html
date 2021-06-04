@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/reference">Reference</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/elements">Elements</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/constructing-html-tables">Constructing HTML
+            Tables</a>
+          </h1>
+          <time>June 4, 2021</time>
+        </header>
+        <p>In my HTML project, I have been constructing HTML tables like
+        so:</p>
+        <pre>
+          <code>NewTable←{
+     ⍝ ⍵ ←→ Namepace
+     ⍝      ⍵.Titles (vec of char vecs)
+     ⍝      ⍵.Values (Matrix of char vecs)
+     ⍝      ⍵.Footer (v/v of footer values)
+     ⍝      ⍵.Classes (vec of char vecs)
+     ⍝ ← ←→ Table
+     ⍺←0
+     newRow←{⍺ New'tr'}
+     newCell←{New'td'⍵}
+     t←⍺ New'table'
+     th←t New'thead'
+     hr←th newRow 0
+     hc←hr{⍺ New'th'⍵}¨⍵.Titles
+     hc.class←⍵.Classes
+     tb←t New'tbody'
+     cd←newCell¨⍵.Values
+     r←tb newRow¨⍳≢⍵.Values
+     r.Content←↓cd
+     r.Content.class←⊂⍵.Classes
+     0=⍵.⎕NC'Footer':t
+     0=≢⍵.Footer:t
+     tf←t New'tfoot'
+     fr←tf newRow 0
+     fc←fr{⍺ New'th'⍵}¨⍵.Footer
+     fc.class←⍵.Classes
+     t
+ }
+</code>
+        </pre>
+        <p>I was not really happy about this, the primary reason being
+        the definition of the argument; it seemed somewhat over specified
+        for the general style of the project. When I had to inject additional
+        class settings into particular rows and columns, I realized I had
+        done it all wrong, and now have:</p>
+        <pre>
+          <code> NewTable←{
+     ⍝ ⍺ ←→ [Parent Element]
+     ⍝ ⍵ ←→ Rows, Columns, [Header Rows, [Footer Rows]]
+     ⍝ ← ←→ Table
+     ⍺←0
+     nr nc nh nf←4↑⍵
+     newHF←{
+         n m←⍵
+         n=0:⍬
+         e←New ⍺
+         r←n New'tr'
+         e.Content←r
+         r.Content←(n⍴m)New¨⊂'th'
+         e
+     }
+     t←⍺ New'table'
+     t.Content,←'thead'newHF nh nc
+     tb←t New'tbody'
+     r←nr New'tr'
+     tb.Content←r
+     r.Content←(nr⍴nc)New¨⊂'td'
+     t.Content,←'tfoot'newHF nf nc
+     t
+ }
+</code>
+        </pre>
+        <p>Now, the table is initially created with no data, just the properly
+        structured DOM elements with no cell content, no attributes, no
+        nothing:</p>
+        <pre>
+          <code>      t←H.NewTable 2 3 1
+      H.DOM2HTML t
+&lt;table&gt;        
+  &lt;thead&gt;      
+    &lt;tr&gt;       
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;/th&gt;
+    &lt;/tr&gt;      
+  &lt;/thead&gt;     
+  &lt;tbody&gt;      
+    &lt;tr&gt;       
+      &lt;td&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;/td&gt;
+    &lt;/tr&gt;      
+    &lt;tr&gt;       
+      &lt;td&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;/td&gt;
+    &lt;/tr&gt;      
+  &lt;/tbody&gt;     
+&lt;/table&gt;       
+</code>
+        </pre>
+        <p>In addition I added a small set of functions for extracting
+        table-specfic elements, for assigning content, setting attributes,
+        etc.:</p>
+        <pre>
+          <code>      b←H.BodyCells t
+      b.Content←2 3⍴⍕¨⍳6
+      h←,H.HeaderCells t 
+      h.Content←'Column '∘,¨'One' 'Two' 'Three'
+      c←H.Cells t
+      c.class←(⍴c)⍴'left' 'right' 'right'
+      H.DOM2HTML t
+&lt;table&gt;                                  
+  &lt;thead&gt;                                
+    &lt;tr&gt;                                 
+      &lt;th class="left"&gt;Column One&lt;/th&gt;   
+      &lt;th class="right"&gt;Column Two&lt;/th&gt;  
+      &lt;th class="right"&gt;Column Three&lt;/th&gt;
+    &lt;/tr&gt;                                
+  &lt;/thead&gt;                               
+  &lt;tbody&gt;                                
+    &lt;tr&gt;                                 
+      &lt;td class="left"&gt;0&lt;/td&gt;            
+      &lt;td class="right"&gt;1&lt;/td&gt;           
+      &lt;td class="right"&gt;2&lt;/td&gt;           
+    &lt;/tr&gt;                                
+    &lt;tr&gt;                                 
+      &lt;td class="left"&gt;3&lt;/td&gt;            
+      &lt;td class="right"&gt;4&lt;/td&gt;           
+      &lt;td class="right"&gt;5&lt;/td&gt;           
+    &lt;/tr&gt;                                
+  &lt;/tbody&gt;                               
+&lt;/table&gt;        
+</code>
+        </pre>
+        <p>Much better, much lighter, much more freedom for the APL programmer.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2021 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
