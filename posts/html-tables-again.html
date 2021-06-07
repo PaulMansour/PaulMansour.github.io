@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/reference">Reference</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/elements">Elements</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/html-tables-again">HTML Tables Again</a>
+          </h1>
+          <time>June 6, 2021</time>
+        </header>
+        <p>The previous post was operative for less than 24 hours. Experience
+        soon proved it silly to provide the dimensions rather than the
+        data as the argument; it just led to more code. Let's try again:</p>
+        <pre>
+          <code>NewTable←{
+     ⍝ ⍺ ←→ [Parent Element]
+     ⍝ ⍵ ←→ BodyContent [HeaderContent [FooterContent]]
+     ⍝ ← ←→ Table
+     ⍺←0
+     c←∊'thead' 'tbody' 'tfoot'{
+         0=≢⍵:⍬
+         d←↑,↓⍵
+         e←New ⍺
+         r←e New¨{'tr'⍵}¨⍳≢d
+         t←(⍺≡'tbody')⊃'th' 'td'
+         e⊣r.Content←↓New¨{t ⍵}¨d
+     }¨3↑⍬ ⍬,⍨(⊂⍣(2=≡⍵))⍵
+     ⍺ New'table'c
+}
+</code>
+        </pre>
+        <p>
+          It's shorter too. We get rid of a lot of code by recognizing
+          that the
+          <code>thead</code>
+          ,
+          <code>tbody</code>
+          , and
+          <code>tfoot</code>
+          elements are (almost) indentically structured.
+        </p>
+        <p>
+          <code>BodyContent</code>
+          ,
+          <code>HeaderContent</code>
+          , and
+          <code>FooterContent</code>
+          are matrices or vectors of simple text vectors. Vectors are treated
+          as one-row matrices.
+          <code>BodyContent</code>
+          is required,
+          <code>HeaderContent</code>
+          and
+          <code>FooterContent</code>
+          are both optional. If
+          <code>FooterContent</code>
+          is provided but
+          <code>HeaderContent</code>
+          is not, a
+          <code>⍬</code>
+          placeholder is needed.
+        </p>
+        <p>
+          The class specification is still left out, as using the utility
+          functions
+          <code>Cells</code>
+          ,
+          <code>BodyCells</code>
+          ,
+          <code>HeaderCells</code>
+          and
+          <code>FooterCells</code>
+          is a much better way to specify classes, or any other attributes
+          or additional content.
+        </p>
+        <p>I usually avoid nested multi-line dfns (especially in application-specfic
+        code), but I make exceptions for tightly designed utility functions.</p>
+        <p>
+          The parentheses required for the power operator are annoying
+          (
+          <code>⍣</code>
+          ).
+        </p>
+        <p>Let's see how long this function lasts.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2021 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
