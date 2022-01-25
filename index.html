@@ -14,11 +14,125 @@
         <a href="/projects">Projects</a>
         <a href="/reference">Reference</a>
         <a href="/donts">Don'ts</a>
+        <a href="/hmmm">Hmmm</a>
         <a href="/links">Links</a>
         <a href="/about">About</a>
       </nav>
     </header>
     <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/vfi-with-csv">⎕VFI with ⎕CSV</a>
+          </h1>
+          <h2>January 25, 2022</h2>
+        </header>
+        <p>
+          A long-standing problem with
+          <a href="https://help.dyalog.com/latest/Content/Language/System%20Functions/vfi.htm">⎕VFI</a>
+          is that it does not accept the traditional minus sign (only an
+          APL high-minus), nevermind thousand separators, a plus sign in
+          front of E notation, and a million other things that Excel users
+          might produce in a CSV file headed your way. It takes a lot of
+          preprocessing to take outside data and run it through
+          <code>⎕VFI</code>
+          .
+        </p>
+        <p>
+          The relatively new sytem function
+          <a href="https://help.dyalog.com/16.0/Content/Language/System%20Functions/csv.htm">⎕CSV</a>
+          handles all the specific cases noted above when converting columns
+          to numeric. Furthermore it works on in-memory data, so we don't
+          need a file. This makes it trivial to write an implementation
+          of
+          <code>⎕VFI</code>
+          using
+          <code>⎕CSV</code>
+          :
+        </p>
+        <pre>
+          <code>~~~ 
+vfi←{
+     ⍝ ⎕VFI using ⎕CSV
+     ⍝ ⍵ ←→ Char Mat
+     ⍝ ← ←→ Num vector
+     ⍺←-2*31
+     o←⊂'Separator' '⎕'
+     o,←⊂'Thousands' ','
+     o,←⊂'Fill'⍺
+     r←,(⎕CSV⍠o)(,⍵,⎕UCS 13)'S' 3
+     v←r≠⍺
+     v(v×r)
+ }   
+</code>
+        </pre>
+        <p>Note:</p>
+        <p>1. The argument here is a char mat, not a delimited vector like
+        ⎕VFI.</p>
+        <p>2. The separator is arbitrary, and should not exist in the argument.
+        Probably should check for this.</p>
+        <p>
+          3. There is currently a bug in
+          <code>⎕CSV</code>
+          where it throws an error on a number with a thousand separator
+          and no decimal - so don't adapt for production yet!
+        </p>
+        <p>4. We should probably test there are no line endings in the
+        argument.</p>
+        <p>
+          This is almost as fast as
+          <code>⎕VFI</code>
+          with no preprocessing, and much faster than a solution with
+          <code>⎕VFI</code>
+          that requires preprocessing for negative signs and thousand separators.
+        </p>
+        <p>However, there are still things we might want to preprocess
+        for, like parentheses for a negative number, leading currency characters,
+        and trailing percentage signs. Here is a first attempt that handles
+        all three cases which no doubt can be improved:</p>
+        <pre>
+          <code>vfiPreprocess←{
+     ⍝ ⍵ ←→ Char mat
+     ⍝   ←→ Modified char mat
+     ⎕IO ⎕ML←0 1
+     ~∨/'$%('∊⍵:⍵
+     m←⍵
+     m[⍸m[;0]='$';0]←' '
+     lp←m[;0]='('
+     ljust←{⍵⌽⍨+/∧\' '=⍵}
+     m[;]←ljust⌽m
+     rp←m[;0]=')'
+     m[⍸m[;0]='%';0]←' '
+     n←⍸lp∧rp
+     m[n;0]←' '
+     m[;]←ljust⌽m
+     m[n;0]←'-'
+     m
+ }
+</code>
+        </pre>
+        <p>
+          Note that
+          <code>m[;]←</code>
+          is used rather than
+          <code>m←</code>
+          because the former does the assignment in place, while the latter
+          makes a copy.
+        </p>
+        <p>
+          When processing
+          <code>CSV</code>
+          files, it is useful to apply
+          <code>⎕CSV</code>
+          first with no numeric conversion bringing everything into the
+          workspace as char columns, and then applying
+          <code>vfi</code>
+          to the columns we want to convert to numeric. Not only does this
+          technique allow us to apply our own custom preprocess function,
+          but it provide the ability to analyze the before-and-after conversion.
+        </p>
+        <p></p>
+      </article>
       <article>
         <header>
           <h1>
@@ -156,88 +270,6 @@
 &lt;/pre&gt;  
 </code>
         </pre>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/html-tables-again">HTML Tables Again</a>
-          </h1>
-          <h4>June 6, 2021</h4>
-        </header>
-        <p>The previous post was operative for less than 24 hours. Experience
-        soon proved it silly to provide the dimensions rather than the
-        data as the argument; it just led to more code. Let's try again:</p>
-        <pre>
-          <code>NewTable←{
-     ⍝ ⍺ ←→ [Parent Element]
-     ⍝ ⍵ ←→ BodyContent [HeaderContent [FooterContent]]
-     ⍝ ← ←→ Table
-     ⍺←0
-     c←∊'thead' 'tbody' 'tfoot'{
-         0=≢⍵:⍬
-         d←↑,↓⍵
-         e←New ⍺
-         r←e New¨{'tr'⍵}¨⍳≢d
-         t←(⍺≡'tbody')⊃'th' 'td'
-         e⊣r.Content←↓New¨{t ⍵}¨d
-     }¨3↑⍬ ⍬,⍨(⊂⍣(2=≡⍵))⍵
-     ⍺ New'table'c
-}
-</code>
-        </pre>
-        <p>
-          It's shorter too. We get rid of a lot of code by recognizing
-          that the
-          <code>thead</code>
-          ,
-          <code>tbody</code>
-          , and
-          <code>tfoot</code>
-          elements are (almost) indentically structured.
-        </p>
-        <p>
-          <code>BodyContent</code>
-          ,
-          <code>HeaderContent</code>
-          , and
-          <code>FooterContent</code>
-          are matrices or vectors of simple text vectors. Vectors are treated
-          as one-row matrices.
-          <code>BodyContent</code>
-          is required,
-          <code>HeaderContent</code>
-          and
-          <code>FooterContent</code>
-          are both optional. If
-          <code>FooterContent</code>
-          is provided but
-          <code>HeaderContent</code>
-          is not, a
-          <code>⍬</code>
-          placeholder is needed.
-        </p>
-        <p>
-          The class specification is still left out, as using the utility
-          functions
-          <code>Cells</code>
-          ,
-          <code>BodyCells</code>
-          ,
-          <code>HeaderCells</code>
-          and
-          <code>FooterCells</code>
-          is a much better way to specify classes, or any other attributes
-          or additional content.
-        </p>
-        <p>I usually avoid nested multi-line dfns (especially in application-specfic
-        code), but I make exceptions for tightly designed utility functions.</p>
-        <p>
-          The parentheses required for the power operator are annoying
-          (
-          <code>⍣</code>
-          ).
-        </p>
-        <p>Let's see how long this function lasts.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
