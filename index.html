@@ -23,6 +23,38 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/aaronhsuquote">Aaron Hsu at Function Conf 2022</a>
+          </h1>
+          <h4>January 27, 2022</h4>
+        </header>
+        <p>
+          Aaron Hsu is giving a
+          <a href="https://confengine.com/conferences/functional-conf-2022/speaker/interview/aaron-w-hsu?utm_source=twitter&amp;utm_medium=organic_social&amp;utm_campaign=FnConf-speaker-profiles">talk
+          at Functional conference 2022</a>
+        </p>
+        <p>In the interview Aaron says:</p>
+        <blockquote>
+          <p>More is accomplished by understanding the whole, than optimizing
+          the part.</p>
+        </blockquote>
+        <p>That is a first class aphorism.</p>
+        <p>
+          It reminded me of the saying
+          <em>premature optimization is the root of all evil</em>
+          , I think extracted from the full Donald Knuth quote:
+        </p>
+        <blockquote>
+          <p>The real problem is that programmers have spent far too much
+          time worrying about efficiency in the wrong places and at the
+          wrong times; premature optimization is the root of all evil (or
+          at least most of it) in programming</p>
+        </blockquote>
+        <p>Aaron's formulation says more with less; it has a positive outlook.</p>
+        <p>Looking forward to seeing his presentation.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/vfi-with-csv">⎕VFI with ⎕CSV</a>
           </h1>
           <h2>January 25, 2022</h2>
@@ -51,8 +83,7 @@
           :
         </p>
         <pre>
-          <code>~~~ 
-vfi←{
+          <code>vfi←{
      ⍝ ⎕VFI using ⎕CSV
      ⍝ ⍵ ←→ Char Mat
      ⍝ ← ←→ Num vector
@@ -67,8 +98,11 @@ vfi←{
 </code>
         </pre>
         <p>Note:</p>
-        <p>1. The argument here is a char mat, not a delimited vector like
-        ⎕VFI.</p>
+        <p>
+          1. The argument here is a char mat, not a delimited vector like
+          <code>⎕VFI</code>
+          .
+        </p>
         <p>2. The separator is arbitrary, and should not exist in the argument.
         Probably should check for this.</p>
         <p>
@@ -148,128 +182,6 @@ vfi←{
           and the choice of color represents the Canadian roots of the
           father of APL, Ken Iverson.
         </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/two-issues-with-xml">Two Issues with ⎕XML</a>
-          </h1>
-          <h4>June 10, 2021</h4>
-        </header>
-        <p>First, consider:</p>
-        <pre>
-          <code>      ⎕XML 0 'p' 'This is a &lt;em&gt;bold&lt;/em&gt; word.'
-&lt;p&gt;This is a &amp;lt;em&amp;gt;bold&amp;lt;/em&amp;gt; word.&lt;/p&gt; 
-</code>
-        </pre>
-        <p>
-          That is, when trying to embed some already formatted XML into
-          the argument of
-          <code>⎕XML</code>
-          , the results are not what we want. Richard Smith at Dyalog suggested
-          a possible enhancement, stealing some ideas from how
-          <code>⎕JSON</code>
-          works, which would be to enclose data that we do not want
-          <code>⎕XML</code>
-          to modify in any way. The extra depth would be a signal to leave
-          the data alone.
-        </p>
-        <p>Second, consider:</p>
-        <pre>
-          <code>      m←2 3⍴0 'pre' '' 1 'code' '      a←5'
-      ]display m
-┌→─────────────────────┐
-↓   ┌→──┐  ┌⊖┐         │
-│ 0 │pre│  │ │         │
-│   └───┘  └─┘         │
-│   ┌→───┐ ┌→────────┐ │
-│ 1 │code│ │      a←5│ │
-│   └────┘ └─────────┘ │
-└∊─────────────────────┘
-      ⎕XML m
-&lt;pre&gt;                          
-  &lt;code&gt;a←5&lt;/code&gt;             
-&lt;/pre&gt;                         
-</code>
-        </pre>
-        <p>
-          Nicely formatted, but white space lost. Using the
-          <code>Whitespace=Preserve</code>
-          variant:
-        </p>
-        <pre>
-          <code>       xml←⎕XML⍠'Whitespace' 'Preserve'
-       xml m
-&lt;pre&gt;&lt;code&gt;      a←5&lt;/code&gt;&lt;/pre&gt;
-</code>
-        </pre>
-        <p>
-          we preserve the whitespace but lose the indented formatting.
-          With ⎕XML is is currently all or nothing. What we want to do
-          is have nicely formatted HTML output from
-          <code>⎕XML</code>
-          , except for certain elements were we we know we want to preserve
-          the whitespace.
-        </p>
-        <p>
-          Absent enhancements to
-          <code>⎕XML</code>
-          by Dyalog, we can solve both problems in a similar way. For embedded
-          HTML, we can enclose the data, note it, insert a special character
-          as a holding place, and then after
-          <code>⎕XML</code>
-          is run replace the special character with the raw HTML. Thus
-          this works:
-        </p>
-        <pre>
-          <code>      H.DOM2HTML H.New 'p' (⊂⊂'This is a &lt;em&gt;bold&lt;/em&gt; word.')
-&lt;p&gt;This is a &lt;em&gt;bold&lt;/em&gt; word.&lt;/p&gt; 
-</code>
-        </pre>
-        <p>
-          Note the use of enclose twice here (
-          <code>⊂⊂</code>
-          ) is for the same reason as this:
-        </p>
-        <pre>
-          <code>      ]display A←'One' 'Two' 'Three'
-┌→────────────────────┐
-│ ┌→──┐ ┌→──┐ ┌→────┐ │
-│ │One│ │Two│ │Three│ │
-│ └───┘ └───┘ └─────┘ │
-└∊────────────────────┘
-      A[1]←⊂⊂'Two'
-      ]Display A
-┌→────────────────────────┐
-│ ┌→──┐ ┌───────┐ ┌→────┐ │
-│ │One│ │ ┌→──┐ │ │Three│ │
-│ └───┘ │ │Two│ │ └─────┘ │
-│       │ └───┘ │         │
-│       └∊──────┘         │
-└∊────────────────────────┘ 
-</code>
-        </pre>
-        <p>
-          For preserving blanks and line endings while still getting nicely
-          indented XML, an
-          <code>EncodePre</code>
-          function is provided to temporaily replace blanks and newlines
-          with special characters. Then, the
-          <code>DOM2HTML</code>
-          function will reverse the substitions after the application of
-          <code>⎕XML</code>
-          :
-        </p>
-        <pre>
-          <code>      p←H.New'pre'
-      _←p H.New'code' (H.EncodePre'      ⎕←a←⍳5 ',(⎕UCS 13),'0 1 2 3 4')
-      H.DOM2HTML p 
-&lt;pre&gt;                                             
-  &lt;code&gt;      ⎕←a←⍳5                                
-0 1 2 3 4&lt;/code&gt;                                    
-&lt;/pre&gt;  
-</code>
-        </pre>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

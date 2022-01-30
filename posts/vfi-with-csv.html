@@ -51,8 +51,7 @@
           :
         </p>
         <pre>
-          <code>~~~ 
-vfi←{
+          <code>vfi←{
      ⍝ ⎕VFI using ⎕CSV
      ⍝ ⍵ ←→ Char Mat
      ⍝ ← ←→ Num vector
@@ -67,8 +66,11 @@ vfi←{
 </code>
         </pre>
         <p>Note:</p>
-        <p>1. The argument here is a char mat, not a delimited vector like
-        ⎕VFI.</p>
+        <p>
+          1. The argument here is a char mat, not a delimited vector like
+          <code>⎕VFI</code>
+          .
+        </p>
         <p>2. The separator is arbitrary, and should not exist in the argument.
         Probably should check for this.</p>
         <p>
