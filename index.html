@@ -23,6 +23,147 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/session-configuration">Session Configuration</a>
+          </h1>
+          <h2>March 6, 2022</h2>
+        </header>
+        <p>When I get a new version of Dyalog (Windows), I go to the configuration
+        dialog box and manually set some options. This is painful, error
+        prone and a general waste of time. In addition, I increase the
+        session font size, and save the session file. This is even worse,
+        as saving the session file can have other deleterious effects.
+        It has never been clear to me why it is necessary to save the session
+        file simply to remember session font size. Anyway, it is way past
+        time to change this entire routine.</p>
+        <p>Dyalog 18.0 introduced some new features, techniques, and options
+        for session configuration. The most important is the introduction
+        of configuration files. Dyalog 18.2 brings some enhancments to
+        these features. There is now a plethora of ways to intialize settings,
+        configure things, and run code on starting the interpreter.</p>
+        <p>
+          When a new version of Dyalog is installed, I want to specify
+          at most one thing: The UserConfigFile parameter. This parameter
+          will point to my confuration file and, indirectly, its parent
+          folder. This parent folder is my
+          <strong>user configuration folder</strong>
+          ; it contains the configuration file itself, as well as any other
+          assets for configuring the sesssion like custom user commands
+          and code that execute on startup.
+        </p>
+        <p>The user config file, and its encompassing user config folder,
+        should be completely portable, which means that any file or path
+        specified inside the config file should be relative to the location
+        of the config file itself.</p>
+        <p>
+          Currently it looks like some parameters that take file names
+          or paths as values will accept relative paths, but not all. The
+          most important one for me that does not accept relative paths
+          is the SALT/CommandFolder that specifies where to look for user
+          commands. (I could probably hack this, but if I start looking
+          at the APL code in
+          <code>⎕SE</code>
+          , the urge to rewrite the entire user command framework will
+          be overwhelming - must not do that!) Thus I am stuck with a unportable
+          configuration file that looks something like:
+        </p>
+        <pre>
+          <code>{ 
+  Settings: {
+             Default_IO: 0,
+             Default_ML: 3, 
+             ClassicMode: 1,
+             ClassicModeSavePosition: 1,
+             SingleTrace: 1,
+             AutoPW: 1, 
+             SessionOnTop: 1,                          
+             Log_Size: "8M",
+             MaxWS: "8G",
+             PropertyExposeRoot: 1,
+             Load: "startup.apln",   
+             SALT: {
+                    CommandFolder: "c:/APLStartup/;[dyalog]/SALT/spice",                 
+                   },
+             Colours: {
+                       SchemeName: "Back in Black",  
+                      },
+            }
+}
+</code>
+        </pre>
+        <p>We should be able to write something like:</p>
+        <pre>
+          <code>  SALT: {
+            CommandFolder: "[configfolder];[dyalog]/SALT/spice",                 
+        },
+</code>
+        </pre>
+        <h2>Fixing and Executing Code on Startup</h2>
+        <p>There are at least four ways to fix and excute code on startup:</p>
+        <p>
+          1. The user command framework using a
+          <strong>setup.dyalog</strong>
+          file.
+        </p>
+        <p>
+          2. The
+          <strong>DyalogStartup</strong>
+          parameter.
+        </p>
+        <p>
+          3. The
+          <strong>DyalogStartupSE</strong>
+          parameter.
+        </p>
+        <p>
+          4. The
+          <strong>Load</strong>
+          (and
+          <strong>LX</strong>
+          ) configuration parameter.
+        </p>
+        <p>
+          Option 1 requires placing setup.dyalog in a specific place, this
+          is a no go. Option 2 requires highjacking LINK, and the DyalogStartupSE
+          parameter which we probably don't want to do. Option 3 requires
+          either putting code in some specific place that dyalog knows
+          about or specifying a fully qualified path. Furthermore, there
+          is a heirarchy of folders that are searched, which may be too
+          clever by half, and lead to a lot of confusion. That leaves Option
+          4, the
+          <code>Load</code>
+          parameter. Luckily it respects relative paths, and will look
+          in the same location as the config file. The code can expunge
+          itself after executing, and not clutter the root or introduce
+          a name conflict. Here, for example, is a very simple startup
+          routine that increases the font size, and specifies that the
+          session window should be maximized:
+        </p>
+        <pre>
+          <code>:Namespace startup
+     ⎕SE.FontObj[1]←28
+     ⎕SE.State←2
+     Run←{
+         #.⎕EX 'startup'
+     }
+:EndNamespace
+</code>
+        </pre>
+        <p>Of course we could do much more here, like set PFKeys, load
+        code into ⎕SE, mess around with menus, etc.</p>
+        <p>
+          It is not clear to me what precisely Dyalog envisioned as use-cases
+          for the
+          <code>Load</code>
+          parameter. It accepts, workspaces, functions, namespace and class
+          scripts and even, new in 18.2, a folder that is then automatically
+          LINKed. For developement purposes, it seems ideal to use
+          <code>Load</code>
+          for session configuration.
+        </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/a-new-workspace-file-format">A New Workspace
             File Format</a>
           </h1>
@@ -101,7 +242,6 @@
           <code>)saveastext</code>
           and have a text file representation of the workspace.
         </p>
-        <p></p>
       </article>
       <article>
         <header>
@@ -134,121 +274,6 @@
         </blockquote>
         <p>Aaron's formulation says more with less; it has a positive outlook.</p>
         <p>Looking forward to seeing his presentation.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/vfi-with-csv">⎕VFI with ⎕CSV</a>
-          </h1>
-          <h2>January 25, 2022</h2>
-        </header>
-        <p>
-          A long-standing problem with
-          <a href="https://help.dyalog.com/latest/Content/Language/System%20Functions/vfi.htm">⎕VFI</a>
-          is that it does not accept the traditional minus sign (only an
-          APL high-minus), nevermind thousand separators, a plus sign in
-          front of E notation, and a million other things that Excel users
-          might produce in a CSV file headed your way. It takes a lot of
-          preprocessing to take outside data and run it through
-          <code>⎕VFI</code>
-          .
-        </p>
-        <p>
-          The relatively new sytem function
-          <a href="https://help.dyalog.com/16.0/Content/Language/System%20Functions/csv.htm">⎕CSV</a>
-          handles all the specific cases noted above when converting columns
-          to numeric. Furthermore it works on in-memory data, so we don't
-          need a file. This makes it trivial to write an implementation
-          of
-          <code>⎕VFI</code>
-          using
-          <code>⎕CSV</code>
-          :
-        </p>
-        <pre>
-          <code>vfi←{
-     ⍝ ⎕VFI using ⎕CSV
-     ⍝ ⍵ ←→ Char Mat
-     ⍝ ← ←→ Num vector
-     ⍺←-2*31
-     o←⊂'Separator' '⎕'
-     o,←⊂'Thousands' ','
-     o,←⊂'Fill'⍺
-     r←,(⎕CSV⍠o)(,⍵,⎕UCS 13)'S' 3
-     v←r≠⍺
-     v(v×r)
- }   
-</code>
-        </pre>
-        <p>Note:</p>
-        <p>
-          1. The argument here is a char mat, not a delimited vector like
-          <code>⎕VFI</code>
-          .
-        </p>
-        <p>2. The separator is arbitrary, and should not exist in the argument.
-        Probably should check for this.</p>
-        <p>
-          3. There is currently a bug in
-          <code>⎕CSV</code>
-          where it throws an error on a number with a thousand separator
-          and no decimal - so don't adapt for production yet!
-        </p>
-        <p>4. We should probably test there are no line endings in the
-        argument.</p>
-        <p>
-          This is almost as fast as
-          <code>⎕VFI</code>
-          with no preprocessing, and much faster than a solution with
-          <code>⎕VFI</code>
-          that requires preprocessing for negative signs and thousand separators.
-        </p>
-        <p>However, there are still things we might want to preprocess
-        for, like parentheses for a negative number, leading currency characters,
-        and trailing percentage signs. Here is a first attempt that handles
-        all three cases which no doubt can be improved:</p>
-        <pre>
-          <code>vfiPreprocess←{
-     ⍝ ⍵ ←→ Char mat
-     ⍝   ←→ Modified char mat
-     ⎕IO ⎕ML←0 1
-     ~∨/'$%('∊⍵:⍵
-     m←⍵
-     m[⍸m[;0]='$';0]←' '
-     lp←m[;0]='('
-     ljust←{⍵⌽⍨+/∧\' '=⍵}
-     m[;]←ljust⌽m
-     rp←m[;0]=')'
-     m[⍸m[;0]='%';0]←' '
-     n←⍸lp∧rp
-     m[n;0]←' '
-     m[;]←ljust⌽m
-     m[n;0]←'-'
-     m
- }
-</code>
-        </pre>
-        <p>
-          Note that
-          <code>m[;]←</code>
-          is used rather than
-          <code>m←</code>
-          because the former does the assignment in place, while the latter
-          makes a copy.
-        </p>
-        <p>
-          When processing
-          <code>CSV</code>
-          files, it is useful to apply
-          <code>⎕CSV</code>
-          first with no numeric conversion bringing everything into the
-          workspace as char columns, and then applying
-          <code>vfi</code>
-          to the columns we want to convert to numeric. Not only does this
-          technique allow us to apply our own custom preprocess function,
-          but it provide the ability to analyze the before-and-after conversion.
-        </p>
-        <p></p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
