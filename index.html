@@ -174,17 +174,43 @@
           <code>      R←[X] F by Y I [B]     
 </code>
         </pre>
-        <p>Here F is any uniform (or aggregate - more on this later) function.
-        Y is a suitable right argument for F, and X is an optional left
-        argument for F. I is a grade vector that orders Y, or a set of
-        grade vectors that groups and optionally orders Y. B is an optional
-        boolean selection vector that flags items to include and exclude
-        in the computation.</p>
         <p>
-          The by operator sorts and groups Y according to I, (optionally
-          selecting by B), applies F to each group, and then ungroups and
-          reorders the results to correspond to the original argument Y.
-          This is similar to the under
+          Here
+          <code>F</code>
+          is any uniform (or aggregate - more on this later) function.
+          <code>Y</code>
+          is a suitable right argument for
+          <code>F</code>
+          , and
+          <code>X</code>
+          is an optional left argument for
+          <code>F</code>
+          .
+          <code>I</code>
+          is a grade vector that orders
+          <code>Y</code>
+          , or a set of grade vectors that groups and optionally orders
+          <code>Y</code>
+          .
+          <code>B</code>
+          is an optional boolean selection vector that flags items to include
+          and exclude in the computation.
+        </p>
+        <p>
+          The
+          <code>by</code>
+          operator sorts and groups
+          <code>Y</code>
+          according to
+          <code>I</code>
+          , (optionally selecting by
+          <code>B</code>
+          ), applies
+          <code>F</code>
+          to each group, and then ungroups and reorders the results to
+          correspond to the original argument
+          <code>Y</code>
+          . This is similar to the under
           <a href="https://aplwiki.com/wiki/Under">operator</a>
           , but I don't think it can handle this particular case.
         </p>
