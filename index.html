@@ -21,6 +21,74 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/trains">Trains</a>
+          </h1>
+          <h2>July 8, 2022</h2>
+        </header>
+        <p>
+          In a
+          <a href="/posts/leetcode-571">previous post</a>
+          we computed the median on grouped data by replicating it and
+          applying a
+          <code>median</code>
+          function that works on ungroued data. I assumed that there was
+          a way to compute the median without replicating the data, and
+          sure enough,
+          <a href="http://tamstat.com">Brother Statistician Steve</a>
+          sent me this old (pre-interval index) solution (slighly modified
+          for explanatory purposes):
+        </p>
+        <pre>
+          <code>median1←{
+    ⍝ ⍺ ←→ Frequency
+    ⍝ ⍵ ←→ Values
+    c←(+\⍺)÷+/⍺
+    i←(0.5≤c)⍳1
+    ⍵[i+0,0.5∊c]+.÷2
+}
+</code>
+        </pre>
+        <p>Looking at:</p>
+        <pre>
+          <code>      (+\⍺)÷+/⍺
+</code>
+        </pre>
+        <p>the function train jumps right off the monitor:</p>
+        <pre>
+          <code>      +\÷+/
+</code>
+        </pre>
+        <p>
+          As an aside, trains come in two styles. First is the
+          <strong>Orange Blossom Special</strong>
+          style, of which this is a prime example. These trains are elegant,
+          a great pleasure to ride. Then we have the
+          <strong>Amtrak</strong>
+          style, which is a mess of tacks, jots, and tildes diaeresis.
+          (I'm guessing that is the proper plural form, and not tilde diaereses.)
+          These trains are all glue and duct tape. A terrible travel experience.
+          One is better off taking the dfn.
+        </p>
+        <p>But the point of this post is that it never occurred to me that
+        trains work in FlipDB. And why wouldn't they?! In the FlipDB session:</p>
+        <pre>
+          <code>      (sum running / sum) 7 1 3 1
+┌────────────┐
+↓0.5833333333│
+│0.6666666667│
+│0.9166666667│
+│1           │
+└Float───────┘
+</code>
+        </pre>
+        <p>So we can use trains anywhere, in a where clause, a select clause,
+        a having clause, anywhere a FlipDB expression is called for.</p>
+        <p>Ten minutes after Steve sent over the solution above he sent
+        a new one using interval index, and spoted the train too.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/leetcode-569">LeetCode 569: Median Employee
             Salary</a>
           </h1>
@@ -185,12 +253,11 @@
         APL-style solutions directly in a query. We can take, drop, rotate,
         expand, replicate, grade (and much more!), doing all sorts of things
         with intermediate values and structures, and as long as as the
-        final result is conforming (produces a table), we are good to go.
-        This makes solving LeetCode 571 not just easy, but trival. We are
-        given a table of observations and their frequencies:</p>
+        final result is conforming in particular context, we are good to
+        go. This makes solving LeetCode 571 not just easy, but trival.
+        We are given a table of observations and their frequencies:</p>
         <pre>
-          <code>~~~          
-   t.Display 0
+          <code>      t.Display 0
 ── LeetCode571.Numbers 
  ┌Num─┐  ┌Frequency┐   
  ↓0   │  ↓7        │   
@@ -203,8 +270,7 @@
         </pre>
         <p>and tasked with computing the median:</p>
         <pre>
-          <code>~~~          
-     q←t.Query''
+          <code>     q←t.Query''
      _←q.AddColumn'Median' 'median Frequency replicate Num'
      r←q.Execute 0
      r.Display 0
@@ -229,193 +295,6 @@
         is not directly related to the shape of any tables in the database.
         We have some serious computational freedom within a query, and
         can write direct solutions to complex problems.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/leetcode-262-trips-and-users">LeetCode 262:
-            Trips and Users</a>
-          </h1>
-          <h2>June 26, 2022</h2>
-        </header>
-        <p>
-          After
-          <code>weightedAverage</code>
-          , the single most import function contributing to the success
-          of
-          <em>The Carlisle Group</em>
-          is
-          <code>percentAcross</code>
-          . Like
-          <code>weightedAverage</code>
-          , it is an aggregate function. Like
-          <code>weightedAverage</code>
-          , it is not complicated mathematically or difficult to implement.
-          And like
-          <code>weightedAverage</code>
-          , you won't find it in Excel or SQL.
-        </p>
-        <p>It takes 2 to 3 arguments. The first argument is the primary
-        numeric vector on which we are computing the percentage. The second
-        argument is the boolean mask to abe applied to the numerator. The
-        optional third argument is the denominator mask, which defaults
-        to 1. The result is simply the quotient of the sums of the primary
-        vector masked by the two booleans.</p>
-        <p>A simple implementation might look like:</p>
-        <pre>
-          <code>percentAcross←{
-     v n d←3↑⍵,1
-     (+/v×n)÷+/v×d
- }
-</code>
-        </pre>
-        <p>We call it "percentAcross" because in the context of a grouped
-        query, its typical usage, it can produce percentages that are additive
-        across the result table, as opposed to down the result table. Repeated
-        calls with mutually exclusive booleans restricting the numerator
-        are a poor man's cross-tab.</p>
-        <p>Consider:</p>
-        <pre>
-          <code>      percentAcross (20 30 10 40) (0 1 0 1)
-0.7
-</code>
-        </pre>
-        <p>The 2nd and 4th item of the vector represent 70 percent of the
-        total. We can restrict the denominator as well:</p>
-        <pre>
-          <code>      percentAcross (20 30 10 40) (0 1 0 1) (0 1 1 1)
-0.875
-</code>
-        </pre>
-        <p>The 2nd and 4th item represent 87.5% of the 2nd, 3rd, and 4th
-        items.</p>
-        <p>
-          With this function in hand, let's tackle LeetCode 262:
-          <a href="https://leetcode.com/problems/trips-and-users/">Trips
-          and Users</a>
-          . We are given two tables:
-        </p>
-        <pre>
-          <code>      d←s.Get '/Databases/LeetCode262'
-      d.Display 0
- ── LeetCode262.Users ────────────                                               
-  ┌UsersID┐  ┌Banned─┐  ┌Roll───┐                                                
-  ↓1      │  ↓No     │  ↓client │                                                
-  │2      │  │Yes    │  │client │                                                
-  │3      │  │No     │  │client │                                                
-  │4      │  │No     │  │client │                                                
-  │10     │  │No     │  │driver │                                                
-  │11     │  │No     │  │driver │                                                
-  │12     │  │No     │  │driver │                                                
-  │13     │  │No     │  │driver │                                                
-  └Int8───┘  └Char(3)┘  └Char(6)┘                                                
- ── 8 rows by 3 columns ──────────                                               
-                                                                                 
- ── LeetCode262.Trips ────────────────────────────────────────────────────────── 
-  ┌ID──┐  ┌ClientID┐  ┌DriverID┐  ┌CityID┐  ┌Status─────────────┐  ┌RequestAt─┐  
-  ↓1   │  ↓1       │  ↓10      │  ↓1     │  ↓completed          │  ↓2013-10-01│  
-  │2   │  │2       │  │11      │  │1     │  │cancelled by driver│  │2013-10-01│  
-  │3   │  │3       │  │12      │  │6     │  │completed          │  │2013-10-01│  
-  │4   │  │4       │  │13      │  │6     │  │cancelled by client│  │2013-10-01│  
-  │5   │  │1       │  │10      │  │1     │  │completed          │  │2013-10-02│  
-  │6   │  │2       │  │11      │  │6     │  │completed          │  │2013-10-02│  
-  │7   │  │3       │  │12      │  │6     │  │completed          │  │2013-10-02│  
-  │8   │  │2       │  │12      │  │12    │  │completed          │  │2013-10-03│  
-  │9   │  │3       │  │10      │  │12    │  │completed          │  │2013-10-03│  
-  │10  │  │4       │  │13      │  │12    │  │cancelled by client│  │2013-10-03│  
-  └Int8┘  └Int8────┘  └Int8────┘  └Int8──┘  └Char(19)───────────┘  └Date──────┘  
- ── 10 rows by 6 columns ─────────────────────────────────────────────────────── 
-</code>
-        </pre>
-        <p>The problem is:</p>
-        <blockquote>
-          <p>The cancellation rate is computed by dividing the number of
-          canceled (by client or driver) requests with unbanned users by
-          the total number of requests with unbanned users on that day.
-          Write a SQL query to find the cancellation rate of requests with
-          unbanned users (both client and driver must not be banned) each
-          day between "2013-10-01" and "2013-10-03". Round Cancellation
-          Rate to two decimal points. Return the result table in any order.</p>
-        </blockquote>
-        <p>Note that CityID and Roll columns of the given tables are not
-        needed. Furthermore, the final restriction of the explicit dates
-        does not add anything material to the problem in this particular
-        case, or anything intesting in any case.</p>
-        <p>Our query begins with the Trips table, selecting only those
-        rows where neither the driver nor the client are banned:</p>
-        <pre>
-          <code>      t←d.GetTable 'Trips'
-      q←t.Query''
-      q.Where←'(ClientID.Banned in "No") and (DriverID.Banned in "No")'
-</code>
-        </pre>
-        <p>ClientID and DriverID are foreign keys in the Trips table pointing
-        to the Users table. Then we group and specify the cancellation
-        rate adding a column to the select clause:</p>
-        <pre>
-          <code>      q.GroupBy←'RequestAt'
-      _←q.AddColumn'CancellationRate' '2 round .01 * percentAcross Status (not Status in "completed")'
-</code>
-        </pre>
-        <p>
-          A production verison of
-          <code>percentAcross</code>
-          should operate on a character column, as it does here, to compute
-          a percentage based on the row count. We need to move the decimal
-          over because in FlipDB the
-          <code>percentAcross</code>
-          function naturally returns a percentage, not a ratio. And of
-          course round it to 2 decmimal places. And now the result:
-        </p>
-        <pre>
-          <code>     r←q.Execute 0                                                                        
-     r.Display 0 
-────────────────────────────────────────
- ┌RequestAt───────┐  ┌CancellationRate┐ 
- ↓2013-10-01      │  ↓0.33            │ 
- │2013-10-02      │  │0.00            │ 
- │2013-10-03      │  │0.50            │ 
- └Date────────────┘  └Dec(2)──────────┘ 
-── 3 rows by 2 columns ─────────────────
-</code>
-        </pre>
-        <p>
-          An issue with this solution, however, is that the where clause
-          might reduce the number of unique dates in the result, and will
-          almost certainly, as it does in this case, reduce the rows processed
-          by the grouping clause. We can move the where clause into the
-          select clause by taking advantage of the
-          <code>percentAcross</code>
-          function's ability to restrict the data in both the numerator
-          and the denominator. We use a couple of temporay results to keep
-          it clear and clean:
-        </p>
-        <pre>
-          <code>      q←t.Query''
-      q.GroupBy←'RequestAt'
-      _←q.AddColumn'Unbanned' '(ClientID.Banned in "No") and (DriverID.Banned in "No")' 1
-      _←q.AddColumn'Cancelled' 'not Status in "completed"' 1
-      _←q.AddColumn'CancellationRate' '2 round .01 * percentAcross Status (Unbanned and Cancelled) Unbanned'
-      r←q.Execute 0
-      r.Display 0
-────────────────────────────────────────
- ┌RequestAt───────┐  ┌CancellationRate┐ 
- ↓2013-10-01      │  ↓0.33            │ 
- │2013-10-02      │  │0.00            │ 
- │2013-10-03      │  │0.50            │ 
- └Date────────────┘  └Dec(2)──────────┘ 
-── 3 rows by 2 columns ─────────────────
-</code>
-        </pre>
-        <p>
-          The
-          <code>percentAcross</code>
-          function is simple yet extremely useful. For grouped queries,
-          it answers the question, what percentage of X is in group Y.
-          It's more general than a cross-tab, because the boolean statements
-          may refer to any number of columns and group the horizontal axis
-          in arbitrary ways.
-        </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

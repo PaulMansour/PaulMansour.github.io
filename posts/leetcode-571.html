@@ -30,12 +30,11 @@
         APL-style solutions directly in a query. We can take, drop, rotate,
         expand, replicate, grade (and much more!), doing all sorts of things
         with intermediate values and structures, and as long as as the
-        final result is conforming (produces a table), we are good to go.
-        This makes solving LeetCode 571 not just easy, but trival. We are
-        given a table of observations and their frequencies:</p>
+        final result is conforming in particular context, we are good to
+        go. This makes solving LeetCode 571 not just easy, but trival.
+        We are given a table of observations and their frequencies:</p>
         <pre>
-          <code>~~~          
-   t.Display 0
+          <code>      t.Display 0
 ── LeetCode571.Numbers 
  ┌Num─┐  ┌Frequency┐   
  ↓0   │  ↓7        │   
@@ -48,8 +47,7 @@
         </pre>
         <p>and tasked with computing the median:</p>
         <pre>
-          <code>~~~          
-     q←t.Query''
+          <code>     q←t.Query''
      _←q.AddColumn'Median' 'median Frequency replicate Num'
      r←q.Execute 0
      r.Display 0
