@@ -34,7 +34,8 @@
         This makes solving LeetCode 571 not just easy, but trival. We are
         given a table of observations and their frequencies:</p>
         <pre>
-          <code>   t.Display 0
+          <code>~~~          
+   t.Display 0
 ── LeetCode571.Numbers 
  ┌Num─┐  ┌Frequency┐   
  ↓0   │  ↓7        │   
@@ -47,7 +48,8 @@
         </pre>
         <p>and tasked with computing the median:</p>
         <pre>
-          <code>     q←t.Query''
+          <code>~~~          
+     q←t.Query''
      _←q.AddColumn'Median' 'median Frequency replicate Num'
      r←q.Execute 0
      r.Display 0
@@ -58,18 +60,11 @@
 ── 1 row by 1 column ──
 </code>
         </pre>
-        <p>
-          Of course FlipDB has a
-          <code>median</code>
-          function (as well as the more general
-          <code>percentile</code>
-          , like SQL), so we have abstracted away the problem of actually
-          computing the median. The point here, though, is that we can
-          easily transform the given data to construct the appropriate
-          argument to
-          <code>median</code>
-          , using a common APL technique:
-        </p>
+        <p>Of course FlipDB has a median function (as well as the more
+        general percentile , like SQL), so we have abstracted away the
+        problem of actually computing the median. The point here, though,
+        is that we can easily transform the given data to construct the
+        appropriate argument to median, using a common APL technique:</p>
         <pre>
           <code>      7 1 3 1/0 1 2 3
 0 0 0 0 0 0 0 1 2 2 2 3
