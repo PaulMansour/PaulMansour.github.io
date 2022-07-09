@@ -141,8 +141,7 @@
         </p>
         <p>With this in hand we can solve the problem:</p>
         <pre>
-          <code>~~~ 
-      q←t.Query''
+          <code>      q←t.Query''
       q.Where←'Salary in {(floor (shape z) / 2)index each enclose(sortUp z)(sortDown z)} each by Salary (group Company)'
       q.Having←'firstOccurrence Company laminate toChar Salary'
       r←q.Execute 0
