@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/composerules-revisited">ComposeRules Revisited</a>
+          </h1>
+          <h2>October 7, 2022</h2>
+        </header>
+        <p>
+          In the previous post we looked at
+          <a href="/posts/constructing-css-in-apl">constructing CSS programatically</a>
+          . The
+          <code>ComposeRules</code>
+          function looked like:
+        </p>
+        <pre>
+          <code>ComposeRules←{
+     ⍝ ⍵ ←→ Vector of CSS Rules
+     ⍺←0
+     0=≢⍵:''
+     nl←⎕UCS 13
+     ⊃,/((⍺&gt;0)/nl),⍺{
+         0=≢⍵.Selector:⍺ ComposeRules ⍵.Rules
+         b←(4×⍺)⍴' '
+         s←b,⍵.Selector,' {',nl
+         s,←⍺ ComposeDeclarations ⍵
+         s,←¯1↓(⍺+1)ComposeRules ⍵.Rules
+         s←s,b,'}',2⍴nl
+         s
+     }¨⍵
+ }
+</code>
+        </pre>
+        <p>As is often the case when reviewing a function after a little
+        time has passed, we wonder why we wrote it the way we did. Often
+        there is a good reason, but also often there is not a good reason.</p>
+        <p>
+          There are at least two things that are bothersome about this
+          function. First, there is a nested dfn. I don't like to do this
+          without a good reason, and I had a nagging feeling there was
+          in fact no good reason. I was probably just in a hurry to enhance
+          the function to handle nested rules. Second, and directly related,
+          the main function is called recursively by explicit name, rather
+          than using self-reference (
+          <code>∇</code>
+          ). A refactoring is in order:
+        </p>
+        <pre>
+          <code>ComposeRules←{
+     ⍝ ⍵ ←→ Vector of CSS Rules
+     ⍺←0
+     0=≢⍵:''
+     nl←⎕UCS 13
+     1=≡⍵:⊃,/((⍺&gt;0)/nl),⍺ ∇¨⍵
+     0=≢⍵.Selector:⍺ ∇ ⍵.Rules
+     b←(4×⍺)⍴' '
+     s←b,⍵.Selector,' {',nl
+     s,←⍺ ComposeDeclarations ⍵
+     s,←¯1↓(⍺+1)∇ ⍵.Rules
+     s←s,b,'}',2⍴nl
+     s
+ }
+</code>
+        </pre>
+        <p>Removing the nested dfn allows recursion via self-reference
+        - the whole thing is much nicer.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2022 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
