@@ -21,6 +21,177 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/parsing-markdown">Parsing Markdown</a>
+          </h1>
+          <h2>October 24, 2022</h2>
+        </header>
+        <p>
+          Once we have an
+          <a href="/posts/a-document-object-model-in-apl">APL document
+          object model</a>
+          , it is natural to want a Markdown to DOM function. While there
+          are a zillion third party markdown libraries, none of them will
+          create an APLDOM directly, and, more importantly, there are advantages
+          to having an easily modified, pure APL, no-dependency solution.
+        </p>
+        <p>
+          This
+          <code>Parse</code>
+          function takes an array of Markdown lines and returns an array
+          of HTML elements:
+        </p>
+        <pre>
+          <code>Parse←{
+     ⍝ ⍵ ←→ MarkDown
+     ⍝   ←→ Array of HTML obs
+     ⍝ f ←→ Paragraph|Table|Code|Header
+     0=≢⍵:''
+     ⎕THIS.H←##.Main
+     s←InitState ⍵
+     t b←↓⍉↑s ProcessLine¨⍳≢⍵
+     ~1∊b:''
+     p←b⊆⍵
+     f←(b&gt;¯1↓0,b)/t
+     f{(⍎⍺)⍵}¨p
+ }
+</code>
+        </pre>
+        <p>It first initializes a namespace to hold the state as we step
+        through each line:</p>
+        <pre>
+          <code>InitState←{
+     s←⎕NS''
+     s.Lines←⍵
+     s.InParagraph←0
+     s.InTable←0
+     s.InCode←0
+     s.InList←0
+     s.InBlockQuote←0
+     s.InPullQuote←0
+     s
+ }
+</code>
+        </pre>
+        <p>We toss the entire set of lines in there as well, so we can
+        inspect a subsequent line if necessary (for lists , if nothing
+        else, it appears this is needed). Then we process each line, to
+        determine the type and location of top-level objects or blocks:</p>
+        <pre>
+          <code>ProcessLine←{
+     ⍝ ⍵ ←→ Line Number
+     ⍝ ⍺ ←→ State
+     ⍝   ←→ Partition Vector
+     l←⍵⊃⍺.Lines
+     ⍺.InParagraph:''(⍺.InParagraph←l≢'')
+     ⍺.InCode:''(1⊣⍺.InCode←'~~~'≢3↑l)
+     ⍺.InTable:''(⍺.InTable←'|'=⊃l)
+     ⍺.InBlockQuote:''(⍺.InBlockQuote←'&gt; '≡2↑l)
+     ⍺.InPullQuote:''(⍺.InPullQuote←'^ '≡2↑l)
+     ⍺.InList:''(⍺.InList←⍺ StillInList ⍵)
+     ''≡l:'' 0
+     '~~~'≡3↑l:'Code'(⍺.InCode←1)
+     '|'=⊃l:'Table'(⍺.InTable←1)
+     '&gt; '≡2↑l:'BlockQuote'(⍺.InBlockQuote←1)
+     '∧ '≡2↑l:'PullQuote'(⍺.InPullQuote←1)
+     '#'=⊃l:'Header' 1
+     '!'=⊃l:'Image' 1
+     IsListItem l:'List'(⍺.InList←1)
+     1:'Paragraph'(⍺.InParagraph←1)
+ }
+</code>
+        </pre>
+        <p>For each line, if we are not in an object already, we find out
+        what object is starting, and return the type of the object and
+        a 1 to indicate it is starting. If we are already in an object,
+        then we determine whether the line being processed is still a member
+        of that object. The object type is also the name of a function
+        that will be called to convert the block of lines into an array
+        of HTML element objects.</p>
+        <p>Consider the following Markdown:</p>
+        <pre>
+          <code># MarkDown List                                         
+                                                        
+A list follows:                                         
+                                                        
+- Item 1                                                
+    This is detail on item 1.                           
+- Item 2                                                
+    This is detail on item 2,                           
+    and note there is no detail on the following item 3.
+- Item 3                                                
+                                                        
+This is a trailing paragraph,                           
+it should not be lost       
+</code>
+        </pre>
+        <p>
+          The result of
+          <code>ProcessLine</code>
+          tells us the type of object and flags the locations with 1-maps:
+        </p>
+        <pre>
+          <code>      ↑s ProcessLine¨⍳≢⍵
+ Header     1
+            0
+ Paragraph  1
+            0
+ List       1
+            1
+            1
+            1
+            1
+            1
+            0
+ Paragraph  1
+            1
+</code>
+        </pre>
+        <p>
+          Note that this partition technique requires a blank line between
+          objects. Now we can apply the appropriate function to each partition.
+          For example, the
+          <code>Paragraph</code>
+          function creates a new paragraph element object, and sets its
+          content after adding any in-line markup:
+        </p>
+        <pre>
+          <code>Paragraph←{
+     l←1↓⊃,/' ',¨⍵
+     H.New'p'(InLine l)
+ }
+</code>
+        </pre>
+        <p>
+          While the
+          <code>List</code>
+          function, and its subfunction
+          <code>ListItem</code>
+          , creates a list element and must recursively parse the content:
+        </p>
+        <pre>
+          <code>List←{
+     t←↑⍵
+     p←(' '≠t[;0])⊂⍵
+     l←('-'∊t[;0])⊃'ol' 'ul'
+     H.New l(ListItem¨p)
+ }
+ListItem←{
+     t←{⍵↓⍨1+⍵⍳' '}⊃⍵
+     i←H.New'li't
+     1=≢⍵:i
+     i.Content,←Parse 4↓¨1↓⍵
+     i
+ }
+</code>
+        </pre>
+        <p>The code above is by no means a comprehensive markdown processor.
+        Many features can and will be easily added, but we are generally
+        not concerned with handling every little issue or variation that
+        may be present in Markdown files out in the wild.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/anatomy-of-a-query">Anatomy of a Query</a>
           </h1>
           <h2>October 23, 2022</h2>
@@ -401,216 +572,6 @@
         </pre>
         <p>Removing the nested dfn allows recursion via self-reference
         - the whole thing is much nicer.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/constructing-css-in-apl">Constructing CSS in
-            APL</a>
-          </h1>
-          <h2>September 30, 2022</h2>
-        </header>
-        <p>
-          Once we have mastered
-          <a href="posts/a-document-object-model-in-apl">building HTML
-          pages</a>
-          , the next task is constructing CSS in an efficient and orderly
-          way.
-        </p>
-        <p>While is it not as important to manipulate CSS the same way
-        we need to be able to manipulate the DOM, we still want to create
-        CSS programmatically, to allow for properties that depend on variables,
-        to avoid catenating strings, specifying braces, colons and semicolons,
-        and to not worry about getting the nesting right. We don't want
-        to write CSS by hand in text files.</p>
-        <p>We can do this with 3 fairly simple functions. One for creating
-        a new rule:</p>
-        <pre>
-          <code>NewRule←{
-     ⍝ ⍺ ←→ [Parent]
-     ⍝ ⍵ ←→ Selector e.g. 'h1' 'h1 h2' 'header&gt;h1', etc.
-     ⍺←0
-     r←⎕NS''
-     r.Selector←⍵
-     r.Rules←⍬
-     ⍺=0:r
-     ⍺.Rules,←r
-     r
- }
-</code>
-        </pre>
-        <p>One for composing the rules:</p>
-        <pre>
-          <code>ComposeRules←{
-     ⍝ ⍵ ←→ Vector of CSS Rules
-     ⍺←0
-     0=≢⍵:''
-     nl←⎕UCS 13
-     ⊃,/((⍺&gt;0)/nl),⍺{
-         0=≢⍵.Selector:⍺ ComposeRules ⍵.Rules
-         b←(4×⍺)⍴' '
-         s←b,⍵.Selector,' {',nl
-         s,←⍺ ComposeDeclarations ⍵
-         s,←¯1↓(⍺+1)ComposeRules ⍵.Rules
-         s←s,b,'}',2⍴nl
-         s
-     }¨⍵
- }
-</code>
-        </pre>
-        <p>And one subfunction for composing declarations:</p>
-        <pre>
-          <code>ComposeDeclarations←{
-     ⍺←0
-     nl←⎕UCS 13
-     n←{⍵/⍨~(⊃¨⍵)∊⎕A}⍵.⎕NL ¯2
-     0=≢n:''
-     v←⍕¨⍵⍎¨n
-     p←'-'@('_'∘=)¨n
-     b←(4×⍺+1)⍴' '
-     ⊃,/p{b,⍺,': ',⍵,';',nl}¨v
- }
-</code>
-        </pre>
-        <p>Consider a single, simple rule:</p>
-        <pre>
-          <code>      r←NewRule 'h1'
-</code>
-        </pre>
-        <p>Specifying declarations is done by assignment:</p>
-        <pre>
-          <code>      r.margin←'1rem'
-      r.font_size←'2rem'
-</code>
-        </pre>
-        <p>
-          The
-          <code>ComposeRules</code>
-          function returns the CSS:
-        </p>
-        <pre>
-          <code>      ComposeRules r
-h1 {
-    font-size: 2rem;
-    margin: 1rem;
-}
-</code>
-        </pre>
-        <p>
-          Of course a style sheet will contain many rules, often nested.
-          The
-          <code>NewRule</code>
-          function takes a parent rule as an optional left argument:
-        </p>
-        <pre>
-          <code>      p←NewRule '@media print'
-      r←p NewRule 'h1'
-      r.font_size←'18pt' 
-      r←p NewRule 'h2'
-      r.font_size←'16pt'
-      ComposeRules p
-@media-print {
-    h1 {
-        font-size: 18pt;
-    }
-    h2 {
-        font-size: 16pt;
-    }
-}
-</code>
-        </pre>
-        <p>
-          This allows us to bury the catenation or accumulation of rules.
-          We can also reuse the same variable name for the result of
-          <code>NewRule</code>
-          , normally a bad practice, but useful in this case, when there
-          could be hundreds of rules that need to be specified, and we
-          don't want to have to name them all.
-        </p>
-        <p>Having a parent rule is useful as it means we have only one
-        item to explicitly name and track. But often there is no parent,
-        just a list of rules with no hierarchy. We can accumulate rules
-        using a parent rule with no selector:</p>
-        <pre>
-          <code>      s←NewRule ''
-      r←s NewRule 'h1'
-      r.font_size←'2em' 
-      r←s NewRule 'h2'
-      r.font_size←'1.5em'
-      ComposeRules s
-h1 {
-    font-size: 2em;
-}
-h2 {
-    font-size: 1.5em;
-}
-</code>
-        </pre>
-        <p>
-          This lets us avoid complicating things with a Style object. There
-          is only one object, a rule object, and it can contain sub rules.
-          And
-          <code>ComposeRules</code>
-          can process multiple sets of rules:
-        </p>
-        <pre>
-          <code>      ComposeRules s p
-h1 {                    
-    font-size: 2em;     
-}                       
-                        
-h2 {                    
-    font-size: 1.5em;   
-}                       
-                        
-@media print {          
-                        
-    h1 {                
-        font-size: 18pt;
-    }                   
-                        
-    h2 {                
-        font-size: 16pt;
-    }                   
-}                       
-</code>
-        </pre>
-        <p>
-          These rules can be injected directly into the APLDOM using the
-          <code>Style</code>
-          property:
-        </p>
-        <pre>
-          <code>       d←New'html'
-       hd←d New'head'
-       d.Style←s
-       DOM2HTML d
-&lt;!DOCTYPE html&gt;      
-&lt;html&gt;               
-  &lt;head&gt;             
-    &lt;style&gt;          
-        h1 {                 
-          font-size: 2em;  
-           }                    
-                     
-        h2 {                 
-          font-size: 1.5em;
-           }                    
-    &lt;/style&gt;         
-  &lt;/head&gt;            
-&lt;/html&gt;          
-</code>
-        </pre>
-        <p>
-          HTML elements may have their own Style property, to allow for
-          components to be delivered with their own styles. The idea is
-          do something similar to
-          <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web
-          Components</a>
-          . This is an area where
-          <a href="https://github.com/the-carlisle-group/Abacus">Abacus</a>
-          needs much more work, hopefully soon.
-        </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
