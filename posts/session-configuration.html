@@ -97,28 +97,12 @@
         </pre>
         <h2>Fixing and Executing Code on Startup</h2>
         <p>There are at least four ways to fix and excute code on startup:</p>
-        <p>
-          1. The user command framework using a
-          <strong>setup.dyalog</strong>
-          file.
-        </p>
-        <p>
-          2. The
-          <strong>DyalogStartup</strong>
-          parameter.
-        </p>
-        <p>
-          3. The
-          <strong>DyalogStartupSE</strong>
-          parameter.
-        </p>
-        <p>
-          4. The
-          <strong>Load</strong>
-          (and
-          <strong>LX</strong>
-          ) configuration parameter.
-        </p>
+        <ol>
+          <li>The user command framework using a **setup.dyalog** file.</li>
+          <li>The **DyalogStartup** parameter.</li>
+          <li>The **DyalogStartupSE** parameter.</li>
+          <li>The **Load** (and **LX**) configuration parameter.</li>
+        </ol>
         <p>
           Option 1 requires placing setup.dyalog in a specific place, this
           is a no go. Option 2 requires highjacking LINK, and the DyalogStartupSE

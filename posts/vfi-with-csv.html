@@ -64,22 +64,20 @@
 </code>
         </pre>
         <p>Note:</p>
-        <p>
-          1. The argument here is a char mat, not a delimited vector like
-          <code>⎕VFI</code>
-          .
-        </p>
-        <p>2. The separator is arbitrary, and should not exist in the argument.
-        Probably should check for this.</p>
-        <p>
-          3. There is currently a bug in
-          <code>⎕CSV</code>
-          where it throws an error on a number with a thousand separator
-          and no decimal - so don't adapt for production yet! (UPDATE:
-          This is is now fixed in version 18.2.45319.0)
-        </p>
-        <p>4. We should probably test there are no line endings in the
-        argument.</p>
+        <ol>
+          <li>The argument here is a char mat, not a delimited vector like
+          `⎕VFI`.</li>
+          <li>The separator is arbitrary, and should not exist in the argument.</li>
+        </ol>
+        <ol>
+          <li>There is currently a bug in `⎕CSV` where it throws an error
+          on a number</li>
+        </ol>
+        <p>(UPDATE: This is is now fixed in version 18.2.45319.0)</p>
+        <ol>
+          <li>We should probably test there are no line endings in the
+          argument.</li>
+        </ol>
         <p>
           This is almost as fast as
           <code>⎕VFI</code>
