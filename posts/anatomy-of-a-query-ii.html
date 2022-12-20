@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/anatomy-of-a-query-ii">Anatomy of a Query,
+            Part 2</a>
+          </h1>
+          <h2>December 20, 2022</h2>
+        </header>
+        <p>
+          In the first part of this series,
+          <a href="/posts/anatomy-of-a-query">Anatomy of a Query</a>
+          , we looked at how a query is an ordered collection of names
+          and expressions, divided into various sections. For simplicity,
+          we assumed all of the data was in a single table. Of course data
+          may be in multiple tables, or even multiple databases, and perhaps
+          in a CSV file hanging around on the disk, not even in the database.
+          To explore how FlipDB handles multiple tables, we will refer
+          to the CJ Date's classic
+          <strong>Suppliers and Parts</strong>
+          database:
+        </p>
+        <pre>
+          <code> ── SandP.S ──────────────────────────────────            
+  ┌SNO────┐  ┌STATUS┐  ┌CITY────┐  ┌SNAME───┐             
+  ↓S1     │  ↓20    │  ↓London  │  ↓Smith   │             
+  │S2     │  │10    │  │Paris   │  │Jones   │             
+  │S3     │  │30    │  │Paris   │  │Blake   │             
+  │S4     │  │20    │  │London  │  │Clark   │             
+  │S5     │  │30    │  │Athens  │  │Adams   │             
+  └Char(2)┘  └Int8──┘  └Char(10)┘  └Char(10)┘             
+ ── 5 rows by 4 columns ──────────────────────            
+                                                          
+ ── SandP.P ────────────────────────────────────────────  
+  ┌PNO────┐  ┌PNAME──┐  ┌COLOR──┐  ┌WEIGHT┐  ┌CITY────┐   
+  ↓P1     │  ↓Nut    │  ↓Red    │  ↓12    │  ↓London  │   
+  │P2     │  │Bolt   │  │Green  │  │17    │  │Paris   │   
+  │P3     │  │Screw  │  │Blue   │  │17    │  │Oslo    │   
+  │P4     │  │Screw  │  │Red    │  │14    │  │London  │   
+  │P5     │  │Cam    │  │Blue   │  │12    │  │Paris   │   
+  │P6     │  │Cog    │  │Red    │  │19    │  │London  │   
+  └Char(2)┘  └Char(5)┘  └Char(5)┘  └Int8──┘  └Char(10)┘   
+ ── 6 rows by 5 columns ────────────────────────────────  
+                                                          
+ ── SandP.SP ──────────────────────────────────────────── 
+  ┌AUTOKEY┐  ┌QTY──┐  ┌SDATE─────┐  ┌SNO────┐  ┌PNO────┐  
+  ↓1      │  ↓300  │  ↓2008-10-27│  ↓S1     │  ↓P1     │  
+  │2      │  │200  │  │2008-08-19│  │S1     │  │P2     │  
+  │3      │  │400  │  │2008-05-18│  │S1     │  │P3     │  
+  │4      │  │200  │  │2007-08-18│  │S1     │  │P4     │  
+  │5      │  │100  │  │2007-08-17│  │S1     │  │P5     │  
+  │6      │  │100  │  │2009-12-16│  │S1     │  │P6     │  
+  │7      │  │300  │  │2009-07-31│  │S2     │  │P1     │  
+  │8      │  │400  │  │2009-12-17│  │S2     │  │P2     │  
+  │9      │  │200  │  │2009-07-24│  │S3     │  │P2     │  
+  │10     │  │200  │  │2009-10-03│  │S4     │  │P2     │  
+  │11     │  │300  │  │2009-06-28│  │S4     │  │P4     │  
+  │12     │  │400  │  │2009-11-04│  │S4     │  │P5     │  
+  └Int8───┘  └Int16┘  └Date──────┘  └Char(2)┘  └Char(2)┘  
+ ── 12 rows by 5 columns ──────────────────────────────── 
+</code>
+        </pre>
+        <p>
+          A FlipDB query generally starts with a certain table, called
+          the
+          <em>starting table</em>
+          . Column names in this table are specified directly; there is
+          no need to qualify them. If starting in the
+          <code>SP</code>
+          table, for example, we may specify the quantity column simply
+          as:
+        </p>
+        <pre>
+          <code>QTY
+</code>
+        </pre>
+        <p>In SQL, in order to query data across multiple tables, the tables
+        must be joined in some way. Then columns and rows are selected
+        from this combined table or view. For example:</p>
+        <pre>
+          <code>select distinct sp.pno,sname from
+supplier inner join sp using (sno)
+where supplier.city = 'London';
+</code>
+        </pre>
+        <p>This gets complicated very quickly.</p>
+        <p>Because a FlipDB query is an ordered set of names and expressions,
+        we may directly specify a column from another table in an expression,
+        using a number of different syntaxes and special functions.</p>
+        <p>
+          If we are lucky enough to have a formal database set up, with
+          primary, alternate, and foreign keys, we can use a simple dot
+          syntax to specify a column in a different table via a foreign
+          key. Starting with the
+          <code>SP</code>
+          table, we can reach into the
+          <code>P</code>
+          table and get the
+          <code>PNAME</code>
+          column:
+        </p>
+        <pre>
+          <code>PNO.PNAME
+</code>
+        </pre>
+        <p>
+          This is called a
+          <em>simple join</em>
+          . Note there is no explicit reference to the foreign table
+          <code>P</code>
+          . The foreign key column PNO implies it. The result is a simple
+          column, as by definition there is a one-to-many relationship
+          between tables
+          <code>S</code>
+          and
+          <code>SP</code>
+          . The column
+          <code>PNAME</code>
+          will be sorted and replicated to line up up with the
+          <code>SP</code>
+          table. A simple join can link through multiple tables, by specifying
+          multiple foreign keys:
+        </p>
+        <pre>
+          <code>FK1.FK2.FK3.Col 
+</code>
+        </pre>
+        <p>
+          We can use foreign keys to go the other way as well. Starting
+          in the
+          <code>P</code>
+          table we can reference a column in the
+          <code>SP</code>
+          table as follows:
+        </p>
+        <pre>
+          <code>SP[PNO].QTY
+</code>
+        </pre>
+        <p>
+          Here we make specific refence to the SP table, indicate in brackets
+          the foreign key column in SP that points back to our primary
+          table P, and finally after the dot, the name of the column in
+          SP to materialize. By definition, this value is a partitioned
+          column, as there is a many-to-one relationship between tables
+          <code>SP</code>
+          and
+          <code>P</code>
+          . This is called a
+          <em>partition join</em>
+          .
+        </p>
+        <p>Simple and partition joins may be combined to link through multiple
+        tables:</p>
+        <pre>
+          <code>SP[PNO].SNO.CITY
+</code>
+        </pre>
+        <p>If we don't have a foreign key specified, we can do explicit
+        look-ups:</p>
+        <pre>
+          <code>Table2[ColA;ColB].ColC
+</code>
+        </pre>
+        <p>
+          This materializes ColC from Table2, by looking up the values
+          of ColA from the starting table in ColB from table 2. If the
+          ColA-ColB relationship is one-to-one, or many to one, the result
+          is simple, while if the relationship is one-to-many or many-to-many,
+          the result is partitioned. This is called a
+          <em>general join</em>
+          .
+        </p>
+        <p>Sometimes we want to access a column in another table without
+        regard to any key:</p>
+        <pre>
+          <code>SP[].QTY                                         `
+</code>
+        </pre>
+        <p>
+          Here the result is enclosed as it is non-conforming; there is
+          no correlation between the starting table and this column. This
+          is useful as the
+          <code>where</code>
+          clause has no effect. We can reach out of the context we are
+          in and grab an entire column from another table, or even the
+          current table. This is called an
+          <em>enclosed join</em>
+          .
+        </p>
+        <p>
+          Directly accessing data from other tables is supremely useful
+          because we want to apply APL-style solutions directly in our
+          queries, avoiding the headache of SQL. Consider a query starting
+          in the parts table
+          <code>P</code>
+          , with the following select clause:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Name</th>
+              <th class="left">Expression</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">
+                <code>PNO</code>
+              </td>
+              <td class="left">
+                <code>PNO</code>
+              </td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>SupplierIn</code>
+              </td>
+              <td class="left">
+                <code>SP[PNO].SNO.CITY</code>
+              </td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>InParis</code>
+              </td>
+              <td class="left">
+                <code>any 'Paris' eq SupplierIn</code>
+              </td>
+            </tr>
+            <tr>
+              <td class="left">
+                <code>IsCompetition</code>
+              </td>
+              <td class="left">
+                <code>not unique SupplierIn</code>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Since we are starting in the parts table, we can access the part
+          number PNO directly. We then foreign-key hop, first in the reverse,
+          one-to-many direction into the suppliers and parts table
+          <code>SP</code>
+          , and then in the many-to-one direction into the suppliers table
+          to get the CITY column. This yields a partitioned column showing
+          the city for each supplier that supplies that part. We can then
+          use this to answer a myriad of questions. For example, what parts
+          are supplied by suppliers located in Paris? Or what parts a supplied
+          competitively, that is by two or more suppliers in the same city?
+          This gives us the following table:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th class="left">PNO</th>
+              <th class="left">SupplierIn</th>
+              <th class="right">InParis</th>
+              <th class="right">IsCompetition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">P1</td>
+              <td class="left">[London,Paris]</td>
+              <td class="right">1</td>
+              <td class="right">0</td>
+            </tr>
+            <tr>
+              <td class="left">P2</td>
+              <td class="left">[London,Paris,Paris,London]</td>
+              <td class="right">1</td>
+              <td class="right">1</td>
+            </tr>
+            <tr>
+              <td class="left">P3</td>
+              <td class="left">[London]</td>
+              <td class="right">0</td>
+              <td class="right">0</td>
+            </tr>
+            <tr>
+              <td class="left">P4</td>
+              <td class="left">[London,London]</td>
+              <td class="right">0</td>
+              <td class="right">1</td>
+            </tr>
+            <tr>
+              <td class="left">P5</td>
+              <td class="left">[London,London]</td>
+              <td class="right">0</td>
+              <td class="right">1</td>
+            </tr>
+            <tr>
+              <td class="left">P6</td>
+              <td class="left">[London]</td>
+              <td class="right">0</td>
+              <td class="right">0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Of course these last two Boolean expressions would most likely
+          be placed in the
+          <code>where</code>
+          or
+          <code>having</code>
+          clause, we just show them here in the
+          <code>select</code>
+          clause for explanatory purposes.
+        </p>
+        <p>In Part 3 of this series we will look at additional ways to
+        get data from other tables, using functions rather than column
+        join syntax, that avoid the need to have formally specified keys.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2022 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
