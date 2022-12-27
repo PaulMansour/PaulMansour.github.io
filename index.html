@@ -22,6 +22,180 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/anatomy-of-a-query-iii">Anatomy of a Query,
+            Part 3</a>
+          </h1>
+          <h2>December 27, 2022</h2>
+        </header>
+        <p>
+          In the second part of this series,
+          <a href="/posts/anatomy-of-a-query-ii">Anatomy of a Query, Part
+          2</a>
+          , we covered how columns from multiple tables are accessed in
+          a single query. Unlike SQL, which requires joins at the table
+          level, in FlipDB we can join data on a column-by-column basis,
+          keeping our ability to trace FlipDB queries step-by-step, one
+          name and one value at a time. In addition, this means pure APL
+          solutions translate directly into FlipDB. The examples focused
+          on column join syntax that generally requires a database with
+          pre-specified foreign keys. In much ad hoc, real-world analysis,
+          we have no such luxury; there is simply data, in a bunch of tables.
+        </p>
+        <p>
+          There is one join syntax that does allow for complete generality,
+          with no pre-specified keys, the
+          <em>general join</em>
+          syntax:
+        </p>
+        <pre>
+          <code>   T[X;Y].Z
+</code>
+        </pre>
+        <p>
+          Where, where given the context of some starting table (let's
+          call it
+          <code>S</code>
+          ), then
+          <code>T</code>
+          is the name of some other table in the same database, X is one
+          or more column names in S, defining the key in S, and Y is one
+          or more column names in T, defining the the key in T. X and Y
+          must conform in number and in type. The names may be different.
+          Y may be elided if the names are the same. Z is a column name
+          in T. This syntax materializes column Z from table T in the table
+          S, by doing the lookup specified by the keys. The result will
+          be simple or partitioned depending on whether the runtime relationship
+          is many-to-one or not.
+        </p>
+        <p>
+          This is useful, but there are times when we may want to explicitly
+          do look ups, to preserve the indices for further computation.
+          FlipDB provides a
+          <code>getColumn</code>
+          function which will directly fetch a column from another table:
+        </p>
+        <pre>
+          <code>getColumn 'Table2.ColumnA'
+</code>
+        </pre>
+        <p>from another database:</p>
+        <pre>
+          <code>getColumn 'Database2.Table2.ColumnA' 
+</code>
+        </pre>
+        <p>or from the same very same table, reaching out of the current
+        context and getting the entire column:</p>
+        <pre>
+          <code>getColumn 'ColumnA'
+</code>
+        </pre>
+        <p>
+          Thus, in any query, at any point (in the where clause, the select
+          clause, the having clause, etc.) an expression can just grab
+          a column from anywhere. A column accessed this way is generally
+          non-conforming; it's not going to line up with our starting table.
+          This does not hinder its usefulness. A typical use is simply
+          to check if values exist in some list. For example, say in the
+          Suppliers and Parts database we added a
+          <code>Sanction</code>
+          table that contains a list of cities that are sanctioned. In
+          order to find existing suppliers in unsanctioned cities, starting
+          in the Supplier table
+          <code>S</code>
+          , it's just simple APL:
+        </p>
+        <pre>
+          <code>not CITY in getColumn 'Sanction.CITY'
+</code>
+        </pre>
+        <p>
+          Because FlipDB queries are just sets of names and expressions,
+          the expression can do virtually anything. We can get an entire
+          table using the
+          <code>getTable</code>
+          function. So starting in the supplier table
+          <code>S</code>
+          , we can materialize the parts table:
+        </p>
+        <pre>
+          <code>      getTable 'P'
+── SandP.P ────────────────────────────────────────────
+ ┌PNO────┐  ┌PNAME──┐  ┌COLOR──┐  ┌WEIGHT┐  ┌CITY────┐ 
+ ↓P1     │  ↓Nut    │  ↓Red    │  ↓12    │  ↓London  │ 
+ │P2     │  │Bolt   │  │Green  │  │17    │  │Paris   │ 
+ │P3     │  │Screw  │  │Blue   │  │17    │  │Oslo    │ 
+ │P4     │  │Screw  │  │Red    │  │14    │  │London  │ 
+ │P5     │  │Cam    │  │Blue   │  │12    │  │Paris   │ 
+ │P6     │  │Cog    │  │Red    │  │19    │  │London  │ 
+ └Char(2)┘  └Char(5)┘  └Char(5)┘  └Int8──┘  └Char(10)┘ 
+── 6 rows by 5 columns ────────────────────────────────
+</code>
+        </pre>
+        <p>
+          The
+          <code>transpose</code>
+          function converts the table into a FlipDB
+          <em>property space</em>
+          (analogous to a k dictionary):
+        </p>
+        <pre>
+          <code>      P=transpose D.GetTable 'P'
+      P
+┌PropertySpace───────────────┐
+│ Name             Type      │
+│ -------------    --------- │
+│ TWID             Integer   │
+│ APPENDTYPE       Integer   │
+│ PNO              Char      │
+│ AUTOKEY          Integer   │
+│ PNAME            Char      │
+│ COLOR            Char      │
+│ WEIGHT           Integer   │
+│ CITY             Char      │
+│ TransDateTime    DateTime  │
+└────────────────────────────┘
+</code>
+        </pre>
+        <p>which then provides convenient dot access to the columns:</p>
+        <pre>
+          <code>     P.COLOR 
+┌COLOR──┐
+↓Red    │
+│Green  │
+│Blue   │
+│Red    │
+│Blue   │
+│Red    │
+└Char(5)┘
+</code>
+        </pre>
+        <p>
+          We can use the
+          <code>indexOf</code>
+          and
+          <code>index</code>
+          functions, both analagous to their APL counterparts, to conform
+          columns from one table to another. Entire tables can be made
+          to line up by using the
+          <code>conform</code>
+          function. The full power of APL techniques and solutions is directly
+          available to us in the expressions.
+        </p>
+        <p>Because FlipDB queries are sets of names and expressions, each
+        set applied in a certain way and in certain context, and expressions,
+        by definition, can do anything the FlipDB language can do, it follows
+        that a query can do pretty much anything. For example a query can
+        do operating system commands like creating a folder, read a file,
+        or write to a log. These are things that would normally be done
+        in scripts or stored procedures. A query becomes a highly structured
+        script, executed in the context of some table in some database.</p>
+        <p>In our next and final part in this series, we will look at how
+        FlipDB allows multiple queries to run as a set and how each query
+        can refer to values in previously executed queries.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/anatomy-of-a-query-ii">Anatomy of a Query,
             Part 2</a>
           </h1>
@@ -396,177 +570,6 @@ where supplier.city = 'London';
         one or more reciprocal pairs by simply removing two (or four, or
         six) cards and swapping the top and bottom parts of each pair.
         The remaining cards are then constructed using the above technique.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/parsing-markdown">Parsing Markdown</a>
-          </h1>
-          <h2>October 24, 2022</h2>
-        </header>
-        <p>
-          Once we have an
-          <a href="/posts/a-document-object-model-in-apl">APL document
-          object model</a>
-          , it is natural to want a Markdown to DOM function. While there
-          are a zillion third party markdown libraries, none of them will
-          create an APLDOM directly, and, more importantly, there are advantages
-          to having an easily modified, pure APL, no-dependency solution.
-        </p>
-        <p>
-          This
-          <code>Parse</code>
-          function takes an array of Markdown lines and returns an array
-          of HTML elements:
-        </p>
-        <pre>
-          <code>Parse←{
-     ⍝ ⍵ ←→ MarkDown
-     ⍝   ←→ Array of HTML obs
-     ⍝ f ←→ Paragraph|Table|Code|Header
-     0=≢⍵:''
-     ⎕THIS.H←##.Main
-     s←InitState ⍵
-     t b←↓⍉↑s ProcessLine¨⍳≢⍵
-     ~1∊b:''
-     p←b⊆⍵
-     f←(b&gt;¯1↓0,b)/t
-     f{(⍎⍺)⍵}¨p
- }
-</code>
-        </pre>
-        <p>It first initializes a namespace to hold the state as we step
-        through each line:</p>
-        <pre>
-          <code>InitState←{
-     s←⎕NS''
-     s.Lines←⍵
-     s.InParagraph←0
-     s.InTable←0
-     s.InCode←0
-     s.InList←0
-     s.InBlockQuote←0
-     s.InPullQuote←0
-     s
- }
-</code>
-        </pre>
-        <p>We toss the entire set of lines in there as well, so we can
-        inspect a subsequent line if necessary (for lists , if nothing
-        else, it appears this is needed). Then we process each line, to
-        determine the type and location of top-level objects or blocks:</p>
-        <pre>
-          <code>ProcessLine←{
-     ⍝ ⍵ ←→ Line Number
-     ⍝ ⍺ ←→ State
-     ⍝   ←→ Partition Vector
-     l←⍵⊃⍺.Lines
-     ⍺.InParagraph:''(⍺.InParagraph←l≢'')
-     ⍺.InCode:''(1⊣⍺.InCode←'~~~'≢3↑l)
-     ⍺.InTable:''(⍺.InTable←'|'=⊃l)
-     ⍺.InBlockQuote:''(⍺.InBlockQuote←'&gt; '≡2↑l)
-     ⍺.InPullQuote:''(⍺.InPullQuote←'^ '≡2↑l)
-     ⍺.InList:''(⍺.InList←⍺ StillInList ⍵)
-     ''≡l:'' 0
-     '~~~'≡3↑l:'Code'(⍺.InCode←1)
-     '|'=⊃l:'Table'(⍺.InTable←1)
-     '&gt; '≡2↑l:'BlockQuote'(⍺.InBlockQuote←1)
-     '∧ '≡2↑l:'PullQuote'(⍺.InPullQuote←1)
-     '#'=⊃l:'Header' 1
-     '!'=⊃l:'Image' 1
-     IsListItem l:'List'(⍺.InList←1)
-     1:'Paragraph'(⍺.InParagraph←1)
- }
-</code>
-        </pre>
-        <p>For each line, if we are not in an object already, we find out
-        what object is starting, and return the type of the object and
-        a 1 to indicate it is starting. If we are already in an object,
-        then we determine whether the line being processed is still a member
-        of that object. The object type is also the name of a function
-        that will be called to convert the block of lines into an array
-        of HTML element objects.</p>
-        <p>Consider the following Markdown:</p>
-        <pre>
-          <code># MarkDown List                                         
-                                                        
-A list follows:                                         
-                                                        
-- Item 1                                                
-    This is detail on item 1.                           
-- Item 2                                                
-    This is detail on item 2,                           
-    and note there is no detail on the following item 3.
-- Item 3                                                
-                                                        
-This is a trailing paragraph,                           
-it should not be lost       
-</code>
-        </pre>
-        <p>
-          The result of
-          <code>ProcessLine</code>
-          tells us the type of object and flags the locations with 1-maps:
-        </p>
-        <pre>
-          <code>      ↑s ProcessLine¨⍳≢⍵
- Header     1
-            0
- Paragraph  1
-            0
- List       1
-            1
-            1
-            1
-            1
-            1
-            0
- Paragraph  1
-            1
-</code>
-        </pre>
-        <p>
-          Note that this partition technique requires a blank line between
-          objects. Now we can apply the appropriate function to each partition.
-          For example, the
-          <code>Paragraph</code>
-          function creates a new paragraph element object, and sets its
-          content after adding any in-line markup:
-        </p>
-        <pre>
-          <code>Paragraph←{
-     l←1↓⊃,/' ',¨⍵
-     H.New'p'(InLine l)
- }
-</code>
-        </pre>
-        <p>
-          While the
-          <code>List</code>
-          function, and its subfunction
-          <code>ListItem</code>
-          , creates a list element and must recursively parse the content:
-        </p>
-        <pre>
-          <code>List←{
-     t←↑⍵
-     p←(' '≠t[;0])⊂⍵
-     l←('-'∊t[;0])⊃'ol' 'ul'
-     H.New l(ListItem¨p)
- }
-ListItem←{
-     t←{⍵↓⍨1+⍵⍳' '}⊃⍵
-     i←H.New'li't
-     1=≢⍵:i
-     i.Content,←Parse 4↓¨1↓⍵
-     i
- }
-</code>
-        </pre>
-        <p>The code above is by no means a comprehensive markdown processor.
-        Many features can and will be easily added, but we are generally
-        not concerned with handling every little issue or variation that
-        may be present in Markdown files out in the wild.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
