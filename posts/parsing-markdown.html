@@ -26,23 +26,9 @@
           </h1>
           <h2>October 24, 2022</h2>
         </header>
-        <p>
-          Once we have an
-          <a href="/posts/a-document-object-model-in-apl">APL document
-          object model</a>
-          , it is natural to want a Markdown to DOM function. While there
-          are a zillion third party markdown libraries, none of them will
-          create an APLDOM directly, and, more importantly, there are advantages
-          to having an easily modified, pure APL, no-dependency solution.
-        </p>
-        <p>
-          This
-          <code>Parse</code>
-          function takes an array of Markdown lines and returns an array
-          of HTML elements:
-        </p>
-        <pre>
-          <code>Parse←{
+        <p>Once we have an <a href="/posts/a-document-object-model-in-apl">APL document object model</a>, it is natural to want a Markdown to DOM function. While there are a zillion third party markdown libraries, none of them will create an APLDOM directly, and, more importantly, there are advantages to having an easily modified, pure APL, no-dependency solution. </p>
+        <p>This <code>Parse</code> function takes an array of Markdown lines and returns an array of HTML elements:</p>
+        <pre><code>Parse←{
      ⍝ ⍵ ←→ MarkDown
      ⍝   ←→ Array of HTML obs
      ⍝ f ←→ Paragraph|Table|Code|Header
@@ -55,12 +41,9 @@
      f←(b&gt;¯1↓0,b)/t
      f{(⍎⍺)⍵}¨p
  }
-</code>
-        </pre>
-        <p>It first initializes a namespace to hold the state as we step
-        through each line:</p>
-        <pre>
-          <code>InitState←{
+</code></pre>
+        <p>It first initializes a namespace to hold the state as we step through each line:</p>
+        <pre><code>InitState←{
      s←⎕NS''
      s.Lines←⍵
      s.InParagraph←0
@@ -71,14 +54,9 @@
      s.InPullQuote←0
      s
  }
-</code>
-        </pre>
-        <p>We toss the entire set of lines in there as well, so we can
-        inspect a subsequent line if necessary (for lists , if nothing
-        else, it appears this is needed). Then we process each line, to
-        determine the type and location of top-level objects or blocks:</p>
-        <pre>
-          <code>ProcessLine←{
+</code></pre>
+        <p>We toss the entire set of lines in there as well, so we can inspect a subsequent line if necessary (for lists , if nothing else, it appears this is needed). Then we process each line, to determine the type and location of top-level objects or blocks:</p>
+        <pre><code>ProcessLine←{
      ⍝ ⍵ ←→ Line Number
      ⍝ ⍺ ←→ State
      ⍝   ←→ Partition Vector
@@ -99,18 +77,10 @@
      IsListItem l:'List'(⍺.InList←1)
      1:'Paragraph'(⍺.InParagraph←1)
  }
-</code>
-        </pre>
-        <p>For each line, if we are not in an object already, we find out
-        what object is starting, and return the type of the object and
-        a 1 to indicate it is starting. If we are already in an object,
-        then we determine whether the line being processed is still a member
-        of that object. The object type is also the name of a function
-        that will be called to convert the block of lines into an array
-        of HTML element objects.</p>
+</code></pre>
+        <p>For each line, if we are not in an object already, we find out what object is starting, and return the type of the object and a 1 to indicate it is starting. If we are already in an object, then we determine whether the line being processed is still a member of that object. The object type is also the name of a function that will be called to convert the block of lines into an array of HTML element objects.</p>
         <p>Consider the following Markdown:</p>
-        <pre>
-          <code># MarkDown List                                         
+        <pre><code># MarkDown List                                         
                                                         
 A list follows:                                         
                                                         
@@ -123,15 +93,9 @@ A list follows:
                                                         
 This is a trailing paragraph,                           
 it should not be lost       
-</code>
-        </pre>
-        <p>
-          The result of
-          <code>ProcessLine</code>
-          tells us the type of object and flags the locations with 1-maps:
-        </p>
-        <pre>
-          <code>      ↑s ProcessLine¨⍳≢⍵
+</code></pre>
+        <p>The result of <code>ProcessLine</code> tells us the type of object and flags the locations with 1-maps: </p>
+        <pre><code>      ↑s ProcessLine¨⍳≢⍵
  Header     1
             0
  Paragraph  1
@@ -145,32 +109,15 @@ it should not be lost
             0
  Paragraph  1
             1
-</code>
-        </pre>
-        <p>
-          Note that this partition technique requires a blank line between
-          objects. Now we can apply the appropriate function to each partition.
-          For example, the
-          <code>Paragraph</code>
-          function creates a new paragraph element object, and sets its
-          content after adding any in-line markup:
-        </p>
-        <pre>
-          <code>Paragraph←{
+</code></pre>
+        <p>Note that this partition technique requires a blank line between objects. Now we can apply the appropriate function to each partition.  For example, the <code>Paragraph</code> function creates a new paragraph element object, and sets its content after adding any in-line markup:</p>
+        <pre><code>Paragraph←{
      l←1↓⊃,/' ',¨⍵
      H.New'p'(InLine l)
  }
-</code>
-        </pre>
-        <p>
-          While the
-          <code>List</code>
-          function, and its subfunction
-          <code>ListItem</code>
-          , creates a list element and must recursively parse the content:
-        </p>
-        <pre>
-          <code>List←{
+</code></pre>
+        <p>While the <code>List</code> function, and its subfunction <code>ListItem</code>, creates a list element and must recursively parse the content:</p>
+        <pre><code>List←{
      t←↑⍵
      p←(' '≠t[;0])⊂⍵
      l←('-'∊t[;0])⊃'ol' 'ul'
@@ -183,16 +130,12 @@ ListItem←{
      i.Content,←Parse 4↓¨1↓⍵
      i
  }
-</code>
-        </pre>
-        <p>The code above is by no means a comprehensive markdown processor.
-        Many features can and will be easily added, but we are generally
-        not concerned with handling every little issue or variation that
-        may be present in Markdown files out in the wild.</p>
+</code></pre>
+        <p>The code above is by no means a comprehensive markdown processor. Many features can and will be easily added, but we are generally not concerned with handling every little issue or variation that may be present in Markdown files out  in the wild.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

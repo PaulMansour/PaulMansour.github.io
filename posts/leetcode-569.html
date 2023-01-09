@@ -27,11 +27,8 @@
           </h1>
           <h2>July 7, 2022</h2>
         </header>
-        <p>This problem is poorly constructed and annoying for multiple
-        reasons. It's also hard to solve - and that makes it even more
-        annoying. We are given the following table:</p>
-        <pre>
-          <code>      t.Display 0
+        <p>This problem is poorly constructed and annoying for multiple reasons. It's also hard to solve - and that makes it even more annoying. We are given the following table:</p>
+        <pre><code>      t.Display 0
 ── LeetCode569.Employee ─────
  ┌ID──┐  ┌Company┐  ┌Salary┐ 
  ↓1   │  ↓A      │  ↓2,341 │ 
@@ -53,26 +50,14 @@
  │17  │  │C      │  │65    │ 
  └Int8┘  └Char(1)┘  └Int16─┘ 
 ── 17 rows by 3 columns ─────
-</code>
-        </pre>
+</code></pre>
         <p>And tasked with:</p>
         <blockquote>
-          <p>Each row of this table indicates the company and the salary
-          of one employee. Write an SQL query to find the median salary
-          of each company.</p>
+          <p>Each row of this table indicates the company and the salary of one employee. Write an SQL query to find the median salary of each company.</p>
         </blockquote>
-        <p>
-          If we did not have an example to the contrary, and we wanted
-          to
-          <em>find the median salary of each company</em>
-          as the instructions say, then this is an easy query, first grouping
-          by company, and then applying the aggregate expression
-          <code>median Salary</code>
-          in the select clause.
-        </p>
+        <p>If we did not have an example to the contrary, and we wanted to  <em>find the median salary of each company</em> as the instructions say, then this is an easy query, first grouping by company, and then applying the aggregate expression <code> median Salary</code> in the select clause.</p>
         <p>But the desired result is:</p>
-        <pre>
-          <code>      r.Display 0
+        <pre><code>      r.Display 0
 ── Key:ID ───────────────────
  ┌ID──┐  ┌Company┐  ┌Salary┐ 
  ↓5   │  ↓A      │  ↓451   │ 
@@ -82,67 +67,21 @@
  │14  │  │C      │  │2,645 │ 
  └Int8┘  └Char(1)┘  └Int16─┘ 
 ── 5 rows by 3 columns ──────
-</code>
-        </pre>
-        <p>By inspection we see that the actual instructions should read
-        something more like:</p>
+</code></pre>
+        <p>By inspection we see that the actual instructions should read something more like:</p>
         <blockquote>
-          <p>Write an SQL query that returns the employees that earn the
-          median salary if the median is not an interpolated value, or
-          the two salaries that are averaged to compute the median, for
-          their respective companies. Remove employees that duplicate company/salary
-          combinations from the result set.</p>
+          <p>Write an SQL query that returns the employees that earn the median salary if the median is not an interpolated value, or the two salaries that are averaged to compute the median, for their respective companies. Remove employees that duplicate company/salary combinations from the result set.  </p>
         </blockquote>
         <p>Yuck.</p>
-        <p>
-          Assume for moment we had a built-in structural function named
-          <code>medians</code>
-          that returned a one-item array or a two-item array containing
-          the values that go into constructing the median. Then we could
-          simply write the select clause:
-        </p>
-        <pre>
-          <code>      Salary in medians each by Salary (group Company)
-</code>
-        </pre>
-        <p>
-          using the
-          <code>each</code>
-          and
-          <code>by</code>
-          operators which does everything we need except the final removal
-          of duplicates. (I am resisting the urge to implement
-          <code>medians</code>
-          in FlipDB). Note that the
-          <code>each</code>
-          operator is necessary as
-          <code>medians</code>
-          is a structural function, not an aggregate, or scalar, or uniform
-          function. (More on this in a future post). However, in FlipDB
-          we can do in-line anonymous functions just like dfns in APL,
-          so we can replace
-          <code>medians</code>
-          above with this mess of a one-liner:
-        </p>
-        <pre>
-          <code>     {(floor (shape z) / 2)index each enclose(sortUp z)(sortDown z)}
-</code>
-        </pre>
-        <p>
-          There is probably a much neater way to get the medians. FlipDB
-          uses
-          <code>z</code>
-          as the right argument, in place of
-          <code>⍵</code>
-          in APL. The
-          <code>enclose</code>
-          function in FlipDB converts a set of simple columns into a single
-          nested column. If there are an odd-number of items, we will get
-          the same item twice, but it does not matter for the problem.
-        </p>
+        <p>Assume for moment we had a built-in structural function named <code>medians</code> that returned a one-item array or a two-item array containing the values that go into constructing the median. Then we could simply write the select clause:</p>
+        <pre><code>      Salary in medians each by Salary (group Company)
+</code></pre>
+        <p>using the <code>each</code> and <code>by</code> operators which does everything we need except the final removal of duplicates. (I am resisting the urge to implement <code>medians</code> in FlipDB). Note that the <code>each</code> operator is necessary as <code>medians</code> is a structural function, not an aggregate, or scalar, or uniform function. (More on this in a future post).    However, in FlipDB we can do in-line anonymous functions just like dfns in APL, so we can replace <code>medians</code> above with this mess of a one-liner:</p>
+        <pre><code>     {(floor (shape z) / 2)index each enclose(sortUp z)(sortDown z)}
+</code></pre>
+        <p>There is probably a much neater way to get the medians. FlipDB uses <code>z</code> as the right argument, in place of <code>⍵</code> in APL. The <code>enclose</code> function in FlipDB converts a set of simple columns into a single nested column. If there are an odd-number of items, we will get the same item twice, but it does not matter for the problem.</p>
         <p>With this in hand we can solve the problem:</p>
-        <pre>
-          <code>      q←t.Query''
+        <pre><code>      q←t.Query''
       q.Where←'Salary in {(floor (shape z) / 2)index each enclose(sortUp z)(sortDown z)} each by Salary (group Company)'
       q.Having←'firstOccurrence Company laminate toChar Salary'
       r←q.Execute 0
@@ -156,26 +95,15 @@
  │14  │  │C      │  │2,645 │ 
  └Int8┘  └Char(1)┘  └Int16─┘ 
 ── 5 rows by 3 columns ──────
-</code>
-        </pre>
-        <p>The having clause should probably be able to be written as:</p>
-        <pre>
-          <code>      firstOccurrence Company Salary
-</code>
-        </pre>
-        <p>
-          The
-          <code>firstOccurrence</code>
-          function is a cover for APL's unique mask function (monadic
-          <code>≠</code>
-          ). I don't think there is any reason it should not accept multiple
-          columns. It could also take a table or datatable as an argument
-          - on the todo list!
-        </p>
+</code></pre>
+        <p>The having clause should probably be able to be written as:  </p>
+        <pre><code>      firstOccurrence Company Salary
+</code></pre>
+        <p>The <code>firstOccurrence</code> function is a cover for APL's unique mask function (monadic <code>≠</code>). I don't think there is any reason it should not accept multiple columns. It could also take a table or datatable as an argument - on the todo list!</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

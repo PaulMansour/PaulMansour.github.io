@@ -22,103 +22,70 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/an-issue-with-xml-revisited">An Issue With
+            ⎕XML Revisited</a>
+          </h1>
+          <h2>January 9, 2023</h2>
+        </header>
+        <p>In a <a href="/posts/two-issues-with-xml">previous post</a> I looked at a couple of issues with <code>⎕XML</code>. One issue was formatting when converting to XML: I wanted indentation and removal of whitespace for most elements, but not all. I dont know how I missed it, but there is a way to do this built into the XML spec and <code>⎕XML</code> supports it. Simply add a special attribute to the elements in question. It's right there <a href="https://help.dyalog.com/latest/index.htm#Language/System%20Functions/xml.htm">in the docs</a>:</p>
+        <pre><code>xml:space="preserve"
+</code></pre>
+        <p>Thus, if the overall variant is <code>'Whitespace' 'Strip'</code>, individual elements will preserve whitespace with this attribute specified.</p>
+        <p>This is more than cosmetic given the differences between XML and HTML. A paragraph with in-line markup, like bold, code, etc., must have whitespace preserved when generated using <code>⎕XML</code> otherwise an additional space will be added due to the formatting. Of course <code>pre</code> elements should also have whitespace preserved. So for I apply <code>xml:space="preserve"</code> to the <code>p</code>, <code>pre</code>, and <code>tr</code> elements. The latter formats tables nicely, with each row on its own line.</p>
+        <p>Unfortunately the generated XML has <code>xml:space="preserve"</code> littered throughout the character vector which provides no use, and increases the size of the array. Oddly enough, I don't think I have ever written code to remove all the occurrences of a given substring from a string - or at least I can't remember doing it. It seems like it would be a very common task. Lets do it without using regular expressions.</p>
+        <p>First, let's find the substrings, easy with the <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Functions/Find.htm">find</a> primitive. This marks the beginning of each substring <code>⍺</code> in the target string <code>⍵</code>:</p>
+        <pre><code>     'ere'{⍺⍷⍵}'here there where'
+0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 0
+</code></pre>
+        <p>Next lets extend each 1 by the length of the substring, using n-wise or-reduction, fully marking each found substring:</p>
+        <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍵}'here there where'
+1 1 0 0 0 1 1 1 0 0 0 1 1 1
+</code></pre>
+        <p>Two related problem arise. First, as always with n-wise reduction, the result is shorter than the right argument. Second, when a substring is found at or near the beginning of the string, we don't get enough 1s. We can fix this by appending the substring to the  target string before searching:</p>
+        <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
+1 0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1
+</code></pre>
+        <p>Note that it is merely a convenience to append the substring itself, as it is, by definition, the proper length. We could also append an appropriate number of zeros to the result of <code>find</code> before applying the reduction. </p>
+        <p>Now we have only one problem: the Boolean mask is too long, by 1. So we drop off the first element:</p>
+        <pre><code>      'ere'{1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
+0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1
+</code></pre>
+        <p>The Boolean mask flags what we want to remove, not what we want to keep, so we negate it, flipping 1s to 0s and vice versa: </p>
+        <pre><code>      'ere'{~1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
+1 0 0 0 1 1 1 0 0 0 1 1 1 0 0 0
+</code></pre>
+        <p>Finally, we apply <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Functions/Replicate.htm">compress or replicate</a>, with <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Operators/Commute.htm">commute</a> to avoid parentheses, to keep everything but the substrings:</p>
+        <pre><code>      'ere'{⍵/⍨~1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
+h th wh
+</code></pre>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/anatomy-of-a-query-iii">Anatomy of a Query,
             Part 3</a>
           </h1>
           <h2>December 27, 2022</h2>
         </header>
-        <p>
-          In the second part of this series,
-          <a href="/posts/anatomy-of-a-query-ii">Anatomy of a Query, Part
-          2</a>
-          , we covered how columns from multiple tables are accessed in
-          a single query. Unlike SQL, which requires joins at the table
-          level, in FlipDB we can join data on a column-by-column basis,
-          keeping our ability to trace FlipDB queries step-by-step, one
-          name and one value at a time. In addition, this means pure APL
-          solutions translate directly into FlipDB. The examples focused
-          on column join syntax that generally requires a database with
-          pre-specified foreign keys. In much ad hoc, real-world analysis,
-          we have no such luxury; there is simply data, in a bunch of tables.
-        </p>
-        <p>
-          There is one join syntax that does allow for complete generality,
-          with no pre-specified keys, the
-          <em>general join</em>
-          syntax:
-        </p>
-        <pre>
-          <code>   T[X;Y].Z
-</code>
-        </pre>
-        <p>
-          Where, where given the context of some starting table (let's
-          call it
-          <code>S</code>
-          ), then
-          <code>T</code>
-          is the name of some other table in the same database, X is one
-          or more column names in S, defining the key in S, and Y is one
-          or more column names in T, defining the the key in T. X and Y
-          must conform in number and in type. The names may be different.
-          Y may be elided if the names are the same. Z is a column name
-          in T. This syntax materializes column Z from table T in the table
-          S, by doing the lookup specified by the keys. The result will
-          be simple or partitioned depending on whether the runtime relationship
-          is many-to-one or not.
-        </p>
-        <p>
-          This is useful, but there are times when we may want to explicitly
-          do look ups, to preserve the indices for further computation.
-          FlipDB provides a
-          <code>getColumn</code>
-          function which will directly fetch a column from another table:
-        </p>
-        <pre>
-          <code>getColumn 'Table2.ColumnA'
-</code>
-        </pre>
+        <p>In the second part of this series, <a href="/posts/anatomy-of-a-query-ii">Anatomy of a Query, Part 2</a>, we covered how columns from multiple tables are accessed in a single query. Unlike SQL, which requires joins at the table level, in FlipDB we can join data on a column-by-column basis, keeping our ability to trace FlipDB queries step-by-step, one name and one value at a time. In addition, this means pure APL solutions translate directly into FlipDB. The examples focused on column join syntax that generally requires a database with pre-specified foreign keys. In much ad hoc, real-world analysis, we have no such luxury; there is simply data, in a bunch of tables.</p>
+        <p>There is one join syntax that does allow for complete generality, with no pre-specified keys, the <em>general join</em> syntax:</p>
+        <pre><code>   T[X;Y].Z
+</code></pre>
+        <p>Where, where given the context of some starting table (let's call it <code>S</code>), then <code>T</code> is the name of some other table in the same database, X is one or more column names in S, defining the key in S, and Y is one or more column names in T, defining the the key in T.  X and Y must conform in number and in type. The names may be different. Y may be elided if the names are the same. Z is a column name in T. This syntax materializes column Z from table T in the table S, by doing the lookup specified by the keys. The result will be simple or partitioned depending on whether the runtime relationship is many-to-one or not.</p>
+        <p>This is useful, but there are times when we may want to explicitly do look ups, to preserve the indices for further computation. FlipDB provides a <code>getColumn</code> function which will directly fetch a column from another table:</p>
+        <pre><code>getColumn 'Table2.ColumnA'
+</code></pre>
         <p>from another database:</p>
-        <pre>
-          <code>getColumn 'Database2.Table2.ColumnA' 
-</code>
-        </pre>
-        <p>or from the same very same table, reaching out of the current
-        context and getting the entire column:</p>
-        <pre>
-          <code>getColumn 'ColumnA'
-</code>
-        </pre>
-        <p>
-          Thus, in any query, at any point (in the where clause, the select
-          clause, the having clause, etc.) an expression can just grab
-          a column from anywhere. A column accessed this way is generally
-          non-conforming; it's not going to line up with our starting table.
-          This does not hinder its usefulness. A typical use is simply
-          to check if values exist in some list. For example, say in the
-          Suppliers and Parts database we added a
-          <code>Sanction</code>
-          table that contains a list of cities that are sanctioned. In
-          order to find existing suppliers in unsanctioned cities, starting
-          in the Supplier table
-          <code>S</code>
-          , it's just simple APL:
-        </p>
-        <pre>
-          <code>not CITY in getColumn 'Sanction.CITY'
-</code>
-        </pre>
-        <p>
-          Because FlipDB queries are just sets of names and expressions,
-          the expression can do virtually anything. We can get an entire
-          table using the
-          <code>getTable</code>
-          function. So starting in the supplier table
-          <code>S</code>
-          , we can materialize the parts table:
-        </p>
-        <pre>
-          <code>      getTable 'P'
+        <pre><code>getColumn 'Database2.Table2.ColumnA' 
+</code></pre>
+        <p>or from the same very same table, reaching out of the current context and getting the entire column:</p>
+        <pre><code>getColumn 'ColumnA'
+</code></pre>
+        <p>Thus, in any query, at any point (in the where clause, the select clause, the having clause, etc.) an expression can just grab a column from anywhere. A column accessed this way is generally non-conforming; it's not going to line up with our starting table. This does not hinder its usefulness.  A typical use is simply to check if values exist in some list. For example, say in the Suppliers and Parts database we added a <code>Sanction</code> table that contains a list of cities that are sanctioned. In order to find existing suppliers in unsanctioned cities, starting in the Supplier table <code>S</code>, it's just simple APL:</p>
+        <pre><code>not CITY in getColumn 'Sanction.CITY'
+</code></pre>
+        <p>Because FlipDB queries are just sets of names and expressions, the expression can do virtually anything. We can get an entire table using the <code>getTable</code> function. So starting in the supplier table <code>S</code>, we can materialize the parts table:</p>
+        <pre><code>      getTable 'P'
 ── SandP.P ────────────────────────────────────────────
  ┌PNO────┐  ┌PNAME──┐  ┌COLOR──┐  ┌WEIGHT┐  ┌CITY────┐ 
  ↓P1     │  ↓Nut    │  ↓Red    │  ↓12    │  ↓London  │ 
@@ -129,17 +96,9 @@
  │P6     │  │Cog    │  │Red    │  │19    │  │London  │ 
  └Char(2)┘  └Char(5)┘  └Char(5)┘  └Int8──┘  └Char(10)┘ 
 ── 6 rows by 5 columns ────────────────────────────────
-</code>
-        </pre>
-        <p>
-          The
-          <code>transpose</code>
-          function converts the table into a FlipDB
-          <em>property space</em>
-          (analogous to a k dictionary):
-        </p>
-        <pre>
-          <code>      P=transpose D.GetTable 'P'
+</code></pre>
+        <p>The <code>transpose</code> function converts the table into a FlipDB <em>property space</em> (analogous  to a k dictionary): </p>
+        <pre><code>      P=transpose D.GetTable 'P'
       P
 ┌PropertySpace───────────────┐
 │ Name             Type      │
@@ -154,11 +113,9 @@
 │ CITY             Char      │
 │ TransDateTime    DateTime  │
 └────────────────────────────┘
-</code>
-        </pre>
+</code></pre>
         <p>which then provides convenient dot access to the columns:</p>
-        <pre>
-          <code>     P.COLOR 
+        <pre><code>     P.COLOR 
 ┌COLOR──┐
 ↓Red    │
 │Green  │
@@ -167,31 +124,10 @@
 │Blue   │
 │Red    │
 └Char(5)┘
-</code>
-        </pre>
-        <p>
-          We can use the
-          <code>indexOf</code>
-          and
-          <code>index</code>
-          functions, both analagous to their APL counterparts, to conform
-          columns from one table to another. Entire tables can be made
-          to line up by using the
-          <code>conform</code>
-          function. The full power of APL techniques and solutions is directly
-          available to us in the expressions.
-        </p>
-        <p>Because FlipDB queries are sets of names and expressions, each
-        set applied in a certain way and in certain context, and expressions,
-        by definition, can do anything the FlipDB language can do, it follows
-        that a query can do pretty much anything. For example a query can
-        do operating system commands like creating a folder, read a file,
-        or write to a log. These are things that would normally be done
-        in scripts or stored procedures. A query becomes a highly structured
-        script, executed in the context of some table in some database.</p>
-        <p>In our next and final part in this series, we will look at how
-        FlipDB allows multiple queries to run as a set and how each query
-        can refer to values in previously executed queries.</p>
+</code></pre>
+        <p>We can use the  <code>indexOf</code> and <code>index</code> functions, both analagous to their APL counterparts, to conform columns from one table to another. Entire tables can be made to line up by using the <code>conform</code> function. The full power of APL techniques and solutions is directly available to us in the expressions.    </p>
+        <p>Because FlipDB queries are sets of names and expressions, each set applied in a certain way and in certain  context, and expressions, by definition, can do anything the FlipDB language can do, it follows that  a query can do pretty much anything. For example a query can do operating system commands like creating a folder, read a file, or write to a log. These are things that would normally be done in scripts or stored procedures. A query becomes a highly structured script, executed in the  context of some table in some database.</p>
+        <p>In our next and final part in this series, we will look at how FlipDB allows multiple queries to run as a set and how each query can refer to values in previously executed queries.</p>
       </article>
       <article>
         <header>
@@ -201,21 +137,8 @@
           </h1>
           <h2>December 20, 2022</h2>
         </header>
-        <p>
-          In the first part of this series,
-          <a href="/posts/anatomy-of-a-query">Anatomy of a Query</a>
-          , we looked at how a query is an ordered collection of names
-          and expressions, divided into various sections. For simplicity,
-          we assumed all of the data was in a single table. Of course data
-          may be in multiple tables, or even multiple databases, and perhaps
-          in a CSV file hanging around on the disk, not even in the database.
-          To explore how FlipDB handles multiple tables, we will refer
-          to CJ Date's classic
-          <strong>Suppliers and Parts</strong>
-          database:
-        </p>
-        <pre>
-          <code> ── SandP.S ──────────────────────────────────            
+        <p>In the first part of this series, <a href="/posts/anatomy-of-a-query">Anatomy of a Query</a>, we looked at how a query is an ordered collection of names and expressions, divided into various sections. For simplicity, we assumed all of the data was in a single table. Of course data may be in multiple tables, or even multiple databases, and perhaps in a CSV file hanging around on the disk, not even in the database. To explore how FlipDB handles multiple tables, we will refer to CJ Date's classic <strong>Suppliers and Parts</strong> database:</p>
+        <pre><code> ── SandP.S ──────────────────────────────────            
   ┌SNO────┐  ┌STATUS┐  ┌CITY────┐  ┌SNAME───┐             
   ↓S1     │  ↓20    │  ↓London  │  ↓Smith   │             
   │S2     │  │10    │  │Paris   │  │Jones   │             
@@ -252,331 +175,73 @@
   │12     │  │400  │  │2009-11-04│  │S4     │  │P5     │  
   └Int8───┘  └Int16┘  └Date──────┘  └Char(2)┘  └Char(2)┘  
  ── 12 rows by 5 columns ──────────────────────────────── 
-</code>
-        </pre>
-        <p>
-          A FlipDB query generally starts with a certain table, called
-          the
-          <em>starting table</em>
-          . Column names in this table are specified directly; there is
-          no need to qualify them. If starting in the
-          <code>SP</code>
-          table, for example, we may specify the quantity column simply
-          as:
-        </p>
-        <pre>
-          <code>QTY
-</code>
-        </pre>
-        <p>In SQL, in order to query data across multiple tables, the tables
-        must be joined in some way. Then columns and rows are selected
-        from this combined table or view. For example:</p>
-        <pre>
-          <code>select distinct sp.pno,sname from
+</code></pre>
+        <p>A FlipDB query generally starts with a certain table, called the <em>starting table</em>.  Column names in this table are specified directly; there is no need to qualify them. If starting in the <code>SP</code> table, for example, we may specify the quantity column simply as: </p>
+        <pre><code>QTY
+</code></pre>
+        <p>In SQL, in order to query data across multiple tables, the tables must be joined in some  way. Then columns and rows are selected from this combined table or view.  For example:</p>
+        <pre><code>select distinct sp.pno,sname from
 supplier inner join sp using (sno)
 where supplier.city = 'London';
-</code>
-        </pre>
+</code></pre>
         <p>This gets complicated very quickly.</p>
-        <p>Because a FlipDB query is an ordered set of names and expressions,
-        we may directly specify a column from another table in an expression,
-        using a number of different syntaxes and special functions.</p>
-        <p>
-          If we are lucky enough to have a formal database set up, with
-          primary, alternate, and foreign keys, we can use a simple dot
-          syntax to specify a column in a different table via a foreign
-          key. Starting with the
-          <code>SP</code>
-          table, we can reach into the
-          <code>P</code>
-          table and get the
-          <code>PNAME</code>
-          column:
-        </p>
-        <pre>
-          <code>PNO.PNAME
-</code>
-        </pre>
-        <p>
-          This is called a
-          <em>simple join</em>
-          . Note there is no explicit reference to the foreign table
-          <code>P</code>
-          . The foreign key column PNO implies it. The result is a simple
-          column, as by definition there is a one-to-many relationship
-          between tables
-          <code>S</code>
-          and
-          <code>SP</code>
-          . The column
-          <code>PNAME</code>
-          will be sorted and replicated to line up up with the
-          <code>SP</code>
-          table. A simple join can link through multiple tables, by specifying
-          multiple foreign keys:
-        </p>
-        <pre>
-          <code>FK1.FK2.FK3.Col 
-</code>
-        </pre>
-        <p>
-          We can use foreign keys to go the other way as well. Starting
-          in the
-          <code>P</code>
-          table we can reference a column in the
-          <code>SP</code>
-          table as follows:
-        </p>
-        <pre>
-          <code>SP[PNO].QTY
-</code>
-        </pre>
-        <p>
-          Here we make specific refence to the SP table, indicate in brackets
-          the foreign key column in SP that points back to our primary
-          table P, and finally after the dot, the name of the column in
-          SP to materialize. By definition, this value is a partitioned
-          column, as there is a many-to-one relationship between tables
-          <code>SP</code>
-          and
-          <code>P</code>
-          . This is called a
-          <em>partition join</em>
-          .
-        </p>
-        <p>Simple and partition joins may be combined to link through multiple
-        tables:</p>
-        <pre>
-          <code>SP[PNO].SNO.CITY
-</code>
-        </pre>
-        <p>If we don't have a foreign key specified, we can do explicit
-        look-ups:</p>
-        <pre>
-          <code>Table2[ColA;ColB].ColC
-</code>
-        </pre>
-        <p>
-          This materializes ColC from Table2, by looking up the values
-          of ColA from the starting table in ColB from table 2. If the
-          ColA-ColB relationship is one-to-one, or many to one, the result
-          is simple, while if the relationship is one-to-many or many-to-many,
-          the result is partitioned. This is called a
-          <em>general join</em>
-          .
-        </p>
-        <p>Sometimes we want to access a column in another table without
-        regard to any key:</p>
-        <pre>
-          <code>SP[].QTY                                         `
-</code>
-        </pre>
-        <p>
-          Here the result is enclosed as it is non-conforming; there is
-          no correlation between the starting table and this column. This
-          is useful as the
-          <code>where</code>
-          clause has no effect. We can reach out of the context we are
-          in and grab an entire column from another table, or even the
-          current table. This is called an
-          <em>enclosed join</em>
-          .
-        </p>
-        <p>
-          Directly accessing data from other tables is supremely useful
-          because we want to apply APL-style solutions directly in our
-          queries, avoiding the headache of SQL. Consider a query starting
-          in the parts table
-          <code>P</code>
-          , with the following select clause:
-        </p>
+        <p>Because a FlipDB query is an ordered set of names and expressions, we may directly specify a column from another table in an expression, using a number of different syntaxes and special functions.</p>
+        <p>If we are lucky enough to have a formal database set up, with primary, alternate, and foreign keys, we can use a simple dot syntax to specify a column in a different table via a foreign key. Starting with the <code>SP</code> table, we  can reach into the <code>P</code> table and get the <code>PNAME</code> column:</p>
+        <pre><code>PNO.PNAME
+</code></pre>
+        <p>This is called a <em>simple join</em>. Note there is no explicit reference to the foreign table <code>P</code>. The foreign key column PNO implies it. The result is a simple column, as by definition there is a one-to-many relationship between tables <code>S</code> and <code>SP</code>. The column <code>PNAME</code> will be sorted and replicated to line up up with the <code>SP</code> table. A simple join can link through multiple tables, by specifying multiple foreign keys:</p>
+        <pre><code>FK1.FK2.FK3.Col 
+</code></pre>
+        <p>We can use foreign keys to go the other way as well. Starting in the <code>P</code> table we can reference a column in the <code>SP</code> table as follows:</p>
+        <pre><code>SP[PNO].QTY
+</code></pre>
+        <p>Here we make specific refence to the SP table, indicate in brackets the foreign key column in SP that points back to our primary table P, and finally after the dot, the name of  the column in SP to materialize. By definition, this value is a partitioned column, as there is a many-to-one relationship between tables <code>SP</code> and <code>P</code>.  This is called a <em>partition join</em>.</p>
+        <p>Simple and partition joins may be combined to link through multiple tables:</p>
+        <pre><code>SP[PNO].SNO.CITY
+</code></pre>
+        <p>If we don't have a foreign key specified, we can do explicit look-ups:</p>
+        <pre><code>Table2[ColA;ColB].ColC
+</code></pre>
+        <p>This materializes ColC from Table2, by looking up the values of ColA from the starting table in ColB from table 2. If the ColA-ColB relationship is one-to-one, or many to one, the result is simple, while if the relationship is one-to-many or many-to-many, the result is partitioned. This is called a <em>general join</em>.</p>
+        <p>Sometimes we want to access a column in another table without regard to any key:</p>
+        <pre><code>SP[].QTY                                         `
+</code></pre>
+        <p>Here the result is enclosed as it is non-conforming; there is no correlation between the starting table and this column. This is useful as the <code>where</code> clause has no effect. We can reach out of the context we are in and grab an entire column from another table, or even the current table. This is called an <em>enclosed join</em>.</p>
+        <p>Directly accessing data from other tables is supremely useful because we want to apply APL-style solutions directly in our queries, avoiding the headache of SQL. Consider a query starting in the parts table <code>P</code>, with the following select clause:</p>
         <table>
           <thead>
-            <tr>
-              <th class="left">Name</th>
-              <th class="left">Expression</th>
-            </tr>
+            <tr><th class="left">Name</th><th class="left">Expression</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="left">
-                <code>PNO</code>
-              </td>
-              <td class="left">
-                <code>PNO</code>
-              </td>
-            </tr>
-            <tr>
-              <td class="left">
-                <code>SupplierIn</code>
-              </td>
-              <td class="left">
-                <code>SP[PNO].SNO.CITY</code>
-              </td>
-            </tr>
-            <tr>
-              <td class="left">
-                <code>InParis</code>
-              </td>
-              <td class="left">
-                <code>any 'Paris' eq SupplierIn</code>
-              </td>
-            </tr>
-            <tr>
-              <td class="left">
-                <code>IsCompetition</code>
-              </td>
-              <td class="left">
-                <code>not unique SupplierIn</code>
-              </td>
-            </tr>
+            <tr><td class="left"><code>PNO</code></td><td class="left"><code>PNO</code></td></tr>
+            <tr><td class="left"><code>SupplierIn</code></td><td class="left"><code>SP[PNO].SNO.CITY</code></td></tr>
+            <tr><td class="left"><code>InParis</code></td><td class="left"><code>any 'Paris' eq SupplierIn</code></td></tr>
+            <tr><td class="left"><code>IsCompetition</code></td><td class="left"><code>not unique SupplierIn</code></td></tr>
           </tbody>
         </table>
-        <p>
-          Since we are starting in the parts table, we can access the part
-          number PNO directly. We then foreign-key hop, first in the reverse,
-          one-to-many direction into the suppliers and parts table
-          <code>SP</code>
-          , and then in the many-to-one direction into the suppliers table
-          to get the CITY column. This yields a partitioned column showing
-          the city for each supplier that supplies that part. We can then
-          use this to answer a myriad of questions. For example, what parts
-          are supplied by suppliers located in Paris? Or what parts a supplied
-          competitively, that is by two or more suppliers in the same city?
-          This gives us the following table:
-        </p>
+        <p>Since we are starting in the parts table, we can access the part number PNO directly. We then foreign-key hop, first in the reverse, one-to-many direction into the suppliers and parts table <code>SP</code>, and then in the many-to-one direction into the suppliers table to get the CITY column. This yields a partitioned column showing the city for each  supplier that supplies that part. We can then use this to answer a myriad of questions. For example, what parts are supplied by suppliers located in Paris? Or what parts a supplied competitively, that is by two or more suppliers in the same city? This gives us the following table:</p>
         <table>
           <thead>
-            <tr>
-              <th class="left">PNO</th>
-              <th class="left">SupplierIn</th>
-              <th class="right">InParis</th>
-              <th class="right">IsCompetition</th>
-            </tr>
+            <tr><th class="left">PNO</th><th class="left">SupplierIn</th><th class="right">InParis</th><th class="right">IsCompetition</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="left">P1</td>
-              <td class="left">[London,Paris]</td>
-              <td class="right">1</td>
-              <td class="right">0</td>
-            </tr>
-            <tr>
-              <td class="left">P2</td>
-              <td class="left">[London,Paris,Paris,London]</td>
-              <td class="right">1</td>
-              <td class="right">1</td>
-            </tr>
-            <tr>
-              <td class="left">P3</td>
-              <td class="left">[London]</td>
-              <td class="right">0</td>
-              <td class="right">0</td>
-            </tr>
-            <tr>
-              <td class="left">P4</td>
-              <td class="left">[London,London]</td>
-              <td class="right">0</td>
-              <td class="right">1</td>
-            </tr>
-            <tr>
-              <td class="left">P5</td>
-              <td class="left">[London,London]</td>
-              <td class="right">0</td>
-              <td class="right">1</td>
-            </tr>
-            <tr>
-              <td class="left">P6</td>
-              <td class="left">[London]</td>
-              <td class="right">0</td>
-              <td class="right">0</td>
-            </tr>
+            <tr><td class="left">P1</td><td class="left">[London,Paris]</td><td class="right">1</td><td class="right">0</td></tr>
+            <tr><td class="left">P2</td><td class="left">[London,Paris,Paris,London]</td><td class="right">1</td><td class="right">1</td></tr>
+            <tr><td class="left">P3</td><td class="left">[London]</td><td class="right">0</td><td class="right">0</td></tr>
+            <tr><td class="left">P4</td><td class="left">[London,London]</td><td class="right">0</td><td class="right">1</td></tr>
+            <tr><td class="left">P5</td><td class="left">[London,London]</td><td class="right">0</td><td class="right">1</td></tr>
+            <tr><td class="left">P6</td><td class="left">[London]</td><td class="right">0</td><td class="right">0</td></tr>
           </tbody>
         </table>
-        <p>
-          Of course these last two Boolean expressions would most likely
-          be placed in the
-          <code>where</code>
-          or
-          <code>having</code>
-          clause, we just show them here in the
-          <code>select</code>
-          clause for explanatory purposes.
-        </p>
-        <p>In Part 3 of this series we will look at additional ways to
-        get data from other tables, using functions rather than column
-        join syntax, that avoid the need to have formally specified keys.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/secret-santa">Secret Santa</a>
-          </h1>
-          <h2>December 12, 2022</h2>
-        </header>
-        <p>Every year I'm tasked with organizing a Secret Santa for the
-        family. There is a very simple, manual technique for doing this
-        by hand, with no need for a computer program and no need for a
-        third party. The technique allows for the organizer to be a participant.
-        However I can never remember what the technique is. Then I google
-        it, and there are million hits for web sites that will do it, and
-        a million techniques that require a trusted third party, or simple
-        draw from a hat where you have to repeat if you draw your own name.
-        If you toss a fancy word in the search like "algorithm", you will
-        also get a bunch of technical articles on graph theory. Interesting,
-        but not what I want.</p>
-        <p>Here, then, is the easy way to do it, for Christmases future.</p>
-        <p>First, take a sheet of paper and a pair of scissors and make
-        up cards for each participant, where n is the number of people:</p>
-        <pre>
-          <code>          n←6
-          c←'You are ' 'You get '∘.,⍕¨1+⍳n
-          ]disp   ↑¨↓⍉c
-┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
-│You are 1│You are 2│You are 3│You are 4│You are 5│You are 6│
-│You get 1│You get 2│You get 3│You get 4│You get 5│You get 6│
-└─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
-</code>
-        </pre>
-        <p>Then, shuffle the cards, keeping them face down, so you can't
-        see them, and place them face down in a row on the table:</p>
-        <pre>
-          <code>        s←c[;n?n]
- ]disp   ↑¨↓⍉s
-┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
-│You are 6│You are 2│You are 5│You are 3│You are 1│You are 4│
-│You get 6│You get 2│You get 5│You get 3│You get 1│You get 4│
-└─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
-</code>
-        </pre>
-        <p>Next, cut each card in half, shift the bottom halfs each to
-        the right or left one position, and then tape the newly formed
-        cards back together:</p>
-        <pre>
-          <code>      ]disp ↑¨↓⍉0 1⌽s
-┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
-│You are 6│You are 2│You are 5│You are 3│You are 1│You are 4│
-│You get 2│You get 5│You get 3│You get 1│You get 4│You get 6│
-└─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
-</code>
-        </pre>
-        <p>Finally, throw the cards in a hat and have the participants
-        each pick one. On a sheet of of paper with lines numbered 1 to
-        n, have the participants write their names next to their numbers.
-        Now the participants can see who they get.</p>
-        <p>The only downside to this technique is that there is no possiblity
-        of reciprocal giving; if you are giving to person #1, you know
-        that person #1 is not giving to you. However, we may add back in
-        one or more reciprocal pairs by simply removing two (or four, or
-        six) cards and swapping the top and bottom parts of each pair.
-        The remaining cards are then constructed using the above technique.</p>
+        <p>Of course these last two Boolean expressions would most likely be placed in the <code>where</code> or  <code>having</code> clause, we just show them here in the <code>select</code> clause for explanatory purposes.  </p>
+        <p>In Part 3 of this series we will look at additional ways to get data from other tables, using functions rather than column join syntax, that avoid the need to have formally specified keys.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
       </h2>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

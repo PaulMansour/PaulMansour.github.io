@@ -26,15 +26,8 @@
           </h1>
           <h2>October 7, 2022</h2>
         </header>
-        <p>
-          In the previous post we looked at
-          <a href="/posts/constructing-css-in-apl">constructing CSS programatically</a>
-          . The
-          <code>ComposeRules</code>
-          function looked like:
-        </p>
-        <pre>
-          <code>ComposeRules←{
+        <p>In the previous post we looked at <a href="/posts/constructing-css-in-apl">constructing CSS programatically</a>. The <code>ComposeRules</code> function looked like:</p>
+        <pre><code>ComposeRules←{
      ⍝ ⍵ ←→ Vector of CSS Rules
      ⍺←0
      0=≢⍵:''
@@ -49,24 +42,10 @@
          s
      }¨⍵
  }
-</code>
-        </pre>
-        <p>As is often the case when reviewing a function after a little
-        time has passed, we wonder why we wrote it the way we did. Often
-        there is a good reason, but also often there is not a good reason.</p>
-        <p>
-          There are at least two things that are bothersome about this
-          function. First, there is a nested dfn. I don't like to do this
-          without a good reason, and I had a nagging feeling there was
-          in fact no good reason. I was probably just in a hurry to enhance
-          the function to handle nested rules. Second, and directly related,
-          the main function is called recursively by explicit name, rather
-          than using self-reference (
-          <code>∇</code>
-          ). A refactoring is in order:
-        </p>
-        <pre>
-          <code>ComposeRules←{
+</code></pre>
+        <p>As is often the case when reviewing a function after a little time has passed, we wonder why we wrote it the way we did. Often there is a good reason, but also often there is not a good reason.</p>
+        <p>There are at least two things that are bothersome about this  function. First, there is a nested dfn. I don't like to do this without a good reason, and I had a nagging feeling there was in fact no good reason. I was probably just in a hurry to enhance the function to handle nested rules. Second, and directly related, the main function is called recursively by explicit name, rather than using  self-reference (<code>∇</code>). A refactoring is in order:</p>
+        <pre><code>ComposeRules←{
      ⍝ ⍵ ←→ Vector of CSS Rules
      ⍺←0
      0=≢⍵:''
@@ -80,14 +59,12 @@
      s←s,b,'}',2⍴nl
      s
  }
-</code>
-        </pre>
-        <p>Removing the nested dfn allows recursion via self-reference
-        - the whole thing is much nicer.</p>
+</code></pre>
+        <p>Removing the nested dfn allows recursion via self-reference - the whole thing is much nicer.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

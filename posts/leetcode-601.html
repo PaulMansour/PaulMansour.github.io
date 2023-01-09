@@ -27,14 +27,8 @@
           </h1>
           <h2>July 9, 2022</h2>
         </header>
-        <p>
-          In this strangely titled
-          <a href="https://leetcode.com/problems/human-traffic-of-stadium/">LeetCode
-          problem</a>
-          , we are given the following table:
-        </p>
-        <pre>
-          <code> t.Display 0
+        <p>In this strangely titled <a href="https://leetcode.com/problems/human-traffic-of-stadium/">LeetCode problem</a>, we are given the following table:</p>
+        <pre><code> t.Display 0
 ── LeetCode601.Numbers ─────────
  ┌ID──┐  ┌VisitDate─┐  ┌People┐ 
  ↓1   │  ↓2017-01-01│  ↓10    │ 
@@ -47,150 +41,70 @@
  │8   │  │2017-01-09│  │188   │ 
  └Int8┘  └Date──────┘  └Int16─┘ 
 ── 8 rows by 3 columns ─────────
-</code>
-        </pre>
+</code></pre>
         <p>And informed that:</p>
         <blockquote>
-          <p>VisitDate is the primary key for this table. Each row of this
-          table contains the visit date and visit id to the stadium with
-          the number of people during the visit. No two rows will have
-          the same VisitDate, and as the ID increases, the dates increase
-          as well.</p>
+          <p>VisitDate is the primary key for this table. Each row of this table contains the visit date and visit id to the stadium with the number of people during the visit. No two rows will have the same VisitDate, and as the ID increases, the dates increase as well.</p>
         </blockquote>
         <p>And then charged with:</p>
         <blockquote>
-          <p>Write an SQL query to display the records with three or more
-          rows with consecutive id's, and the number of people is greater
-          than or equal to 100 for each. Return the result table ordered
-          by VisitDate in ascending order.</p>
+          <p>Write an SQL query to display the records with three or more rows with consecutive id's, and the number of people is greater than or equal to 100 for each. Return the result table ordered by VisitDate in ascending order.</p>
         </blockquote>
-        <p>Let's take a look at how to the solve this in APL, and then
-        translate to a FlipDB solution. First some variables:</p>
-        <pre>
-          <code>      i←1+⍳8
+        <p>Let's take a  look at how to the solve this in APL, and then translate to a FlipDB solution. First some variables:</p>
+        <pre><code>      i←1+⍳8
       p←10 109 150 99 145 1455 199 188 
-</code>
-        </pre>
-        <p>Note that the visit date adds nothing of interest to this problem.
-        Also note we assume, for now, the IDs are already in ascending
-        order. Selecting out IDs where the number of People is greater
-        than 100:</p>
-        <pre>
-          <code>      j←(p&gt;100)/i
+</code></pre>
+        <p>Note that the visit date adds nothing of interest to this problem. Also note we assume, for now, the IDs are already in ascending order. Selecting out IDs where the number of People is greater than 100:</p>
+        <pre><code>      j←(p&gt;100)/i
       j
 2 3 5 6 7 8
-</code>
-        </pre>
-        <p>
-          This yields non-consecutive IDs, which is the heart of the problem.
-          We now need to identify runs of non-consecutive IDs, which is
-          easy using the rank idiom (
-          <code>⍋⍋</code>
-          ):
-        </p>
-        <pre>
-          <code>      j-⍋⍋j
+</code></pre>
+        <p>This yields non-consecutive IDs, which is the heart of the problem.  We now need to identify runs of non-consecutive IDs, which is easy using the rank idiom (<code>⍋⍋</code>):</p>
+        <pre><code>      j-⍋⍋j
 2 2 3 3 3 3 
-</code>
-        </pre>
-        <p>We might reach for pair-wise reduction here instead, to find
-        where the IDs increase by more than one, but that leads to a more
-        complicated solution. Now partition or group the IDs by their runs:</p>
-        <pre>
-          <code>     g←(j-⍋⍋j)⊆j 
+</code></pre>
+        <p>We might reach for pair-wise reduction here instead, to find where the IDs increase by more than one, but that leads to a more complicated solution. Now partition or group the IDs by their runs:</p>
+        <pre><code>     g←(j-⍋⍋j)⊆j 
      g
 ┌───┬───────┐
 │2 3│5 6 7 8│
 └───┴───────┘
-</code>
-        </pre>
-        <p>And finally, get a simple vector of all IDs that exist in groups
-        of 3 or more:</p>
-        <pre>
-          <code>       k←∊(3≤≢¨g)/g
+</code></pre>
+        <p>And finally, get a simple vector of all IDs that exist in groups of 3 or more:</p>
+        <pre><code>       k←∊(3≤≢¨g)/g
        k
 5 6 7 8 
-</code>
-        </pre>
+</code></pre>
         <p>A boolean where clause to apply to the original table is then:</p>
-        <pre>
-          <code>      i∊k
+        <pre><code>      i∊k
 0 0 0 0 1 1 1 1
-</code>
-        </pre>
-        <p>And we are pretty much done. We can write this as a one-liner
-        using a couple of dfns if we want an expression that maps to a
-        single FlipDB where statement:</p>
-        <pre>
-          <code>      i∊∊{(2&lt;≢¨⍵)/⍵}{(⍵-⍋⍋⍵)⊆⍵}(p&gt;100)/i
+</code></pre>
+        <p>And we are pretty much done. We can write this as a one-liner using a couple of dfns if we want an expression that maps to a single FlipDB where statement: </p>
+        <pre><code>      i∊∊{(2&lt;≢¨⍵)/⍵}{(⍵-⍋⍋⍵)⊆⍵}(p&gt;100)/i
 0 0 0 0 1 1 1 1
-</code>
-        </pre>
+</code></pre>
         <p>Now we can almost transliterate into FlipDB:</p>
-        <pre>
-          <code>      ID in {z where 2 &lt; count z} {(z-rankUp z) partition z} ID where People &gt; 100
-</code>
-        </pre>
-        <p>
-          Note that the
-          <code>where</code>
-          appearing twice above is not a where clause, which is the entire
-          statement, but the
-          <code>where</code>
-          function - a FlipDB structural function. Of course in FlipDB
-          we might break the problem down a bit, and define some computed
-          values first in our query, and we should probably sort the IDs
-          to ensure ascending order:
-        </p>
+        <pre><code>      ID in {z where 2 &lt; count z} {(z-rankUp z) partition z} ID where People &gt; 100
+</code></pre>
+        <p>Note that the <code>where</code> appearing twice above is not a where clause, which is the entire statement, but the <code>where</code> function - a FlipDB structural function. Of course in FlipDB we might break the problem down a bit, and define some computed values first in our query, and we should probably sort the IDs to ensure ascending order:</p>
         <table>
           <thead>
-            <tr>
-              <th class="left">Name</th>
-              <th class="left">Expression</th>
-              <th class="center"></th>
-            </tr>
+            <tr><th class="left">Name</th><th class="left">Expression</th><th class="center"> </th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="left">
-                <code>Over100</code>
-              </td>
-              <td class="left">
-                <code>sortUp ID where People &gt; 100</code>
-              </td>
-              <td class="center"></td>
-            </tr>
-            <tr>
-              <td class="left">
-                <code>Groups</code>
-              </td>
-              <td class="left">
-                <code>{(z - rankUp z) partition z} Over100</code>
-              </td>
-              <td class="center"></td>
-            </tr>
-            <tr>
-              <td class="left">
-                <code>Threes</code>
-              </td>
-              <td class="left">
-                <code>Groups where 2 &lt; count Groups</code>
-              </td>
-              <td class="center"></td>
-            </tr>
+            <tr><td class="left"><code>Over100</code></td><td class="left"><code>sortUp ID where People &gt; 100</code></td><td class="center">         </td></tr>
+            <tr><td class="left"><code>Groups</code></td><td class="left"><code>{(z - rankUp z) partition z} Over100</code></td><td class="center"> </td></tr>
+            <tr><td class="left"><code>Threes</code></td><td class="left"><code>Groups where  2 &lt; count Groups</code></td><td class="center">        </td></tr>
           </tbody>
         </table>
         <p>and then write a simple where statement:</p>
-        <pre>
-          <code>      ID in Threes
-</code>
-        </pre>
-        <p>This keeps it clean, simple, and usefully traceable in the FlipDB
-        tracer.</p>
+        <pre><code>      ID in Threes
+</code></pre>
+        <p>This keeps it clean, simple, and usefully traceable in the FlipDB tracer.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

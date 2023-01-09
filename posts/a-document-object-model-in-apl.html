@@ -27,36 +27,15 @@
           </h1>
           <h2>September 21, 2022</h2>
         </header>
-        <p>With a web browser now effectively built into the interpreter,
-        constructing and manipulating HTML and the DOM in a simple and
-        consistent way has never been more important. Explicitly catenating
-        strings is no way to go through life. Lots of (my) old code looks
-        like:</p>
-        <pre>
-          <code>       '&lt;h1&gt;',t,'&lt;/h1&gt;'
-</code>
-        </pre>
+        <p>With a web browser now effectively built into the interpreter, constructing and manipulating HTML and the DOM in a simple and consistent way has never been more important. Explicitly catenating  strings is no way to go through life. Lots of (my) old code looks like:</p>
+        <pre><code>       '&lt;h1&gt;',t,'&lt;/h1&gt;'
+</code></pre>
         <p>or barely better we might define tag as:</p>
-        <pre>
-          <code>        tag←{'&lt;',⍺,'&gt;',⍵,'&lt;/',⍺,'&gt;'}
-</code>
-        </pre>
-        <p>
-          And then tag this, that and the other, which all has to be catenated
-          up. And then we enhance
-          <code>tag</code>
-          to take an argument with attributes. It doesn't get better. And
-          when we are done, we have a horrific string, probably nested
-          in various places by mistake, of hopefully valid HTML that we
-          cannot manipulate in any meaningful way.
-        </p>
-        <p>
-          Consider instead a single simple function
-          <code>New</code>
-          :
-        </p>
-        <pre>
-          <code>   New←{
+        <pre><code>        tag←{'&lt;',⍺,'&gt;',⍵,'&lt;/',⍺,'&gt;'}
+</code></pre>
+        <p>And then tag this, that and the other, which all has to be catenated up. And then we enhance <code>tag</code> to take an argument with attributes. It doesn't get better. And when we are done, we have a horrific string, probably nested in various places by mistake, of hopefully valid HTML that we cannot manipulate in any meaningful way. </p>
+        <p>Consider instead a single simple function <code>New</code>:</p>
+        <pre><code>   New←{
      ⍝ ⍺ ←→ [Parent, 0 - no parent]
      ⍝ ⍵ ←→ Tag [Content [Attributes]]
      ⍝ ← ←→ Element
@@ -70,26 +49,19 @@
      _←a SetAttributes e
      e⊣Add/⍺ e c
  }
-</code>
-        </pre>
-        <p>We can now create an object for an element, and produce HTML
-        from it:</p>
-        <pre>
-          <code>      h←New 'h1' 'My Title'
+</code></pre>
+        <p>We can now create an object for an element, and produce HTML from it: </p>
+        <pre><code>      h←New 'h1' 'My Title'
       DOM2HTML h
 &lt;h1&gt;My Title&lt;/h1&gt;
-</code>
-        </pre>
+</code></pre>
         <p>Attributes may be specified by assignment:</p>
-        <pre>
-          <code>      h.class←'chapter'
+        <pre><code>      h.class←'chapter'
       DOM2HTML h
 &lt;h1 class="chapter"&gt;My Title&lt;/h1&gt;
-</code>
-        </pre>
-        <p>Elements can be created as children:</p>
-        <pre>
-          <code>      d←New 'html'
+</code></pre>
+        <p>Elements can be created as children: </p>
+        <pre><code>      d←New 'html'
       b←d New 'body'
       m←b New 'main'
       DOM2HTML d
@@ -99,11 +71,9 @@
     &lt;main&gt;&lt;/main&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-</code>
-        </pre>
+</code></pre>
         <p>Content may be directly assigned:</p>
-        <pre>
-          <code>      m.Content←h
+        <pre><code>      m.Content←h
       DOM2HTML d
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -113,16 +83,9 @@
     &lt;/main&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-</code>
-        </pre>
-        <p>
-          Producing HTML without explicit catenation is only a small part
-          of the benefit. Consider the function
-          <code>Elements</code>
-          :
-        </p>
-        <pre>
-          <code>Elements←{
+</code></pre>
+        <p>Producing HTML without explicit catenation is only a small part of the benefit. Consider the function <code>Elements</code>:</p>
+        <pre><code>Elements←{
      ⍝ ⍵ ←→ Element
      ⍝ ← ←→ Vector of ⍵ and all sub elements
      326≠⎕DR ⍵:⍬
@@ -130,31 +93,17 @@
          0=≢c:⍬
          ⊃,/c,¨∇¨c}⍵
  } 
-</code>
-        </pre>
-        <p>This traverses the DOM and yields a simple vector of all the
-        elements:</p>
-        <pre>
-          <code>      e←Elements d
+</code></pre>
+        <p>This traverses the DOM and yields a simple vector of all the elements:</p>
+        <pre><code>      e←Elements d
       e.Tag
 ┌────┬────┬────┬──┐
 │html│body│main│h1│
 └────┴────┴────┴──┘
-</code>
-        </pre>
-        <p>
-          With this function in hand, various covers like
-          <code>ElementByID</code>
-          or
-          <code>ElementsByTag</code>
-          are trivial to write. Now its easy to find all the h1 headers
-          and change, say, their class.
-        </p>
-        <p>Tables are especially painful to deal with without the proper
-        tooling. With a few helper functions to extract cells, we can manipulate
-        HTML tables like an array programmer should:</p>
-        <pre>
-          <code>     t←NewTable ⍕¨3 4⍴⍳12
+</code></pre>
+        <p>With this function in hand, various covers like <code>ElementByID</code> or <code>ElementsByTag</code> are trivial to write. Now its easy to find all the h1 headers and change, say, their class.</p>
+        <p>Tables are especially painful to deal with without the proper tooling. With  a few helper functions to extract cells, we can manipulate HTML tables like an array programmer should:</p>
+        <pre><code>     t←NewTable ⍕¨3 4⍴⍳12
      c←BodyCells t
      c[;2].class←⊂'char'
      DOM2HTML t
@@ -180,23 +129,15 @@
     &lt;/tr&gt;                     
   &lt;/tbody&gt;                    
 &lt;/table&gt;                      
-</code>
-        </pre>
+</code></pre>
         <p>Finally we can take HTML and get back the DOM:</p>
-        <pre>
-          <code>       html←DOM2HTML t
+        <pre><code>       html←DOM2HTML t
        t2←HTML2DOM html
        html≡DOM2HTML t2
 1
-</code>
-        </pre>
-        <p>
-          Where
-          <code>HTML2DOM</code>
-          is:
-        </p>
-        <pre>
-          <code>HTML2DOM←{
+</code></pre>
+        <p>Where <code>HTML2DOM</code> is:</p>
+        <pre><code>HTML2DOM←{
      ⍝ ⍵ ←→ HTML
      ⍝ ← ←→ DOM
      0=≢⍵:⍬
@@ -209,15 +150,12 @@
          p⊣p ∇¨1↓¨b⊂[0]m
      }⎕XML ⍵
  }
-</code>
-        </pre>
-        <p>Once you start creating HTML this way, patterns arise and utility
-        functions fall out naturally. These utilities return content that
-        can be manipulated and injected anywhere.</p>
+</code></pre>
+        <p>Once you start creating HTML this way, patterns arise and utility functions fall out naturally. These utilities return content that can be manipulated and injected anywhere.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

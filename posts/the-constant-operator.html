@@ -26,48 +26,36 @@
           </h1>
           <h2>March 21, 2021</h2>
         </header>
-        <p>Having neglected moving to version 18 for obvious reasons I
-        was surprised by this expression from ngn over at the APL Orchard:</p>
-        <pre>
-          <code>⍬⍨¨v
-</code>
-        </pre>
-        <p>The new constant operator, which simply returns it's left operand.
-        I think it is exaclty equivalent to:</p>
-        <pre>
-          <code>{⍺⍺}
-</code>
-        </pre>
-        <p>Comparing to creating a vector of empty vectors in more traditional
-        ways, the contstant operator is certainly the shortest, and more
-        or less as fast as most of the others:</p>
-        <pre>
-          <code>      v←⍳10000000
+        <p>Having neglected moving to version 18 for obvious reasons I was surprised by this expression from ngn over at the APL Orchard: </p>
+        <pre><code>⍬⍨¨v
+</code></pre>
+        <p>The new constant operator, which simply returns it's left operand. I think it is exaclty equivalent to:</p>
+        <pre><code>{⍺⍺}
+</code></pre>
+        <p>Comparing to creating a vector of empty vectors in more traditional ways, the contstant operator is certainly the shortest, and more or less as fast as most of the others:</p>
+        <pre><code>      v←⍳10000000
       cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' '{⍬}¨v'  '⍬∘⊣¨v' 'v⊢¨⊂⍬'
   (≢v)⍴⊂⍬ → 2.7E¯2 |     0% ⎕⎕                                      
   ⍬⍨¨v    → 2.8E¯2 |    +4% ⎕⎕                                      
   {⍬}¨v   → 4.4E¯1 | +1569% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
   ⍬∘⊣¨v   → 2.6E¯2 |    -4% ⎕⎕                                      
   v⊢¨⊂⍬   → 2.6E¯2 |    -1% ⎕⎕
-</code>
-        </pre>
+</code></pre>
         <blockquote>
           <p>NB. That Dfn is very expensive!</p>
         </blockquote>
         <p>However:</p>
-        <pre>
-          <code>        v←⍳10000000 ⋄ r←v    
+        <pre><code>        v←⍳10000000 ⋄ r←v    
         cmpx '(≢v)⍴⊂⍬' '⍬⍨¨v' 'r⊣r[]←⊂⍬'
   (≢v)⍴⊂⍬  → 2.7E¯2 |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
   ⍬⍨¨v     → 2.6E¯2 |  -2% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕ 
   r⊣r[]←⊂⍬ → 2.4E¯2 | -11% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕    
-</code>
-        </pre>
+</code></pre>
         <p>Never underestimate the usefulness of bracket indexing.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>

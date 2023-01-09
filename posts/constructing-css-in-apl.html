@@ -27,23 +27,10 @@
           </h1>
           <h2>September 30, 2022</h2>
         </header>
-        <p>
-          Once we have mastered
-          <a href="posts/a-document-object-model-in-apl">building HTML
-          pages</a>
-          , the next task is constructing CSS in an efficient and orderly
-          way.
-        </p>
-        <p>While is it not as important to manipulate CSS the same way
-        we need to be able to manipulate the DOM, we still want to create
-        CSS programmatically, to allow for properties that depend on variables,
-        to avoid catenating strings, specifying braces, colons and semicolons,
-        and to not worry about getting the nesting right. We don't want
-        to write CSS by hand in text files.</p>
-        <p>We can do this with 3 fairly simple functions. One for creating
-        a new rule:</p>
-        <pre>
-          <code>NewRule←{
+        <p>Once we have mastered <a href="posts/a-document-object-model-in-apl">building HTML pages</a>, the next task is constructing CSS in an efficient and orderly way.</p>
+        <p>While is it not as important to manipulate CSS the same way we need to be able to manipulate the DOM, we still want to create CSS programmatically, to allow for properties that depend on variables, to avoid catenating strings, specifying braces, colons and semicolons, and to not worry about getting the nesting right. We don't want to write CSS by hand in text files.  </p>
+        <p>We can do this with 3 fairly simple functions. One for creating a new rule:</p>
+        <pre><code>NewRule←{
      ⍝ ⍺ ←→ [Parent]
      ⍝ ⍵ ←→ Selector e.g. 'h1' 'h1 h2' 'header&gt;h1', etc.
      ⍺←0
@@ -54,11 +41,9 @@
      ⍺.Rules,←r
      r
  }
-</code>
-        </pre>
+</code></pre>
         <p>One for composing the rules:</p>
-        <pre>
-          <code>ComposeRules←{
+        <pre><code>ComposeRules←{
      ⍝ ⍵ ←→ Vector of CSS Rules
      ⍺←0
      0=≢⍵:''
@@ -73,11 +58,9 @@
          s
      }¨⍵
  }
-</code>
-        </pre>
+</code></pre>
         <p>And one subfunction for composing declarations:</p>
-        <pre>
-          <code>ComposeDeclarations←{
+        <pre><code>ComposeDeclarations←{
      ⍺←0
      nl←⎕UCS 13
      n←{⍵/⍨~(⊃¨⍵)∊⎕A}⍵.⎕NL ¯2
@@ -87,40 +70,23 @@
      b←(4×⍺+1)⍴' '
      ⊃,/p{b,⍺,': ',⍵,';',nl}¨v
  }
-</code>
-        </pre>
+</code></pre>
         <p>Consider a single, simple rule:</p>
-        <pre>
-          <code>      r←NewRule 'h1'
-</code>
-        </pre>
+        <pre><code>      r←NewRule 'h1'
+</code></pre>
         <p>Specifying declarations is done by assignment:</p>
-        <pre>
-          <code>      r.margin←'1rem'
+        <pre><code>      r.margin←'1rem'
       r.font_size←'2rem'
-</code>
-        </pre>
-        <p>
-          The
-          <code>ComposeRules</code>
-          function returns the CSS:
-        </p>
-        <pre>
-          <code>      ComposeRules r
+</code></pre>
+        <p>The <code>ComposeRules</code> function returns the CSS:</p>
+        <pre><code>      ComposeRules r
 h1 {
     font-size: 2rem;
     margin: 1rem;
 }
-</code>
-        </pre>
-        <p>
-          Of course a style sheet will contain many rules, often nested.
-          The
-          <code>NewRule</code>
-          function takes a parent rule as an optional left argument:
-        </p>
-        <pre>
-          <code>      p←NewRule '@media print'
+</code></pre>
+        <p>Of course a style sheet will contain many rules, often nested. The <code>NewRule</code> function takes a parent rule as an optional left argument:</p>
+        <pre><code>      p←NewRule '@media print'
       r←p NewRule 'h1'
       r.font_size←'18pt' 
       r←p NewRule 'h2'
@@ -134,22 +100,10 @@ h1 {
         font-size: 16pt;
     }
 }
-</code>
-        </pre>
-        <p>
-          This allows us to bury the catenation or accumulation of rules.
-          We can also reuse the same variable name for the result of
-          <code>NewRule</code>
-          , normally a bad practice, but useful in this case, when there
-          could be hundreds of rules that need to be specified, and we
-          don't want to have to name them all.
-        </p>
-        <p>Having a parent rule is useful as it means we have only one
-        item to explicitly name and track. But often there is no parent,
-        just a list of rules with no hierarchy. We can accumulate rules
-        using a parent rule with no selector:</p>
-        <pre>
-          <code>      s←NewRule ''
+</code></pre>
+        <p>This allows us to bury the catenation or accumulation of rules. We can also reuse the same variable name for the result of <code>NewRule</code>, normally a bad practice, but useful in this case, when there could be hundreds of rules that need to be specified, and we don't want to have to name them all.</p>
+        <p>Having a parent rule is useful as it means we have only one item to explicitly name and track. But often there is no parent, just a list of rules with no hierarchy. We can accumulate rules using a parent rule with no selector:</p>
+        <pre><code>      s←NewRule ''
       r←s NewRule 'h1'
       r.font_size←'2em' 
       r←s NewRule 'h2'
@@ -161,17 +115,9 @@ h1 {
 h2 {
     font-size: 1.5em;
 }
-</code>
-        </pre>
-        <p>
-          This lets us avoid complicating things with a Style object. There
-          is only one object, a rule object, and it can contain sub rules.
-          And
-          <code>ComposeRules</code>
-          can process multiple sets of rules:
-        </p>
-        <pre>
-          <code>      ComposeRules s p
+</code></pre>
+        <p>This lets us avoid complicating things with a Style object. There is only one object, a rule object, and it can contain sub rules. And <code>ComposeRules</code> can process multiple sets of rules:</p>
+        <pre><code>      ComposeRules s p
 h1 {                    
     font-size: 2em;     
 }                       
@@ -190,15 +136,9 @@ h2 {
         font-size: 16pt;
     }                   
 }                       
-</code>
-        </pre>
-        <p>
-          These rules can be injected directly into the APLDOM using the
-          <code>Style</code>
-          property:
-        </p>
-        <pre>
-          <code>       d←New'html'
+</code></pre>
+        <p>These rules can be injected directly into the APLDOM using the <code>Style</code> property:</p>
+        <pre><code>       d←New'html'
        hd←d New'head'
        d.Style←s
        DOM2HTML d
@@ -216,22 +156,12 @@ h2 {
     &lt;/style&gt;         
   &lt;/head&gt;            
 &lt;/html&gt;          
-</code>
-        </pre>
-        <p>
-          HTML elements may have their own Style property, to allow for
-          components to be delivered with their own styles. The idea is
-          do something similar to
-          <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web
-          Components</a>
-          . This is an area where
-          <a href="https://github.com/the-carlisle-group/Abacus">Abacus</a>
-          needs much more work, hopefully soon.
-        </p>
+</code></pre>
+        <p>HTML elements may have their own Style property, to allow for components to be delivered with their own styles. The idea is do something similar to <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Components</a>. This is an area where <a href="https://github.com/the-carlisle-group/Abacus">Abacus</a> needs much more work, hopefully soon.</p>
       </article>
     </main>
     <footer>
-      <p>Copyright 2022 Paul S. Mansour</p>
+      <p>Copyright 2023 Paul S. Mansour</p>
     </footer>
   </body>
 </html>
