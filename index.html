@@ -31,8 +31,8 @@
         <pre><code>xml:space="preserve"
 </code></pre>
         <p>Thus, if the overall variant is <code>'Whitespace' 'Strip'</code>, individual elements will preserve whitespace with this attribute specified.</p>
-        <p>This is more than cosmetic given the differences between XML and HTML. A paragraph with in-line markup, like bold, code, etc., must have whitespace preserved when generated using <code>⎕XML</code> otherwise an additional space will be added due to the formatting. Of course <code>pre</code> elements should also have whitespace preserved. So for I apply <code>xml:space="preserve"</code> to the <code>p</code>, <code>pre</code>, and <code>tr</code> elements. The latter formats tables nicely, with each row on its own line.</p>
-        <p>Unfortunately the generated XML has <code>xml:space="preserve"</code> littered throughout the character vector which provides no use, and increases the size of the array. Oddly enough, I don't think I have ever written code to remove all the occurrences of a given substring from a string - or at least I can't remember doing it. It seems like it would be a very common task. Lets do it without using regular expressions.</p>
+        <p>This is more than cosmetic given the differences between XML and HTML. A paragraph with in-line markup, like bold, code, etc., must have whitespace preserved when generated using <code>⎕XML</code> otherwise an additional space will be added due to the formatting. Of course <code>pre</code> elements should also have whitespace preserved. So far I apply <code>xml:space="preserve"</code> to the <code>p</code>, <code>pre</code>, and <code>tr</code> elements. The latter formats tables nicely, with each row on its own line.</p>
+        <p>Unfortunately the generated XML has <code>xml:space="preserve"</code> littered throughout the character vector which provides no use, and increases the size of the array. Oddly enough, I don't think I have ever written code to remove all the occurrences of a given substring from a string - or at least I can't remember doing it. It seems like it would be a very common task. Let's do it without using regular expressions.</p>
         <p>First, let's find the substrings, easy with the <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Functions/Find.htm">find</a> primitive. This marks the beginning of each substring <code>⍺</code> in the target string <code>⍵</code>:</p>
         <pre><code>     'ere'{⍺⍷⍵}'here there where'
 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 0
@@ -41,7 +41,7 @@
         <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍵}'here there where'
 1 1 0 0 0 1 1 1 0 0 0 1 1 1
 </code></pre>
-        <p>Two related problem arise. First, as always with n-wise reduction, the result is shorter than the right argument. Second, when a substring is found at or near the beginning of the string, we don't get enough 1s. We can fix this by appending the substring to the  target string before searching:</p>
+        <p>Two related problems arise. First, as always with n-wise reduction, the result is shorter than the right argument. Second, when a substring is found at or near the beginning of the string, we don't get enough 1s. We can fix this by appending the substring to the  target string before searching:</p>
         <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
 1 0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1
 </code></pre>
