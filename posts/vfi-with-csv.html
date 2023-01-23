@@ -43,18 +43,15 @@
 </code></pre>
         <p>Note:</p>
         <ol>
-          <li>The argument here is a char mat, not a delimited vector like
-          `⎕VFI`.</li>
+          <li>The argument here is a char mat, not a delimited vector like <code>⎕VFI</code>.</li>
           <li>The separator is arbitrary, and should not exist in the argument.</li>
         </ol>
         <ol>
-          <li>There is currently a bug in `⎕CSV` where it throws an error
-          on a number</li>
+          <li>There is currently a bug in <code>⎕CSV</code> where it throws an error on a number</li>
         </ol>
         <p> (UPDATE: This is is now fixed in version 18.2.45319.0)</p>
         <ol>
-          <li>We should probably test there are no line endings in the
-          argument.</li>
+          <li>We should probably test there are no line endings in the argument.</li>
         </ol>
         <p>This is almost as fast as <code>⎕VFI</code> with no preprocessing, and much faster than a  solution with <code>⎕VFI</code> that requires preprocessing for negative signs and  thousand separators.</p>
         <p>However, there are still things we might want to preprocess for, like parentheses for a negative number, leading currency characters, and trailing percentage signs. Here is a first attempt that handles all three cases which no doubt can be improved:</p>

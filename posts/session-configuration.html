@@ -61,10 +61,10 @@
         <h2>Fixing and Executing Code on Startup</h2>
         <p>There are at least four ways to fix and excute code on startup:</p>
         <ol>
-          <li>The user command framework using a **setup.dyalog** file.</li>
-          <li>The **DyalogStartup** parameter.</li>
-          <li>The **DyalogStartupSE** parameter.</li>
-          <li>The **Load** (and **LX**) configuration parameter.</li>
+          <li>The user command framework using a <strong>setup.dyalog</strong> file.</li>
+          <li>The <strong>DyalogStartup</strong> parameter.</li>
+          <li>The <strong>DyalogStartupSE</strong> parameter. </li>
+          <li>The <strong>Load</strong> (and <strong>LX</strong>) configuration parameter.</li>
         </ol>
         <p>Option 1 requires placing setup.dyalog in a specific place, this is a no go. Option 2 requires highjacking LINK, and the DyalogStartupSE parameter which we probably don't want to do. Option 3 requires either putting code in some specific place that dyalog knows about or specifying a fully qualified path. Furthermore, there is a heirarchy of folders that are searched, which may be too clever by half, and lead to a lot of confusion. That leaves Option 4, the <code>Load</code> parameter. Luckily it respects relative paths, and will look in the same location as the config file. The code can expunge itself after executing, and not clutter the root or introduce a  name conflict. Here, for example, is a very simple startup routine that increases the font size, and specifies that the session window should be maximized:</p>
         <pre><code>:Namespace startup
