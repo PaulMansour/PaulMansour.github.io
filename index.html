@@ -22,6 +22,38 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/error-trapping">Error Trapping</a>
+          </h1>
+          <h2>February 20, 2023</h2>
+        </header>
+        <p>Once we have written some nice, succinct APL code, it is disheartening to muck it all up with error trapping. There are many techniques, and often we just sling <code>⎕TRAP</code>, <code>:Trap</code>, <code>⎕SIGNAL</code> and error guards willy-nilly. It would be nice have to some tried and true patterns to apply, and extract as much messiness as possible.</p>
+        <p>The best error trapping is none at all, or rather, left to functions further up the stack. But if we are providing a package to be used by others, and the API consists of more than utility functions like deleting extraneous blanks, we should provide some minimal distinction between a user error and a bug. This post explores one possible pattern, used in the <a href="https://github.com/the-carlisle-group/Text2Date">Text2Date</a> project.</p>
+        <p>For some packages, there is no need to invent new error numbers and  event messages. However, we need a way to distinguish between, say, a length error that we anticipate, and one that we don't.  Two functions will suffice to extract all the needed logic:</p>
+        <pre><code>Signal←{
+     ⎕SIGNAL⊂('EN'(⍺+500))('Message'⍵)
+ }
+</code></pre>
+        <p>and</p>
+        <pre><code>f←ReSignal
+f←⎕SIGNAL{
+    ⊂('EN'(⍵.EN-500))('Message'⍵.Message)
+}
+</code></pre>
+        <p>The <code>Signal</code> function wraps <code>⎕SIGNAL</code>, and specifies the <strong>error number</strong> and <strong>message</strong> for <code>⎕DMX</code>. The error number is bumped up by an arbitrary multiple of 100 (from 100 to 900), to distinguish it from an unexpected error. So, for example, if the left argument to an API function requires a 1 or 0, to signal a DOMAIN ERROR we might write:</p>
+        <pre><code>~⍺∊0 1:11 Signal 'The left argument must be 0 or 1'
+</code></pre>
+        <p>Note that <code>Signal</code> reverses the arguments of <code>⎕SIGNAL</code>. This is because <code>⎕SIGNAL</code> is more often than not called with <code>⍨</code> as the right argument is almost always a literal scalar, while the left argument is often constructed. </p>
+        <p>At the top of any API function we include the error guard:  </p>
+        <pre><code>500+⍳100::ReSignal ⎕DMX
+</code></pre>
+        <p>This traps all errors in our arbitrary block of 100, and using <code>ReSignal</code> propagates expected errors to the calling function. Unexpected errors remain untrapped and fail where they are. <code>ReSignal</code> only specifies the event number <code>EN</code> and <code>Message</code> for <code>⎕DMX</code>. The event message <code>EM</code> is automatically provided. <code>ReSignal</code> is a niladic trad function that returns a function. The reason for this subterfuge is that we want to encapsulate the right side of this error guard:</p>
+        <pre><code>300+⍳100::⎕SIGNAL ⊂('EN'(⎕DMX.EN-500))('Message'⎕DMX.Message)
+</code></pre>
+        <p>as this is far too much code to be copying and pasting all over the place. But <code>⎕SIGNAL</code> itself cannot be wrapped inside a function (trad or dfn) or it will not break out of the main function. It must signal in the scope of the main API function. The code to the right of <code>⎕SIGNAL</code> could easily be wrapped, but it would be nice to include the whole thing. Thus the trad function <code>ReSignal</code> returns a function that includes the whole thing, but keeps the <code>⎕SIGNAL</code> out of the subfunction.  This encapsulation technique is lifted from <a href="https://github.com/abrudz/dyalog_vision/blob/main/%E2%88%86SIGNAL.aplf">Adám Brudzewsky</a>.                                                             </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/provanto">Provanto: A Test Framework</a>
           </h1>
           <h2>February 13, 2023</h2>
@@ -190,46 +222,6 @@ DOMAIN ERROR: Invalid date-time
         <p>This brings up the question of whether the format specifier for <code>1200⌶</code> is really the best unformat specifier. Is a true inverse really what we need? Certainly they are related, but in a real application we would probably want <code>'12/31/2022'</code>, <code>'1-1-2023'</code>, and <code>'7/4/21'</code> to all convert properly with the same format string.</p>
         <p>Thus there are at least two issues that make to-and-from text fundamentally different from all the other date formats.  <code>1200⌶</code> will create "invalid" dates, that is, strings that cannot be converted back to a unique Dyalog Date Number. And conversely, there are multiple strings that could only be created using multiple formats, but that should all convert back to a Dyalog Date Number using a single format. This may be an argument to keep <code>1200⌶</code> out of <code>⎕DT</code>.</p>
         <p>A further complication is handling bad data. To be useful, <code>Text2Date</code> must not fail when it cannot yield a valid Dyalog Data Number for a string. There are then only two options: return a value that indicates failure, or take the route of <code>⎕VFI</code>, and return a Boolean mask indicating valid results. A zero might be useful for a failure value. If not, a zero is perfect for a fill value, with the Boolean mask indicating valid results, just like <code>⎕VFI</code>.  If <code>1200⌶</code> is folded in to <code>⎕DT</code>, perhaps a variant could be added that changes the result to a <code>⎕VFI</code> style result. This might be useful for numeric-to-numeric conversions as well.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/an-issue-with-xml-revisited">An Issue With
-            ⎕XML Revisited</a>
-          </h1>
-          <h2>January 9, 2023</h2>
-        </header>
-        <p>In a <a href="/posts/two-issues-with-xml">previous post</a> I looked at a couple of issues with <code>⎕XML</code>. One issue was formatting when converting to XML: I wanted indentation and removal of whitespace for most elements, but not all. I dont know how I missed it, but there is a way to do this built into the XML spec and <code>⎕XML</code> supports it. Simply add a special attribute to the elements in question. It's right there <a href="https://help.dyalog.com/latest/index.htm#Language/System%20Functions/xml.htm">in the docs</a>:</p>
-        <pre><code>xml:space="preserve"
-</code></pre>
-        <p>Thus, if the overall variant is <code>'Whitespace' 'Strip'</code>, individual elements will preserve whitespace with this attribute specified.</p>
-        <p>This is more than cosmetic given the differences between XML and HTML. A paragraph with in-line markup, like bold, code, etc., must have whitespace preserved when generated using <code>⎕XML</code> otherwise an additional space will be added due to the formatting. Of course <code>pre</code> elements should also have whitespace preserved. So far I apply <code>xml:space="preserve"</code> to the <code>p</code>, <code>pre</code>, and <code>tr</code> elements. The latter formats tables nicely, with each row on its own line.</p>
-        <p>Unfortunately the generated XML has <code>xml:space="preserve"</code> littered throughout the character vector which provides no use, and increases the size of the array. Oddly enough, I don't think I have ever written code to remove all the occurrences of a given substring from a string - or at least I can't remember doing it. It seems like it would be a very common task. Let's do it without using regular expressions.</p>
-        <p>First, let's find the substrings, easy with the <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Functions/Find.htm">find</a> primitive. This marks the beginning of each substring <code>⍺</code> in the target string <code>⍵</code>:</p>
-        <pre><code>     'ere'{⍺⍷⍵}'here there where'
-0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 0
-</code></pre>
-        <p>Next lets extend each 1 by the length of the substring, using n-wise or-reduction, fully marking each found substring:</p>
-        <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍵}'here there where'
-1 1 0 0 0 1 1 1 0 0 0 1 1 1
-</code></pre>
-        <p>Two related problems arise. First, as always with n-wise reduction, the result is shorter than the right argument. Second, when a substring is found at or near the beginning of the string, we don't get enough 1s. We can fix this by appending the substring to the  target string before searching:</p>
-        <pre><code>      'ere'{(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
-1 0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1
-</code></pre>
-        <p>Note that it is merely a convenience to append the substring itself, as it is, by definition, the proper length. We could also append an appropriate number of zeros to the result of <code>find</code> before applying the reduction. </p>
-        <p>Now we have only one problem: the Boolean mask is too long, by 1. So we drop off the first element:</p>
-        <pre><code>      'ere'{1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
-0 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1
-</code></pre>
-        <p>The Boolean mask flags what we want to remove, not what we want to keep, so we negate it, flipping 1s to 0s and vice versa: </p>
-        <pre><code>      'ere'{~1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
-1 0 0 0 1 1 1 0 0 0 1 1 1 0 0 0
-</code></pre>
-        <p>Finally, we apply <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Functions/Replicate.htm">compress or replicate</a>, with <a href="https://help.dyalog.com/latest/index.htm#Language/Primitive%20Operators/Commute.htm">commute</a> to avoid parentheses, to keep everything but the substrings:</p>
-        <pre><code>      'ere'{⍵/⍨~1↓(≢⍺)∨/⍺⍷⍺,⍵}'here there where'
-h th wh
-</code></pre>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
