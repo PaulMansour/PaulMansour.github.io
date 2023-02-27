@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/text2date">Text2Date, a New Repository</a>
+          </h1>
+          <h2>February 27, 2023</h2>
+        </header>
+        <p>In a <a href="/posts/text-to-date">previous post</a> I discussed the problem of converting time strings to time numbers. I have now extracted this functionality from our main application, rewritten it, and made it an open source project, imaginatively, but prematurely, named <a href="https://github/the-carlisle-group\Text2Date">Text2Date</a>.                       Text2Date uses a modified version of the Dyalog format pattern that is the left argument of <code>1200⌶</code>.</p>
+        <p>One useful recent, simplifying, insight is that differentiating between undelimited  and delimited fixed-width formats strings is useful.  Undelimited format strings do not require that the time strings line up. For example, the format string <code>MMDDYY</code> can easily  process the character matrix:</p>
+        <pre><code>123124
+10125
+  72476
+011523
+</code></pre>
+        <p>yielding four dates:</p>
+        <pre><code>      'MMDDYY' Text2Date '123124' '10125' '  72476   ' '011523'
+20241231 20250101 19760724 20230115
+</code></pre>
+        <p>When there are no delimiters, we don't need to worry about where an element starts or ends. The time string is just a text representation of a date time packed into an integer. A missing leading zero is no problem. Leading and trailing blanks are no problem. Data in this format shows up all the time in Excel and CSV files out in the wild. </p>
+        <p>In the case of undelimited formats, there is also no need that the input are time strings, We can easily pass in integers and convert them to dates. Thus Text2Date is now misnamed, as this works:</p>
+        <pre><code>      'MMDDYY' Text2Date 123124 10125 72476 011523
+20241231 20250101 19760724 20230115
+</code></pre>
+        <p>Three special format strings are also accepted: <code>Excel</code> or <code>Excel1900</code>, and <code>Excel1904</code>, which also work on text or numeric input:</p>
+        <pre><code>      'Excel' Text2Date 35000 37125 41256
+19951028 20010822 20121213
+      'Excel' Text2Date '35000' '37125' '41256'
+19951028 20010822 20121213
+</code></pre>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2023 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
