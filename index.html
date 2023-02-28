@@ -26,8 +26,8 @@
           </h1>
           <h2>February 27, 2023</h2>
         </header>
-        <p>In a <a href="/posts/text-to-date">previous post</a> I discussed the problem of converting time strings to time numbers. I have now extracted this functionality from our main application, rewritten it, and made it an open source project, imaginatively, but prematurely, named <a href="https://github/the-carlisle-group\Text2Date">Text2Date</a>.                       Text2Date uses a modified version of the Dyalog format pattern that is the left argument of <code>1200⌶</code>.</p>
-        <p>One useful recent, simplifying, insight is that differentiating between undelimited  and delimited fixed-width formats strings is useful.  Undelimited format strings do not require that the time strings line up. For example, the format string <code>MMDDYY</code> can easily  process the character matrix:</p>
+        <p>In a <a href="/posts/text-to-date">previous post</a> I discussed the problem of converting time strings to time numbers. I have now extracted this functionality from our main application, rewritten it, and made it an open source project, imaginatively, but prematurely, named <a href="https://github.com/the-carlisle-group\Text2Date">Text2Date</a>.                       Text2Date uses a modified version of the Dyalog format pattern that is the left argument of <code>1200⌶</code>.</p>
+        <p>One useful recent, simplifying, insight gained in the process of rewriting  is that differentiating between undelimited  and delimited fixed-width formats strings is useful. Delimited fixed-width time strings must line up - the elements must be in the exact positions specified in the format string.   Undelimited format strings do not require that the time strings line up. For example, the format string <code>MMDDYY</code> can easily  process the character matrix:</p>
         <pre><code>123124
 10125
   72476
@@ -38,7 +38,7 @@
 20241231 20250101 19760724 20230115
 </code></pre>
         <p>When there are no delimiters, we don't need to worry about where an element starts or ends. The time string is just a text representation of a date time packed into an integer. A missing leading zero is no problem. Leading and trailing blanks are no problem. Data in this format shows up all the time in Excel and CSV files out in the wild. </p>
-        <p>In the case of undelimited formats, there is also no need that the input are time strings, We can easily pass in integers and convert them to dates. Thus Text2Date is now misnamed, as this works:</p>
+        <p>In the case of undelimited formats, there is also no need that the input are time strings, numeric is just as good, if not better. <code>Text2Date</code> is now misnamed, as this works:</p>
         <pre><code>      'MMDDYY' Text2Date 123124 10125 72476 011523
 20241231 20250101 19760724 20230115
 </code></pre>
