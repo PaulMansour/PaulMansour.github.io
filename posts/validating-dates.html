@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/validating-dates">Validating Dates</a>
+          </h1>
+          <h2>March 27, 2023</h2>
+        </header>
+        <p>One of the features of <code>⎕DT</code> is that it validates timestamps and time numbers.</p>
+        <p>Verifying type 60 and 61 time numbers, as well as timestamps (<code>⎕TS</code> style) takes a bit of computation. Leap years must be determined, there are different day counts for different months, no more than 12 months in a year, 24 hours in a day, etc:</p>
+        <pre><code>      60 0 ⎕DT 20230101.235959 20010229 20000229 20231301
+1 0 1 0
+</code></pre>
+        <p>For time numbers that are a (potentially fractional) number of days from some epoch, the testing is much simpler. In fact it is hard to come up with an invalid value when almost any input yields a valid date:</p>
+        <pre><code>      1 0 ⎕DT ¯1 0 1 35654 12345.123456789123456789 123456789123456789.123
+1 1 1 1 1 1    
+</code></pre>
+        <p>There is no need to check much of anything except perhaps the range, which appears to be somewhere near:</p>
+        <pre><code>      1 0 ⎕DT ¯2 2*22 62
+1 1
+</code></pre>
+        <p>For a relatively large array, <a href="https://github.com/the-carlisle-group/Text2Date">Text2Date</a> is taking an inordinate amount of time using <code>⎕DT</code> to validate type 60 time numbers. To investigate, some slighty modified old code (from the pre <code>⎕DT</code> era) that handles time numbers in the form <code>YYYYMMDD.HHMMSS</code>:</p>
+        <pre><code>Val←{
+     k←(0,5⍴100)⊤⍵×10*6
+     f c←(1752 1 1 0 0 0)(4000 13 32 24 60 60)
+     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
+     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
+     (k[5;]=⌈k[5;])∧g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
+ } 
+</code></pre>
+        <p>For comparison, let's define <code>ValDT</code>:</p>
+        <pre><code>ValDT←{
+     60 0 ⎕DT ⍵
+ }
+</code></pre>
+        <p>And run on 50 million integer dates:</p>
+        <pre><code>      d←18000000+?50E6⍴22E6
+      cmpx 'Val d' 'ValDT d'
+  Val d   → 5.2E0  |    0% ⎕⎕⎕⎕⎕⎕                                  
+  ValDT d → 3.4E1  | +552% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+</code></pre>
+        <p>And <code>Val</code> has not been optimized. If we rewrite it for integers only:</p>
+        <pre><code>ValInt←{
+     k←(0,2⍴100)⊤⍵
+     f c←(1752 1 1)(4000 13 32)
+     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
+     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
+     g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
+ }
+</code></pre>
+        <p>Then we get:</p>
+        <pre><code>      cmpx 'ValInt d' 'ValDT d'
+  ValInt d   → 1.4E0  |     0% ⎕                                       
+  ValDT d    → 3.8E1  | +2628% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+</code></pre>
+        <p>Something is not right here. Maybe there is some check I'm not doing, but it looks like there is more going on than that.</p>
+        <p>Even more inexplicable is how long <code>⎕DT</code> takes to validate a Dyalog Date Number when the array gets large. Unless I'm missing something, the check should be almost trivial. Maybe it is some sort of memory issue rather than computational inefficiency.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2023 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>

@@ -22,7 +22,65 @@
       <article>
         <header>
           <h1>
-            <a href="/posts/grade-up-of-grade-down">Grade Up of Grade Down</a>
+            <a href="/posts/validating-dates">Validating Dates</a>
+          </h1>
+          <h2>March 27, 2023</h2>
+        </header>
+        <p>One of the features of <code>⎕DT</code> is that it validates timestamps and time numbers.</p>
+        <p>Verifying type 60 and 61 time numbers, as well as timestamps (<code>⎕TS</code> style) takes a bit of computation. Leap years must be determined, there are different day counts for different months, no more than 12 months in a year, 24 hours in a day, etc:</p>
+        <pre><code>      60 0 ⎕DT 20230101.235959 20010229 20000229 20231301
+1 0 1 0
+</code></pre>
+        <p>For time numbers that are a (potentially fractional) number of days from some epoch, the testing is much simpler. In fact it is hard to come up with an invalid value when almost any input yields a valid date:</p>
+        <pre><code>      1 0 ⎕DT ¯1 0 1 35654 12345.123456789123456789 123456789123456789.123
+1 1 1 1 1 1    
+</code></pre>
+        <p>There is no need to check much of anything except perhaps the range, which appears to be somewhere near:</p>
+        <pre><code>      1 0 ⎕DT ¯2 2*22 62
+1 1
+</code></pre>
+        <p>For a relatively large array, <a href="https://github.com/the-carlisle-group/Text2Date">Text2Date</a> is taking an inordinate amount of time using <code>⎕DT</code> to validate type 60 time numbers. To investigate, some slighty modified old code (from the pre <code>⎕DT</code> era) that handles time numbers in the form <code>YYYYMMDD.HHMMSS</code>:</p>
+        <pre><code>Val←{
+     k←(0,5⍴100)⊤⍵×10*6
+     f c←(1752 1 1 0 0 0)(4000 13 32 24 60 60)
+     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
+     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
+     (k[5;]=⌈k[5;])∧g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
+ } 
+</code></pre>
+        <p>For comparison, let's define <code>ValDT</code>:</p>
+        <pre><code>ValDT←{
+     60 0 ⎕DT ⍵
+ }
+</code></pre>
+        <p>And run on 50 million integer dates:</p>
+        <pre><code>      d←18000000+?50E6⍴22E6
+      cmpx 'Val d' 'ValDT d'
+  Val d   → 5.2E0  |    0% ⎕⎕⎕⎕⎕⎕                                  
+  ValDT d → 3.4E1  | +552% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+</code></pre>
+        <p>And <code>Val</code> has not been optimized. If we rewrite it for integers only:</p>
+        <pre><code>ValInt←{
+     k←(0,2⍴100)⊤⍵
+     f c←(1752 1 1)(4000 13 32)
+     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
+     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
+     g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
+ }
+</code></pre>
+        <p>Then we get:</p>
+        <pre><code>      cmpx 'ValInt d' 'ValDT d'
+  ValInt d   → 1.4E0  |     0% ⎕                                       
+  ValDT d    → 3.8E1  | +2628% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+</code></pre>
+        <p>Something is not right here. Maybe there is some check I'm not doing, but it looks like there is more going on than that.</p>
+        <p>Even more inexplicable is how long <code>⎕DT</code> takes to validate a Dyalog Date Number when the array gets large. Unless I'm missing something, the check should be almost trivial. Maybe it is some sort of memory issue rather than computational inefficiency.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/grade-up-of-grade-down">Grade Down of Grade
+            Up</a>
           </h1>
           <h2>March 21, 2023</h2>
         </header>
@@ -69,36 +127,6 @@
         <p>There is no need for a comment, either outside the function or inside the function. The name of the function and its literal argument say it all. Furthermore, by extracting <code>'git'</code> as an argument, we have a function that might be useful in many other places, and would make a good candiate for an item in a utility package. Even if the function is hard-coded in the application, and is only used once, the simple act of encapsulating and naming the code is very useful.</p>
         <p>Once we have a well-named function, we might even say, <em>who cares how the code is written!</em>   The fact that the code is in a function, that the function has a good name and a singular purpose, that the arguments are well-designed-- all of these things are more important than the style or technique of the code inside the function itself. It would be better to have the function named and then coded with all sorts of control structures than to have the naked APL-style solution following the :If statement.</p>
         <p>The benefits of an application composed of small, well-named and designed functions cannot be overstated. </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/text2date">Text2Date, a New Repository</a>
-          </h1>
-          <h2>February 27, 2023</h2>
-        </header>
-        <p>In a <a href="/posts/text-to-date">previous post</a> I discussed the problem of converting time strings to time numbers. I have now extracted this functionality from our main application, rewritten it, and made it an open source project, imaginatively, but prematurely, named <a href="https://github.com/the-carlisle-group\Text2Date">Text2Date</a>.                       Text2Date uses a modified version of the Dyalog format pattern that is the left argument of <code>1200⌶</code>.</p>
-        <p>One useful recent, simplifying, insight gained in the process of rewriting  is that differentiating between undelimited  and delimited fixed-width formats strings is useful. Delimited fixed-width time strings must line up - the elements must be in the exact positions specified in the format string.   Undelimited format strings do not require that the time strings line up. For example, the format string <code>MMDDYY</code> can easily  process the character matrix:</p>
-        <pre><code>123124
-10125
-  72476
-011523
-</code></pre>
-        <p>yielding four dates:</p>
-        <pre><code>      'MMDDYY' Text2Date '123124' '10125' '  72476   ' '011523'
-20241231 20250101 19760724 20230115
-</code></pre>
-        <p>When there are no delimiters, we don't need to worry about where an element starts or ends. The time string is just a text representation of a date time packed into an integer. A missing leading zero is no problem. Leading and trailing blanks are no problem. Data in this format shows up all the time in Excel and CSV files out in the wild. </p>
-        <p>In the case of undelimited formats, there is also no need that the input are time strings, numeric is just as good, if not better. <code>Text2Date</code> is now misnamed, as this works:</p>
-        <pre><code>      'MMDDYY' Text2Date 123124 10125 72476 011523
-20241231 20250101 19760724 20230115
-</code></pre>
-        <p>Three special format strings are also accepted: <code>Excel</code> or <code>Excel1900</code>, and <code>Excel1904</code>, which also work on text or numeric input:</p>
-        <pre><code>      'Excel' Text2Date 35000 37125 41256
-19951028 20010822 20121213
-      'Excel' Text2Date '35000' '37125' '41256'
-19951028 20010822 20121213
-</code></pre>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
