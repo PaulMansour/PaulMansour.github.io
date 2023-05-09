@@ -77,6 +77,11 @@
         <code>⎕NEW</code>
       </h2>
       <p>Don't use classes, but if you do, don't directly use <code>⎕NEW</code>.  Have an static method named <code>New</code> in the class that calls <code>⎕NEW</code>. This forces all instances of the class to be in a known place, where they can find friendly classes by doing something <code>##.FriendlyClass.New</code>.   </p>
+      <h2>Don't micro trap</h2>
+      <p>Don't trap around regularly expected errors if there is a simple test that will do the job. Don't do:</p>
+      <pre><code>   {6::⍺⍎⍵ }
+</code></pre>
+      <p>Do</p>
       <h2>Don't trap 0</h2>
       <p>If you trap 0 around anything more than trivial code, you have no idea if your code works the way you think it works, and it probably does not. Minimize the amount of code wrapped in a trap. Use a specific error number (like 6 for VALUE ERROR) if you can. If you must trap, use a dfn with a specific error guard to trap trivial code. </p>
       <h2>

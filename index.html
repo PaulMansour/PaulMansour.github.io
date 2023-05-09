@@ -22,6 +22,70 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/excel-column-names">Excel Column Names</a>
+          </h1>
+          <h2>May 8, 2023</h2>
+        </header>
+        <p>Phase I, problem 3, of the 2020 Dyalog Programming Contest, <strong>Excel-lent Columns</strong> is stated thus:</p>
+        <blockquote>
+          <p>A Microsoft Excel spreadsheet numbers its rows counting up from 1. However Excel's columns are labelled alphabetically — beginning with A–Z, then AA–AZ, BA– BZ, up to ZA–ZZ, then AAA–AAZ and so on. Write a function that, given a right argument which is a character scalar or nonempty vector representing a valid character Excel column identifier between A and XFD, returns the corresponding column number</p>
+          <p>Hint: The Decode function <code>X⊥Y</code>.</p>
+          <p>Examples:</p>
+          <pre><code>      (fn) 'A'
+1
+      (fn) 'APL'
+1104
+</code></pre>
+        </blockquote>
+        <p>The solution is remarkably succint:</p>
+        <pre><code>      N2I←{26⊥⎕A⍳⍵}
+      N2I¨'A' 'Z' 'AA' 'AZ' 'BA'
+1 26 27 52 53
+</code></pre>
+        <p>With such a simple solution, one would think the inverse would be fairly easy. That is, given an integer, return the corresponding column name. If <code>decode</code> solves it one way, certainly <code>encode</code> should solve it the other way:</p>
+        <pre><code>      {(' ',⎕A)[1+26 26⊤⍵]}¨1 26 27 52 53 
+ A  A   AA  B   BA 
+</code></pre>
+        <p>Clearly not correct. The problem is that the column names are not plain old base-26, but rather bijective base-26, as a recent August 22, 2022 answer to an <a href="https://stackoverflow.com/questions/181596/how-to-convert-a-column-number-e-g-127-into-an-excel-column-e-g-aa">old question on Stack Overflow makes clear.</a></p>
+        <p>This is not handled well by <code>encode</code>. While it may be possible to post-process the result of <code>encode</code> to make this work, I have not found a solution in this direction. From the referenced question and answer we can use recursion to compute the correct answer: </p>
+        <pre><code>      I2N←{
+           ⍺←⎕A
+           n←≢⍺
+           i←{q←¯1+⌈⍵÷n
+              a←⍵-n×q
+              q=0:,a
+              a,⍨∇ q}⍵
+           ⍺[i]
+       }
+       I2N¨1 26 27 52 53
+ A  Z  AA  AZ  BA  
+</code></pre>
+        <p>Both of these functions are fairly easy to convert to work on vectors, but it does get a little messy.</p>
+        <p>The function <code>I2N</code> works for any number of digits, which is nice. But this being APL for the practical programmer, we note that Excel columns don't exceed ZZZ (in fact much less) so it is easy to generate all possible Excel column names:</p>
+        <pre><code>      n←⊃,/,¨∘.,\3⍴⊂,¨⎕A
+      10↑n
+ A  B  C  D  E  F  G  H  I  J 
+      ¯10↑n
+ ZZQ  ZZR  ZZS  ZZT  ZZU  ZZV  ZZW  ZZX  ZZY  ZZZ 
+</code></pre>
+        <p>With this in hand, and precomputed if we are worried about performance, we can trivially solve both the original problem and its inverse, with a single self-inverse function:</p>
+        <pre><code>      ColumnLookup←{
+          ⍝ ⍵ ←→ Column Index or Name
+          ⍝ ← ←→ Column Name or Index
+          ⍺←⊃,/,¨∘.,\3⍴⊂,¨⎕A
+          2=≡⍵:⍺⍳⍵
+          ⍺[⍵]
+          }   
+       ColumnLookup 1 26 27 52 53
+ A  Z  AA  AZ  BA 
+       ColumnLookup ColumnLookup 1 26 27 52 53
+1 26 27 52 53
+</code></pre>
+        <p>If we precompute the column names, this will be the fastest and the simplest solution, though all the solutions are petty fast, even with an <code>each</code>. </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/dom-via-json-performance">DOM via JSON Performance</a>
           </h1>
           <h2>April 12, 2023</h2>
@@ -50,7 +114,7 @@
   XM2JM_NoLoop xm → 5.2E¯1 |    0% ⎕⎕⎕⎕⎕⎕⎕⎕                                
   XM2JM_Loop xm   → 2.4E0  | +372% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
 </code></pre>
-        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
+        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that the looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
         <p>Of more interest is the relative performance of the complete task of using <code>⎕JSON</code> verses recursion to build the DOM:</p>
         <pre><code>      HTML2DOMviaJSON←{
                 ⎕JSON(⎕JSON⍠'M')XM2JM ⎕XML ⍵
@@ -194,63 +258,6 @@ SimpleDoc←{
 </code></pre>
         <p>With the exception of the depth column, the target matrix is filled in over about 6 steps. There may be a way to fill in each column in one go, as the depth is done on the penultimate line.    </p>
         <p>In the next post we will investigate the relative performance of these various techniques.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/validating-dates">Validating Dates</a>
-          </h1>
-          <h2>March 27, 2023</h2>
-        </header>
-        <p>One of the features of <code>⎕DT</code> is that it validates timestamps and time numbers.</p>
-        <p>Verifying type 60 and 61 time numbers, as well as timestamps (<code>⎕TS</code> style) takes a bit of computation. Leap years must be determined, there are different day counts for different months, no more than 12 months in a year, 24 hours in a day, etc:</p>
-        <pre><code>      60 0 ⎕DT 20230101.235959 20010229 20000229 20231301
-1 0 1 0
-</code></pre>
-        <p>For time numbers that are a (potentially fractional) number of days from some epoch, the testing is much simpler. In fact it is hard to come up with an invalid value when almost any input yields a valid date:</p>
-        <pre><code>      1 0 ⎕DT ¯1 0 1 35654 12345.123456789123456789 123456789123456789.123
-1 1 1 1 1 1    
-</code></pre>
-        <p>There is no need to check much of anything except perhaps the range, which appears to be somewhere near:</p>
-        <pre><code>      1 0 ⎕DT ¯2 2*22 62
-1 1
-</code></pre>
-        <p>For a relatively large array, <a href="https://github.com/the-carlisle-group/Text2Date">Text2Date</a> is taking an inordinate amount of time using <code>⎕DT</code> to validate type 60 time numbers. To investigate, some slighty modified old code (from the pre <code>⎕DT</code> era) that handles time numbers in the form <code>YYYYMMDD.HHMMSS</code>:</p>
-        <pre><code>Val←{
-     k←(0,5⍴100)⊤⍵×10*6
-     f c←(1752 1 1 0 0 0)(4000 13 32 24 60 60)
-     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
-     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
-     (k[5;]=⌈k[5;])∧g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
- } 
-</code></pre>
-        <p>For comparison, let's define <code>ValDT</code>:</p>
-        <pre><code>ValDT←{
-     60 0 ⎕DT ⍵
- }
-</code></pre>
-        <p>And run on 50 million integer dates:</p>
-        <pre><code>      d←18000000+?50E6⍴22E6
-      cmpx 'Val d' 'ValDT d'
-  Val d   → 5.2E0  |    0% ⎕⎕⎕⎕⎕⎕                                  
-  ValDT d → 3.4E1  | +552% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>And <code>Val</code> has not been optimized. If we rewrite it for integers only:</p>
-        <pre><code>ValInt←{
-     k←(0,2⍴100)⊤⍵
-     f c←(1752 1 1)(4000 13 32)
-     l←(k[1;]=2)∧(0=4|k[0;])=(0=100|k[0;])=0=400|k[0;]
-     g←(k[2;]&gt;0)∧k[2;]≤l+31 28 31 30 31 30 31 31 30 31 30 31[11⌊0⌈k[1;]-1]
-     g∧∧⌿(f(≤⍤¯1)k)∧c(&gt;⍤¯1)k
- }
-</code></pre>
-        <p>Then we get:</p>
-        <pre><code>      cmpx 'ValInt d' 'ValDT d'
-  ValInt d   → 1.4E0  |     0% ⎕                                       
-  ValDT d    → 3.8E1  | +2628% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>Something is not right here. Maybe there is some check I'm not doing, but it looks like there is more going on than that.</p>
-        <p>Even more inexplicable is how long <code>⎕DT</code> takes to validate a Dyalog Date Number when the array gets large. Unless I'm missing something, the check should be almost trivial. Maybe it is some sort of memory issue rather than computational inefficiency.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

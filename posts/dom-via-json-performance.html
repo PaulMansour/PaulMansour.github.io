@@ -50,7 +50,7 @@
   XM2JM_NoLoop xm → 5.2E¯1 |    0% ⎕⎕⎕⎕⎕⎕⎕⎕                                
   XM2JM_Loop xm   → 2.4E0  | +372% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
 </code></pre>
-        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
+        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that the looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
         <p>Of more interest is the relative performance of the complete task of using <code>⎕JSON</code> verses recursion to build the DOM:</p>
         <pre><code>      HTML2DOMviaJSON←{
                 ⎕JSON(⎕JSON⍠'M')XM2JM ⎕XML ⍵
