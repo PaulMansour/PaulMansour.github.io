@@ -44,6 +44,8 @@
       blah blah flah
 :EndIf
 </code></pre>
+      <h2>Don't pack control structures into a single diamondized line</h2>
+      <p>Don't use control structures, but if you do, don't pack them with diamonds. If you already have 8 levels of indentation what are you saving?   And don't pack them with diamonds <em>and</em> embedded assignments!</p>
       <h2>Don't nest parentheses</h2>
       <p>One level is fine. Even multiple non-nested pairs on a line is OK. There is nothing wrong with using parenthesis to change the order of execution (that's what they are for):</p>
       <pre><code>(+/⍵)÷⍴⍵
@@ -79,9 +81,11 @@
       <p>Don't use classes, but if you do, don't directly use <code>⎕NEW</code>.  Have an static method named <code>New</code> in the class that calls <code>⎕NEW</code>. This forces all instances of the class to be in a known place, where they can find friendly classes by doing something <code>##.FriendlyClass.New</code>.   </p>
       <h2>Don't micro trap</h2>
       <p>Don't trap around regularly expected errors if there is a simple test that will do the job. Don't do:</p>
-      <pre><code>   {6::⍺⍎⍵ }
+      <pre><code>   {6::0 ⋄ ⍺⍎⍵ }
 </code></pre>
-      <p>Do</p>
+      <p>Do instead:</p>
+      <pre><code>   {0=⎕NC ⍵:0 ⋄ ⍺⍎⍵}
+</code></pre>
       <h2>Don't trap 0</h2>
       <p>If you trap 0 around anything more than trivial code, you have no idea if your code works the way you think it works, and it probably does not. Minimize the amount of code wrapped in a trap. Use a specific error number (like 6 for VALUE ERROR) if you can. If you must trap, use a dfn with a specific error guard to trap trivial code. </p>
       <h2>
