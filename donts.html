@@ -84,10 +84,10 @@
       <pre><code>   {6::0 ⋄ ⍺⍎⍵ }
 </code></pre>
       <p>Do instead:</p>
-      <pre><code>   {0=⎕NC ⍵:0 ⋄ ⍺⍎⍵}
+      <pre><code>   {0=⍺.⎕NC ⍵:0 ⋄ ⍺⍎⍵}
 </code></pre>
-      <h2>Don't trap 0</h2>
-      <p>If you trap 0 around anything more than trivial code, you have no idea if your code works the way you think it works, and it probably does not. Minimize the amount of code wrapped in a trap. Use a specific error number (like 6 for VALUE ERROR) if you can. If you must trap, use a dfn with a specific error guard to trap trivial code. </p>
+      <h2>Don't trap 0 except for top level traps</h2>
+      <p>If you trap 0 around anything more than trivial code,  you have no idea if your code works the way you think it works,  and it probably does not.  Use a specific error number (like 6 for VALUE ERROR) if you can.  If you must trap, use a dfn with a specific error guard to trap trivial code. </p>
       <h2>
         Don't use
         <code>⍬</code>
