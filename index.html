@@ -22,6 +22,56 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/boolean-techniques">Boolean Techniques</a>
+          </h1>
+          <h2>May 13, 2023</h2>
+        </header>
+        <p>In a recent post titled <a href="https://www.sacrideo.us/suggestivity-and-idioms-in-apl/">Suggestivity and Idioms in APL</a> on his blog <a href="https://www.sacrideo.us/tag/apl/">Fastidious Elegance</a> Arron Hsu enumerates all the permutations and combinations of logical pairwise reductions on Boolean vectors. There are 10 scalar dyadic relational functions and Aaron throws in <code>⊣</code> and  <code>⊢</code> as well for total of 12 functions. With the catenation of 1 or 0 on the front or the back, to keep the result the same shape as the input, there are <code>12×2×2</code> or <code>48</code> possible combinations. </p>
+        <p>It would be convenient to be able to describe in short terms what each of these Boolean transformations does. If we can't meaningfully name them, we probably cannot effectively use them. If we are going to search for these expressions on, say, <a href="https://aplcart.info">APL Cart</a>, we need to have some way to describe them.</p>
+        <p>In his 1987 book <strong>APL - Advanced Techniques and Utilities</strong>, Gary Berquist uses the terms <em>maps</em> and  <em>poles</em> to facilitate discussion of Boolean vectors and techniques: </p>
+        <blockquote>
+          <p>A "maps" vector is a Boolean vector which consists of sets of contiguous 1s (1-maps) separated by one or more 0s, (0-maps). For example, the following bit vector contains 3 1-maps and 4 0-maps:</p>
+          <pre><code>0 0 1 1 1 1 0 0 0 1 1 0 0 1 1 1 1 1 0 0
+</code></pre>
+          <p>A "leading" 1-poles vector is a Boolean vector which consists of pairs of 1s  separated by zero or more 0s. The 1's are called "poles".  The left pole in each pair may be viewed as the starting element of a set of contiguous elements.  The right pole in each pair may be viewed as the next element beyond the ending element of the set. For example, the following bit vector contains 3 pairs of leading 1-poles:</p>
+          <pre><code>0 0 1 0 0 0 1 0 0 1 0 1 0 1 0 0 0 0 1 0  
+</code></pre>
+          <p>Notice that 1-maps and leading 1-poles are alternative means of conveying the  same information. Basically they identify spans of contiguous elements. 1-maps do so by using 1s to flag the elements within the spans. Leading 1-poles do so by using 1s to flag the starts of spans and the starts of non-spans (hence the  word "leading").</p>
+        </blockquote>
+        <p>We can of course flip the bits and discuss 0-maps and leading 0-poles as well.  With this terminolgy in hand, we can interpret  <code>≠\</code> as converting leading 1-poles to 1-maps, and <code>=\</code> as converting leading 0-poles to 0-maps.</p>
+        <p>How many of Aaron's 48 permutations can be succinctly described with this lexicon? Gary defines and names 6 transformations, using shift-and-compare techniques that pre-date the introduction of n-wise reduction. We can find the corresponding 6 transformations in Aaron's 48 by inspection:  </p>
+        <table>
+          <thead>
+            <tr><th class="left">            </th><th class="left">            </th><th class="left">                               </th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="left"> <code>R≠¯1↓0,R</code> </td><td class="left"> <code>{2≠/0,⍵}</code> </td><td class="left"> 1-maps to leading 1-poles     </td></tr>
+            <tr><td class="left"> <code>R=¯1↓1,R</code> </td><td class="left"> <code>{2=/1,⍵}</code> </td><td class="left"> 0-maps to leading 0-poles     </td></tr>
+            <tr><td class="left"> <code>R&gt;¯1↓0,R</code> </td><td class="left"> <code>{2&lt;/0,⍵}</code> </td><td class="left"> 1-maps to first 1 bits        </td></tr>
+            <tr><td class="left"> <code>R≥¯1↓1,R</code> </td><td class="left"> <code>{2≤/1,⍵}</code> </td><td class="left"> 0-maps to first 0 bits        </td></tr>
+            <tr><td class="left"> <code>R∨¯1↓0,R</code> </td><td class="left"> <code>{2∨/0,⍵}</code> </td><td class="left"> extend 1-maps to right by 1   </td></tr>
+            <tr><td class="left"> <code>R∧¯1↓1,R</code> </td><td class="left"> <code>{2∧/1,⍵}</code> </td><td class="left"> extend 0-maps to right by 1   </td></tr>
+          </tbody>
+        </table>
+        <p>From these, six related ones jump right out:</p>
+        <table>
+          <thead>
+            <tr><th class="left">            </th><th class="left">            </th><th class="left">                                </th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="left"> <code>R≠1↓R,0</code>  </td><td class="left"> <code>{2≠/⍵,0}</code> </td><td class="left"> 1-maps to trailing 1-poles     </td></tr>
+            <tr><td class="left"> <code>R=1↓R,1</code>  </td><td class="left"> <code>{2=/⍵,1}</code> </td><td class="left"> 0-maps to trailing 0-poles     </td></tr>
+            <tr><td class="left"> <code>R&gt;1↓R,0</code>  </td><td class="left"> <code>{2&gt;/⍵,0}</code> </td><td class="left"> 1-maps to last 1 bits          </td></tr>
+            <tr><td class="left"> <code>R≥1↓R,1</code>  </td><td class="left"> <code>{2≥/⍵,1}</code> </td><td class="left"> 0-maps to last 0 bits          </td></tr>
+            <tr><td class="left"> <code>R∨1↓R,0</code>  </td><td class="left"> <code>{2∨/⍵,0}</code> </td><td class="left"> extend 1-maps to left by 1     </td></tr>
+            <tr><td class="left"> <code>R∧1↓R,1</code>  </td><td class="left"> <code>{2∧/⍵,1}</code> </td><td class="left"> extend 0-maps to left by 1     </td></tr>
+          </tbody>
+        </table>
+        <p>Aaron may be a bit optimistic when he writes that <em>almost all of the binary relations that we can imagine in use here find some meaningful interpretation</em>, but here we have 12 simple, visually suggestive, well-named expressions using the language of maps and poles. That's a good start. Can we find more?</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/dont-trap-when-you-can-verify">Don't Trap When
             You Can Verify</a>
           </h1>
@@ -108,58 +158,6 @@ findCmdPos[1] exact←{6::⍵ ⋄ exact}~ASN ⍝ exact match?
 1 26 27 52 53
 </code></pre>
         <p>If we precompute the column names, this will be the fastest and the simplest solution, though all the solutions are petty fast, even with an <code>each</code>. </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/dom-via-json-performance">DOM via JSON Performance</a>
-          </h1>
-          <h2>April 12, 2023</h2>
-        </header>
-        <p>In the <a href="/posts/the-dom-via-json">previous post</a> we looked at building an APL DOM from a <code>⎕XML</code>-style matrix using <code>⎕JSON</code> rather than recursively creating namespaces by hand. Now let's look at some performance characteristics.</p>
-        <p>First let's create a relatively large document and convert it to HTML:</p>
-        <pre><code>      A←#.Abacus.Main
-  
-      LargeDoc←{
-            v←25000 20⍴⍕¨⍳500000
-            t←A.NewTable v
-            c←A.Cells t
-            c.class←⊂'cell'
-            c.id←v
-            t
-       }
-      
-      d←LargeDoc 0
-      h←A.DOM2HTML d 
-      ≢h
-20127817
-</code></pre>
-        <p>Now let's convert the HTML to a <code>⎕XML</code> matrix, and test the performance of the two techniques from the previous post for converting a <code>⎕XML</code> matrix to a ⎕JSON matrix: </p>
-        <pre><code>  xm←⎕XML h
-      cmpx 'XM2JM_NoLoop xm' 'XM2JM_Loop xm'
-  XM2JM_NoLoop xm → 5.2E¯1 |    0% ⎕⎕⎕⎕⎕⎕⎕⎕                                
-  XM2JM_Loop xm   → 2.4E0  | +372% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that the looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
-        <p>Of more interest is the relative performance of the complete task of using <code>⎕JSON</code> verses recursion to build the DOM:</p>
-        <pre><code>      HTML2DOMviaJSON←{
-                ⎕JSON(⎕JSON⍠'M')XM2JM ⎕XML ⍵
-            }
-      
-      
-      cmpx 'HTML2DOMviaJSON h'  'A.HTML2DOM h'
-  HTML2DOMviaJSON h → 9.4E0  |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕                   
-* A.HTML2DOM h      → 1.8E1  | +91% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>Note that the results of these two functions don't match as they are namespaces not arrays. Note further that <code>⎕JSON</code> creates a tree where the child namespaces are true children of the parent, as opposed to the (this particular) recursive technique:  </p>
-        <pre><code>        d1←HTML2DOMviaJSON h
-        d2←A.HTML2DOM h 
-        ⊃⊃⊃d1.Content.Content.Content
-#.[JSON object].[JSON object].[JSON object].[JSON object]
-        ⊃⊃⊃d2.Content.Content.Content
-#.Abacus.Main.[Namespace]
-</code></pre>
-        <p>Recursion is clearly slower, but more testing should be done on reasonably sized and more realistic documents, especially docs with more depth.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
