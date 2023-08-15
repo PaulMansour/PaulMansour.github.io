@@ -22,6 +22,75 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/testing-guis">Testing GUIs</a>
+          </h1>
+          <h2>August 14, 2023</h2>
+        </header>
+        <p>I'm currently in the process of extracting a GUI testing framework from a private project  and adding it to <a href="https://github.com/the-carlisle-group/provanto">Provanto</a>.  Writing automated GUI tests for <code>⎕WC</code> applications is somewhat of a dark art. Nowhere is the principle of Test Driven Development (TDD) more important than with GUI programming and <code>⎕WC</code>. Writing GUI code without forethought will invariably yield code that is simply untestable. Of course we don't have forethought until we have written a bunch of GUI code first, and then attempted to write test code,  so we are generally doomed to have untestable GUI code that must be rewritten.</p>
+        <p>Future posts will explore the underlying framework code in detail. Here we just take a look at the overall basics, what a test function looks like, and how to write one. Once the dark art is mastered and burried in the framework, and we learn how to write testable GUI apps, the tests themselves are clean, neat, and simple to write, read, and maintain.</p>
+        <p>Testing a GUI starts with a reference to the primary form object of an application. The <code>Init</code> function takes this form, intantiates a few properties in it, and then injects a few functions back into the test namespace:</p>
+        <pre><code>Init←{
+     ⍵.on999←1
+     ⍵.DequeueTimes←4
+     ⍵.ActionDelay←0
+     ⍵.KeyPressDelay←0
+     t←⊃⎕RSI
+     t.Keys←KeySpace 0
+     t.G←⎕THIS
+     _←⍵ Fix¨API 0
+     0
+ }
+</code></pre>
+        <p>In addition to <code>Assert</code> and <code>Try</code> (the functions that Provanto injects into the test space), we now will have two more reserved words: <code>Enter</code> and <code>Get</code>. Both of the these functions are bound with the reference to the form, so it is not needed as an argument.</p>
+        <p>The <code>Init</code> function may be called in the <code>Startup</code> function for a suite of tests, or  directly in a test function.  </p>
+        <p>Provanto includes a sample GUI application and a few tests to show how it is done. A typical GUI test fires events on objects, then inspects the state of the GUI and the application and makes assertions. Let's take a look at one:</p>
+        <pre><code>TestAllowDigitsProperty←{
+     s←GetAppState 0
+     e←Get'Name'
+     Assert~s.AllowDigits:
+     Enter'Name' 'A12B345C':
+     Assert e.Text≡'ABC':
+     Enter'AllowDigits':
+     Assert s.AllowDigits:
+     Enter'Name' '12345':
+     Assert e.Text≡'ABC12345':
+     Enter'AllowDigits':
+     Assert~s.AllowDigits:
+     0
+ }
+</code></pre>
+        <p>This function assumes that <code>Init</code> has already been called. <code>GetAppState</code> is an application specfic helper function that returns a namespace with a few variables representing the state of the application.  Of course in a real application, the application state may be represented by a complex object model, or a folder on disk, or both and more. </p>
+        <p>The <code>Get</code> function takes the name of a GUI object and returns a reference to it, providing access to the state of the GUI.</p>
+        <p>The <code>Enter</code> function allows us to fire events at the GUI.  To click on a push button or menu item, or to change the state of a radio button or check box, we simply call the <code>Enter</code> function with the name of the object. To enter text in an edit box, we call <code>Enter</code> with both the name of the object and the text to enter.</p>
+        <p>We can also fire specific events. For example, to double click on the <code>Name</code> edit object:</p>
+        <pre><code>Enter 'Name' (⊂'MouseDblClick')
+</code></pre>
+        <p>A full event message may be provided as well:</p>
+        <pre><code>Enter 'Name' ('KeyPress' 'RC' 0 39 0) 
+</code></pre>
+        <p><code>KeyPress</code> events are very common, so a namespace with <code>KeyPress</code> events is provided, to make it easy to fire specific keys on objects:</p>
+        <pre><code>Enter 'Name' Keys.RightCursor  
+</code></pre>
+        <p>The above test is implement as a dfn, and thus naked guards are necessary to prevent the function from exiting on the lines that lack an assignment, specifically the lines calling <code>Enter</code>. We could of course assign a useless result, but it adds a lot of clutter. The naked guard is already used on the lines making assertions, so its not that much of stretch, but some might find it objectionable. I'm not entirely sure how I feel about it. A trad function works just as well, arguably cleaner if there are not too many local variables:</p>
+        <pre><code> z←TestAllowDigitsProperty x;s;e
+ s←GetAppState 0
+ e←Get'Name'
+ Assert~s.AllowDigits
+ Enter'Name' 'A12B345C'
+ Assert e.Text≡'ABC'
+ Enter'AllowDigits'
+ Assert s.AllowDigits
+ Enter'Name' '12345'
+ Assert e.Text≡'ABC12345'
+ Enter'AllowDigits'
+ Assert~s.AllowDigits
+ z←0 
+</code></pre>
+        <p>The main point is that both of these function, the dfn and trad fn, have little to no extraneous code. The functions are easy to write and read. The two API functions <code>Enter</code> and <code>Get</code> provide almost all that is needed. The test functions are also easy to trace, and you can see exactly what the GUI is doing while stepping through them.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/boolean-techniques">Boolean Techniques</a>
           </h1>
           <h2>May 13, 2023</h2>
@@ -94,70 +163,6 @@ findCmdPos[1] exact←{6::⍵ ⋄ exact}~ASN ⍝ exact match?
         <p>There is virtually no scenario during development where we want a micro trap like this to not work. We are abusing the error guard. </p>
         <p>Many times we can avoid micro traps and even guards by refactoring.  Micro traps are often a sign of technical debt: we have no idea how or why a certain state arises, but it does, so we trap around it. Regardless, if we must handle the case instead of finding and eliminating the root cause, it is better to explicitly test for it.</p>
         <p>So this proscription is now added to the <a href="/donts">Dyalog APL Dont's</a> </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/excel-column-names">Excel Column Names</a>
-          </h1>
-          <h2>May 8, 2023</h2>
-        </header>
-        <p>Phase I, problem 3, of the 2020 Dyalog Programming Contest, <strong>Excel-lent Columns</strong> is stated thus:</p>
-        <blockquote>
-          <p>A Microsoft Excel spreadsheet numbers its rows counting up from 1. However Excel's columns are labelled alphabetically — beginning with A–Z, then AA–AZ, BA– BZ, up to ZA–ZZ, then AAA–AAZ and so on. Write a function that, given a right argument which is a character scalar or nonempty vector representing a valid character Excel column identifier between A and XFD, returns the corresponding column number</p>
-          <p>Hint: The Decode function <code>X⊥Y</code>.</p>
-          <p>Examples:</p>
-          <pre><code>      (fn) 'A'
-1
-      (fn) 'APL'
-1104
-</code></pre>
-        </blockquote>
-        <p>The solution is concise:</p>
-        <pre><code>      N2I←{26⊥⎕A⍳⍵}
-      N2I¨'A' 'Z' 'AA' 'AZ' 'BA'
-1 26 27 52 53
-</code></pre>
-        <p>With such a simple solution, one would think the inverse would be fairly easy. That is, given an integer, return the corresponding column name. If <code>decode</code> solves it one way, certainly <code>encode</code> should solve it the other way:</p>
-        <pre><code>      {(' ',⎕A)[1+26 26⊤⍵]}¨1 26 27 52 53 
- A  A   AA  B   BA 
-</code></pre>
-        <p>Clearly not correct. The problem is that the column names are not plain old base-26, but rather bijective base-26, as a recent August 22, 2022 answer to an <a href="https://stackoverflow.com/questions/181596/how-to-convert-a-column-number-e-g-127-into-an-excel-column-e-g-aa">old question on Stack Overflow makes clear.</a></p>
-        <p>This is not handled well by <code>encode</code>. While it may be possible to post-process the result of <code>encode</code> to make this work, I have not found a solution in this direction. From the referenced question and answer we can use recursion to compute the correct answer: </p>
-        <pre><code>      I2N←{
-           ⍺←⎕A
-           n←≢⍺
-           i←{q←¯1+⌈⍵÷n
-              a←⍵-n×q
-              q=0:,a
-              a,⍨∇ q}⍵
-           ⍺[i]
-       }
-       I2N¨1 26 27 52 53
- A  Z  AA  AZ  BA  
-</code></pre>
-        <p>Both of these functions are fairly easy to convert to work on vectors, but it does get a little messy.</p>
-        <p>The function <code>I2N</code> works for any number of digits, which is nice. But this being APL for the practical programmer, we note that Excel columns don't exceed ZZZ (in fact much less) so it is easy to generate all possible Excel column names:</p>
-        <pre><code>      n←⊃,/,¨∘.,\3⍴⊂,¨⎕A
-      10↑n
- A  B  C  D  E  F  G  H  I  J 
-      ¯10↑n
- ZZQ  ZZR  ZZS  ZZT  ZZU  ZZV  ZZW  ZZX  ZZY  ZZZ 
-</code></pre>
-        <p>With this in hand, and precomputed if we are worried about performance, we can trivially solve both the original problem and its inverse, with a single self-inverse function:</p>
-        <pre><code>      ColumnLookup←{
-          ⍝ ⍵ ←→ Column Index or Name
-          ⍝ ← ←→ Column Name or Index
-          ⍺←⊃,/,¨∘.,\3⍴⊂,¨⎕A
-          2=≡⍵:⍺⍳⍵
-          ⍺[⍵]
-          }   
-       ColumnLookup 1 26 27 52 53
- A  Z  AA  AZ  BA 
-       ColumnLookup ColumnLookup 1 26 27 52 53
-1 26 27 52 53
-</code></pre>
-        <p>If we precompute the column names, this will be the fastest and the simplest solution, though all the solutions are petty fast, even with an <code>each</code>. </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

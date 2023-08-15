@@ -79,6 +79,12 @@
         <code>⎕NEW</code>
       </h2>
       <p>Don't use classes, but if you do, don't directly use <code>⎕NEW</code>.  Have an static method named <code>New</code> in the class that calls <code>⎕NEW</code>. This forces all instances of the class to be in a known place, where they can find friendly classes by doing something <code>##.FriendlyClass.New</code>.   </p>
+      <h2>
+        Don't use
+        <code>⎕NEW</code>
+        for GUI objects
+      </h2>
+      <p>Use <code>⎕WC</code>, which creates named objects, not <code>⎕NEW</code> which creates unnamed objects. Other than returning a reference, which can easily be obtained by executing the result of <code>⎕WC</code>, there are no advantages to using <code>⎕NEW</code>, and plenty of disadvantages to not being able to reference objects by name.</p>
       <h2>Don't micro trap</h2>
       <p>Don't trap around regularly expected errors if there is a simple test that will do the job. Don't do:</p>
       <pre><code>   {6::0 ⋄ ⍺⍎⍵ }
