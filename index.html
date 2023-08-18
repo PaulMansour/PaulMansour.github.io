@@ -22,6 +22,31 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/testing-guis-wrestling-with-events">Testing
+            GUIs: Wrestling with Events</a>
+          </h1>
+          <h2>August 18, 2023</h2>
+        </header>
+        <p>GUI applications are complicated. Callbacks are attached to events and processed by <code>⎕DQ</code>. Events can get queued up by their nature. For example, a single user action on a grid can fire a <code>GridKeyPress</code> event, followed by a  <code>CellChange</code> event followed by a <code>CellChanged</code> event. Events can also get queued up because a callback explicity calls <code>⎕NQ</code> adding another event to the queue. During the normal course of using the application, this all just just works (hopefully!). However, the moment we try to write automated tests that exercise the GUI, the complexity manifests itself.</p>
+        <p>The first problem that arises is that when testing, we cannot run <code>⎕DQ</code> at all. If we <code>⎕DQ</code> the main form, we cannot then run a test function.</p>
+        <blockquote>
+          <p>Note that it is possible to either write your tests into the application itself, so that they run under the main <code>⎕DQ</code> of the application, or to run  each test under a temporary invocation of <code>⎕DQ</code> - by using <code>⎕NQ</code> to put a test into the queue. But these techniques are overly complicated and add nothing useful. They make writing and tracing tests more difficult, and they don't solve  a secondary problem of model subforms like dialog boxes.</p>
+        </blockquote>
+        <p>This is easy to solve. We just use the implicit <code>⎕DQ</code> that runs when the session is wait mode. We should also avoid all uses of <code>⎕DQ</code> to wait on modal forms. A simply <code>TestMode</code>  flag in our application fascilitates this. </p>
+        <p>The second and more difficult problem to solve is that in a GUI test function we want to fire events and make assertions, and fire more events and make more assertions, and this must behave exactly as it does in a runtime situation under <code>⎕DQ</code>. But firing a single event can stack up multiple events, and these will not fire in real time during the execution of the test function. This is because when the test function runs, there is no opportunity for queued up callbacks to execute. When the interpreter drops into immediate execution mode, then the queued up events can be processed by the session's implicit <code>⎕DQ</code>. We have the strange situation where an assertion fails and the test stops, and then the assertion can be reexecuted and it passes, as the very fact of failure has allowed the interpreter to pause and process the queued up events. How then is this problem solved? We must have a way of giving the interpreter an opportunity on every line of the test function, or at least on every line that fires an event, to process all of the events that may occur as a result of the primary event that was fired.</p>
+        <p>The magic that does this is:</p>
+        <pre><code>Fire←{
+     _←⎕NQ ⍵
+     0⊣{⎕DQ ⍵⊣⎕NQ ⍵ 999}¨⍺.DequeueTimes⍴⍺ 
+ }  
+</code></pre>
+        <p><code>⍺</code> is the primary form.    </p>
+        <p>We fire the primary event with <code>⎕NQ</code>. We then enter and exit an explict <code>⎕DQ</code> as many times as necessary to process the queued up events right on the spot. The <code>⎕NQ</code> fires a 999 event which is set to exit <code>⎕DQ</code>.  It is not always clear    how many times we must enter and exit <code>⎕DQ</code> to clear the queue. And of course it is different for different primary events. Luckily it appears we can set it to an arbitrarily high number, say 10, with no performance penalty.</p>
+        <p>The sample GUI app in Provanto contains an example of explicitly using <code>⎕NQ</code> in callbacks to create a chain of 7 events. It can be observed that we must enter and exit <code>⎕DQ</code> exactly 7 times to process all the events. In a real-life large GUI application the magic number appeared to be 4. </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/testing-guis">Testing GUIs</a>
           </h1>
           <h2>August 14, 2023</h2>
@@ -86,7 +111,7 @@
  Assert~s.AllowDigits
  z←0 
 </code></pre>
-        <p>The main point is that both of these function, the dfn and trad fn, have little to no extraneous code. The functions are easy to write and read. The two API functions <code>Enter</code> and <code>Get</code> provide almost all that is needed. The test functions are also easy to trace, and you can see exactly what the GUI is doing while stepping through them.</p>
+        <p>The main point is that both of these functions, the dfn and trad fn, have little to no extraneous code. The functions are easy to write and read. The two API functions <code>Enter</code> and <code>Get</code> provide almost all that is needed. The test functions are also easy to trace, and you can see exactly what the GUI is doing while stepping through them.</p>
       </article>
       <article>
         <header>
@@ -137,32 +162,6 @@
           </tbody>
         </table>
         <p>Aaron may be a bit optimistic when he writes that <em>almost all of the binary relations that we can imagine in use here find some meaningful interpretation</em>, but here we have 12 simple, visually suggestive, well-named expressions using the language of maps and poles. That's a good start. Can we find more?</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/dont-trap-when-you-can-verify">Don't Trap When
-            You Can Verify</a>
-          </h1>
-          <h2>May 11, 2023</h2>
-        </header>
-        <p>The other day I turned trapping off:</p>
-        <pre><code>      600⌶1
-2 
-</code></pre>
-        <p>And attempted to run a user command:</p>
-        <pre><code>      ]display ⍳10
-VALUE ERROR: Undefined name: exact
-findCmdPos[1] exact←{6::⍵ ⋄ exact}~ASN ⍝ exact match?
-</code></pre>
-        <p>...which fails due to a <strong>micro trap</strong>.</p>
-        <p>I'm not picking on user commands here, my apps do this all over the place and it's a bad idea. With trap control set to 1, virtually no aspect of my apps will run. I don't think that should be. Error guards are seductive because they are terse. It's a little annoying to write: </p>
-        <pre><code>      {0=⎕NC 'exact':⍵ ⋄ exact}
-</code></pre>
-        <p>But the explicit test is a better practice. Sure, we can turn trap control on and off, we can put a stop flag in a function to get us to the point where we can safely turn trapping off to proceed to the error we are looking for, but it's all messy.</p>
-        <p>There is virtually no scenario during development where we want a micro trap like this to not work. We are abusing the error guard. </p>
-        <p>Many times we can avoid micro traps and even guards by refactoring.  Micro traps are often a sign of technical debt: we have no idea how or why a certain state arises, but it does, so we trap around it. Regardless, if we must handle the case instead of finding and eliminating the root cause, it is better to explicitly test for it.</p>
-        <p>So this proscription is now added to the <a href="/donts">Dyalog APL Dont's</a> </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

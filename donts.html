@@ -106,6 +106,13 @@
      (⊂⍬)≡¨(⎕NS'') ⍬ (⎕NS'')
 0 1 0
 </code></pre>
+      <h2>Don't write operators that never take functions as operands</h2>
+      <p>Don't do:</p>
+      <pre><code>{⍵⊃⍨⍵⍵⍳⊂⍺⍺}
+</code></pre>
+      <p>If you must, just do something like: </p>
+      <pre><code>{n v←⍵ ⋄ v⊃⍨n⍳⊂⍺}
+</code></pre>
       <h2>Don't abbreviate names</h2>
       <p>In the proper circumstances, the letter <code>d</code> is an excellent name. Again, in the proper circumstances, the string <code>NextRateAdjustmentDate</code> may be an excellent name, as is the string <code>NRADate</code>. These names have in common the following property: they may be spoken over the phone, and the hearer has a reasonable chance of understanding what is being communicated. The string <code>NxtRtAdjDt</code> is _never_ a good name. It sows confusion. It is the Voldemort of names by force: it must not be spoken because it cannot be spoken. </p>
       <h2>Don't use long names for short-lived variables</h2>
