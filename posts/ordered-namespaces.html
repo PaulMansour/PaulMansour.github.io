@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/ordered-namespaces">Ordered Namespaces</a>
+          </h1>
+          <h2>September 26, 2023</h2>
+        </header>
+        <p>It is useful to be able to retrieve the names and values in a namespace in the order in which they were assigned, especially when designing DSLs where users are writing scripts.  For example, we may want to assign vectors into a namespace and then display the vectors as columns in an Excel spreadsheet in the same order. </p>
+        <p>One way to do this is with global triggers. Here is QNSO, for <em>quad namespace, ordered</em>:</p>
+        <pre><code>QNSO←{
+     s←⎕NS''
+     s.∆nl←''
+     f←⊂'∆T x' ':Implements Trigger *' '{}2007⌶1' '∆nl,←⊂x.Name' '{}2007⌶0'
+     f,←⊂'z←∆NL' 'z←⌽∪⌽∆nl∩⎕NL ¯2'
+     s⊣s.⎕FX¨f
+ }
+</code></pre>
+        <p>Now we can do:</p>
+        <pre><code>      s←QNSO ''
+      s.Zebras←5
+      s.Apples←8
+      s.Eggs←12
+      s.∆NL
+ Zebras  Apples  Eggs 
+      s.Zebras←7
+      s.⎕EX 'Apples'
+      s.∆NL
+ Eggs  Zebras 
+</code></pre>
+        <p>The trigger <code>∆T</code> function is called on every assignment to a global variable in the namespace. The assigned names are accumulated in the variable <code>∆nl</code>. We have to be careful to use <code>2007⌶</code> to turn global triggers off and then back on, or else we will end up in an endless loop.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2023 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
