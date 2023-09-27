@@ -22,12 +22,34 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/project-playfair">Project Playfair</a>
+          </h1>
+          <h2>September 27, 2023</h2>
+        </header>
+        <p><a href="https://github.com/the-carlisle-group/Playfair">Playfair</a> is a new project for exploring the features, pros, and cons of <a href="https://sharpplot.com/">SharpPlot</a>, and how it compares to the big popular projects like <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>, <a href="https://ggplot2.tidyverse.org/">ggplot2</a> and <a href="https://plotly.com/">plotly</a>.</p>
+        <p>Playfair is also for exploring and what needs to be done to to cover SharpPlot  to make it as easy and consistent to use as possible. </p>
+        <p>It should be noted the main concern is with statistics and business graphics, so the focus is on bar charts, line charts, and scatter plots.  3D plots and the like are not particularly relevant   though SharpPlot clearly has some of that capability.</p>
+        <p>Also it is assumed that a sophisticated database and query language is available to produce the data ready to be plotted. There is little need for the chart library to summarize data, compute totals and averages, and do general analytics, even though SharpPlot and the rest can in fact do this to some degree. However, it can be useful to delegate splitting and grouping data to the chart library in certain circumstances.</p>
+        <p>There are three completely superficial (but to the casual observer often fatal)  cons of SharpPlot which need to to be noted but dispensed with: the SharpPlot website/help, the Wizard provided in the Dyalog Windows IDE, and the default color scheme. The website and CHM help both display charts as fuzzy, out-of-focus, pixelated png files. (That's not good for a graphics package!) The wizard is unusable, the default color palette hideous.</p>
+        <p>A primary pro of SharpPlot is that it is delivered as a single dll (or even APL workspace) with no dependencies. It is hard to overestimate the benefit of this. This feature is so important that it can make up for many, many cons of the library that may exist. Vega-Lite is a JavaScript library that depends on Vega, which in turn depends on D3 and who knows how many other libraries. And of course it takes a web browser or some JavaScript interpreter to run it. Despite the existence of the HTMRenderer, a JavaScript solution is not ideal. </p>
+        <h2>The Grammar of Graphics</h2>
+        <p>The primary difference between SharpPlot and Vega-Lite and ggplot2 is that the latter two  are based on <a href="https://www.amazon.com/Grammar-Graphics-Statistics-Computing/dp/0387245448/ref=as_li_ss_tl">The Grammar of Graphics</a>. This means things are ... abstract. To see how abstract, this quote from the home page of ggplot2 should suffice:</p>
+        <blockquote>
+          <p>It’s hard to succinctly describe how ggplot2 works because it embodies a deep philosophy of visualisation. However, in most cases you start with ggplot(), supply a dataset and aesthetic mapping (with aes()). You then add on layers (like geom_point() or geom_histogram()), scales (like scale_colour_brewer()), faceting specifications (like facet_wrap()) and coordinate systems (like coord_flip()).</p>
+        </blockquote>
+        <p>Now there is nothing wrong with deep philosophy, abstractions and generalizations, and for those who design and create charts for a living, or better yet, those who design systems that design charts, having the power this ultimately delivers is no doubt a good thing. Plotly and SharpPlot both fly a little closer to the ground, and provide specific functions that  directly create bar charts and scatter plots and so on. Of course, given a grammar of graphics, the first thing we want to do is completely hide it from  our end users, so it remains to be seen if it really is an advantage for basic business graphics. </p>
+        <p>One potential con of SharpPlot compared to the other packages (those based on GoG or not), is that the SharpPlot draw methods do not take a consistent specification for the data on the <code>x</code> and <code>y</code> axes. For example, the SharpPlot <code>DrawBarChart</code> method takes a vector of values for the quantitativive axis, usually <code>y</code>. The categorical axis is not defined and must be manually labeled. To get a horizontal bar chart, the bar-chart-specific <code>Horizontal</code> property must be specified, instead of just switching the specification of the data feeding the <code>x</code> and <code>y</code> axes. A little more generalization would help here. Be that as it may, end users are probably  more comfortable selecting chart type <code>BarChart</code> and then clicking a check box for a <code>Horizontal</code> option, without thinking much about axes.</p>
+        <p>In future posts we will be putting SharpPlot through its paces, comparing and contrasting with the other charting libraries.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/ordered-namespaces">Ordered Namespaces</a>
           </h1>
           <h2>September 26, 2023</h2>
         </header>
         <p>It is useful to be able to retrieve the names and values in a namespace in the order in which they were assigned, especially when designing DSLs where users are writing scripts.  For example, we may want to assign vectors into a namespace and then display the vectors as columns in an Excel spreadsheet in the same order. </p>
-        <p>One way to do this is with global triggers. Here is QNSO, for <em>quad namespace, ordered</em>:</p>
+        <p>One way to do this is with global triggers. Here is <code>QNSO</code>, for <em>quad namespace, ordered</em>:</p>
         <pre><code>QNSO←{
      s←⎕NS''
      s.∆nl←''
@@ -48,7 +70,7 @@
       s.∆NL
  Eggs  Zebras 
 </code></pre>
-        <p>The trigger <code>∆T</code> function is called on every assignment to a global variable in the namespace. The assigned names are accumulated in the variable <code>∆nl</code>. We have to be careful to use <code>2007⌶</code> to turn global triggers off and then back on, or else we will end up in an endless loop.</p>
+        <p>The trigger function <code>∆T</code> is called on every assignment to a global variable in the namespace. The assigned names are accumulated in the variable <code>∆nl</code>. We have to be careful to use <code>2007⌶</code> to turn global triggers off and then back on, or else we will end up in an endless loop.</p>
       </article>
       <article>
         <header>
@@ -236,31 +258,6 @@
         <p>The chart definition outlined above is just a set of name/value pairs. They can be executed in any order, as they just set the state of the SharpPlot chart object before the appropriate draw method is executed. But there are times when we may want to draw additional things on charts, additional graphs, or lines, perhaps in different colors, and it is important that additional properties are set after the draw method is executed, and then we need to specify the next draw method. Order becomes an issue here. One solution is for <code>BuildChart</code> to accept a list of name/value pairs rather than a namespace. As a chart definition needs to be stored to disk somehow, and a namespace is no good for that, we will need this feature anyway. Now we will have order. The namespace is then just a convenience for writing charts in code, rather than defining the chart in an array of name/value pairs. The result of the wizard should be this array. </p>
         <h2>Next Steps</h2>
         <p>Now that we have a tidy way of defining charts in code or as an array, we can think about a GUI to make it really easy. This is perhaps a good opportunity to look at the HTMLRenderer for a cross-platform solution. </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/testing-guis-wrestling-with-events">Testing
-            GUIs: Wrestling with Events</a>
-          </h1>
-          <h2>August 18, 2023</h2>
-        </header>
-        <p>GUI applications are complicated. Callbacks are attached to events and processed by <code>⎕DQ</code>. Events can get queued up by their nature. For example, a single user action on a grid can fire a <code>GridKeyPress</code> event, followed by a <code>CellChange</code> event followed by a <code>CellChanged</code> event. Events can also get queued up because a callback explicitly calls <code>⎕NQ</code> adding another event to the queue. During the normal course of using the application, this all just works (hopefully!). However, the moment we try to write automated tests that exercise the GUI, the complexity manifests itself.</p>
-        <p>The first problem that arises is that when testing, we cannot run <code>⎕DQ</code> at all. If we <code>⎕DQ</code> the main form, we cannot then run a test function.</p>
-        <blockquote>
-          <p>Note that it is possible to either write your tests into the application itself, so that they run under the main <code>⎕DQ</code> of the application, or to run  each test under a temporary invocation of <code>⎕DQ</code> - by using <code>⎕NQ</code> to put a test into the queue. But these techniques are overly complicated and add nothing useful. They make writing and tracing tests more difficult, and they don't solve  a secondary problem of modal subforms like dialog boxes.</p>
-        </blockquote>
-        <p>This is easy to solve. We just use the implicit <code>⎕DQ</code> that runs when the session is wait mode. We should also avoid all uses of <code>⎕DQ</code> to wait on modal forms. A simply <code>TestMode</code>  flag in our application facilitates this. </p>
-        <p>The second and more difficult problem to solve is that in a GUI test function we want to fire events and make assertions, and fire more events and make more assertions, and this must behave exactly as it does in a runtime situation under <code>⎕DQ</code>. But firing a single event can stack up multiple events, and these will not fire in real time during the execution of the test function. This is because when the test function runs, there is no opportunity for queued up callbacks to execute. When the interpreter drops into immediate execution mode, then the queued up events can be processed by the session's implicit <code>⎕DQ</code>. We have the strange situation where an assertion fails and the test stops, and then the assertion can be re-executed and it passes, as the very fact of failure has allowed the interpreter to pause and process the queued up events. How then is this problem solved? We must have a way of giving the interpreter an opportunity on every line of the test function, or at least on every line that fires an event, to process all of the events that may occur as a result of the primary event that was fired.</p>
-        <p>The magic that does this is:</p>
-        <pre><code>Fire←{
-     _←⎕NQ ⍵
-     0⊣{⎕DQ ⍵⊣⎕NQ ⍵ 999}¨⍺.DequeueTimes⍴⍺ 
- }  
-</code></pre>
-        <p><code>⍺</code> is the primary form.    </p>
-        <p>We fire the primary event with <code>⎕NQ</code>. We then enter and exit an explict <code>⎕DQ</code> as many times as necessary to process the queued up events right on the spot. The <code>⎕NQ</code> fires a 999 event which is set to exit <code>⎕DQ</code>.  It is not always clear    how many times we must enter and exit <code>⎕DQ</code> to clear the queue. And of course it is different for different primary events. Luckily it appears we can set it to an arbitrarily high number, say 10, with no performance penalty.</p>
-        <p>The sample GUI app in Provanto contains an example of explicitly using <code>⎕NQ</code> in callbacks to create a chain of 7 events. It can be observed that we must enter and exit <code>⎕DQ</code> exactly 7 times to process all the events. In a real-life large GUI application the magic number appeared to be 4. </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

@@ -27,7 +27,7 @@
           <h2>September 26, 2023</h2>
         </header>
         <p>It is useful to be able to retrieve the names and values in a namespace in the order in which they were assigned, especially when designing DSLs where users are writing scripts.  For example, we may want to assign vectors into a namespace and then display the vectors as columns in an Excel spreadsheet in the same order. </p>
-        <p>One way to do this is with global triggers. Here is QNSO, for <em>quad namespace, ordered</em>:</p>
+        <p>One way to do this is with global triggers. Here is <code>QNSO</code>, for <em>quad namespace, ordered</em>:</p>
         <pre><code>QNSO←{
      s←⎕NS''
      s.∆nl←''
@@ -48,7 +48,7 @@
       s.∆NL
  Eggs  Zebras 
 </code></pre>
-        <p>The trigger <code>∆T</code> function is called on every assignment to a global variable in the namespace. The assigned names are accumulated in the variable <code>∆nl</code>. We have to be careful to use <code>2007⌶</code> to turn global triggers off and then back on, or else we will end up in an endless loop.</p>
+        <p>The trigger function <code>∆T</code> is called on every assignment to a global variable in the namespace. The assigned names are accumulated in the variable <code>∆nl</code>. We have to be careful to use <code>2007⌶</code> to turn global triggers off and then back on, or else we will end up in an endless loop.</p>
       </article>
     </main>
     <footer>
