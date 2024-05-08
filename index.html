@@ -22,6 +22,27 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/uncle-bob-and-the-primeagen">Uncle Bob and
+            The Primeagen</a>
+          </h1>
+          <h2>May 7, 2024</h2>
+        </header>
+        <p>Recently the genial Robert "Uncle Bob" Martin sat down with the always entertaining Primeagen for an <a href="https://www.youtube.com/watch?v=UBXXw2JSloo">interview</a>.  Given The Primeagen's well-known aversion to TDD and short functions, it was bound to be a spirited conversation, and indeed it was.</p>
+        <p>I'm fully sympathetic to the idea that it's hard and often counterproductive (if not impossible) to do full TDD on a new project.  What I don't get is The Primeagen's gripe about 100% code coverage. He asks Uncle Bob about testing the summing of the elements of an array. Uncle Bob explains that he would not write a specific test for that, but that the code would be tested indirectly; there would be a test on a method or function that  has the line that sums the array. Or even a test higher up the stack. But the line would get executed in the test suite somewhere. In the interview, the Primeagen doesn't seem to understand that.  </p>
+        <p>In response to The Primeagen's repeated questions about "what to test", Uncle Bob brings up Kent Beck: test anything and everything that can break. In APL, that's pretty much every line of every function. I assume a similar situation in any interpreted language.</p>
+        <p>Consider the line: </p>
+        <pre><code>      c←a+b
+</code></pre>
+        <p>This can fail in at least 5 different ways, including <code>VALUE ERROR</code>, <code>DOMAIN ERROR</code>, <code>RANK ERROR</code>, and <code>LENGTH ERROR</code>.  Heck, consider:</p>
+        <pre><code>      v←1   
+</code></pre>
+        <p>This line can fail!</p>
+        <p>Now, as Uncle Bob points out, it would be silly to write a test for every line of code. But every line of code should be executed in the tests, because every line of code can break. There is no excuse for less than 100% code coverage. </p>
+        <p>Please note that I have written a lot of code that has a lot less than 100% coverage, even 0% coverage, and I have no excuse.  </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/modal-dialog-boxes-prompt">Modal Dialog Boxes
             3: Prompt</a>
           </h1>
@@ -124,59 +145,6 @@ OnSelect←{
 </code></pre>
         <p>The <code>New</code> function takes a title, caption, and optional list of one or more  button captions, which defaults to <code>Yes</code> and <code>No</code>. The thread ID is noted in the dialog element. This will be used as a token when the user clicks on one of the choices. The button elements are flagged as being <em>Unqueued</em> (as is the parent dialog, which  has an onclose event handler). This is critical. Normally browser events are handled serially  on the APL server side. If <code>Unqueued</code> is not to set to <code>1</code>, then the <code>OnSelect</code> (and <code>OnClose</code>) handler will wait until the handler function that called <code>ShowModalAndWait</code> is complete, which is waiting for token from <code>OnSelect</code>, which is waiting for... well you get the idea, and it's not good. Setting <code>Unqueued</code> to <code>1</code> tells Abacus to execute the APL event handler immediately. This allows it to put the token into the pool that satisfies the <code>⎕TGET</code> in <code>ShowModalAndWait</code>. The token value, the name or caption of the button, is returned by <code>ShowModalAndWait</code>.</p>
         <p>Note the advantage of having an APL DOM that can store all kinds of useful info like  <code>Tid</code>, <code>Unqueued</code>, and <code>Name</code> - none of which are in the browser DOM.   </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/modal-dialog-boxes-1">Modal Dialog Boxes 1:
-            Alert</a>
-          </h1>
-          <h2>April 29, 2024</h2>
-        </header>
-        <p>JavaScript provides at least three methods for small, utility, modal dialog boxes: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/alert">alert</a>, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm">confirm</a>, and <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt">prompt</a>.</p>
-        <p>While handy, these methods have limitations. At a minimum we want to be able to style these dialog boxes, and that cannot be done as they are implemented by the underlying operating system. More importantly, we need additional behaviors. For example, the <code>confirm</code> method provides two buttons, <em>Yes</em> and <em>No</em>, and we may want different labels or more than two choices. In addition, we may want to be able to pause an APL function mid execution, server-side, waiting for the response to a set of choices from the user.</p>
-        <p>Abacus thus provides 3 analogous components: <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/AlertBox">AlertBox</a>, <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ConfirmBox">ConfirmBox</a>, and <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/PromptBox">PromptBox</a>. These are all built with the native HTML <code>&lt;dialog&gt;</code> element. All three of these components are modal from the perspective of the user - that is, the use cannot access any other part of the page or app until the dialog box is closed. However, from the programmer's perspective, they behave very differently.</p>
-        <p>The simplest is the <code>AlertBox</code> component. It provides a message to the user in a modal dialog that may dismissed by pressing the <code>OK</code> button or the <code>Esc</code> key. </p>
-        <blockquote>
-          <p>Abacus components are not formally classes, just a few functions in a namespace, inlcuding <code>New</code> to create a new instance and <code>CSS</code> to define the styling. Depending on the component, additional functions like <code>Show</code>, <code>Run</code>, or <code>Init</code> may be defined.</p>
-        </blockquote>
-        <p>The AlertBox is called using its <code>Show</code> method:</p>
-        <pre><code>      d A.AlertBox.Show 'Hello world!'
-</code></pre>
-        <p>The important thing to note about this is that your code does not wait here. The alert box is displayed, and the calling APL function keeps on running. So you cannot use alerts as a debugging tool to pause and display state, as you might have done with <code>MsgBox</code> using <code>⎕WC</code>. The behavior of <code>AlertBox</code> is in contrast to, as we shall see in the next post, the way the <code>ConfirmBox</code> component behaves. It would be easy enough to make the alert box modal with a capital M and to wait in the APL code for the user to click <code>OK</code>. However, as far as I can tell, there is no real use case for this, other than perhaps debugging, for which we already have much better tools. Furthermore, the confirm box with a single button works this way, so it can be used to pause and display state if necessary.</p>
-        <p>The left argument <code>Show</code> is the application document, the right argument is the message to display. The <code>Show</code> method calls the <code>New</code> method to construct the component, and then the <code>ShowModal</code> function to insert it into the document and to display it:</p>
-        <pre><code>Show←{
-     ⍺ A.ShowModal New ⍵
- }
-New←{
-     ⍝ ⍵ ←→ Message
-     ⍝ ← ←→ New dialog element
-     m←⍵
-     A←##
-     d←A.New'dialog'
-     d.class←'alert-box'
-     p←d A.New'p'm
-     b←d A.New'button' 'OK'
-     b.Onclick←A.FQP'OnOK'
-     d.Onclose←A.FQP'OnOK'
-     d
- }
-ShowModal←{
-     ⍝ ⍺ ←→ Document
-     ⍝ ⍵ ←→ dialog element
-     b←GetBody ⍺
-     _←⍺ SetDefaultId Elements ⍵
-     _←b AppendChild ⍵
-     ⍵ ExecuteOnElement'showModal()'
- }
-</code></pre>
-        <p>In Abacus, dialog boxes are created and disposed of every time they are called on to appear. So, for the alert box, we use the same callback for the click event and the close event, which deletes the component from the DOM:</p>
-        <pre><code>OnOK←{
-     d←⍵.CurrentTarget ##.GetNearest'dialog'
-     ##.DeleteElement d
- }
-</code></pre>
-        <p>The alert box is a simple component. It has no knowledge of the state of the server, or the client for that matter. It puts a message on the screen and forces the user to acknowledge it for continuing to use the app. </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
