@@ -23,6 +23,59 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/modal-dialog-boxes-progressbar-more">Modal
+            Dialog Boxes 5: More on ProgressBar</a>
+          </h1>
+          <h2>May 18, 2024</h2>
+        </header>
+        <p>The <code>ProgressBar.Run</code> operator, so far, handles iterative processes; we effectively have a loop, whether implemented using each of recursion. This gives us the opportunitiy to check for a <em>Pause</em> click on each iteration, to cleanly pause the process, and clean up if the operation is canceled.</p>
+        <p>Sometimes we have a potentially long running process that is not itererative, or it is iterative but we don't want to bother with refactoring it to fit the needs of the <code>Progress.Run</code> operator. We want to put up a spinner or <a href="https://www.w3schools.com/howto/howto_css_loader.asp">loader</a> - and provide a cancel button to kill the process.</p>
+        <p>The HTML <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress">progress element</a> provides an oscillating bar when no <code>max</code> attribute is set, giving us a JavaScript-free and CSS-free spinner.</p>
+        <p>For this case we can wrap our long running code with the <code>Start</code> and <code>Stop</code> functions: </p>
+        <pre><code>_←d Progress.Start ''
+...
+... your code here
+...
+_←d Progress.Stop ''
+</code></pre>
+        <p>The <code>Start</code> function puts up a modal dialog, but does not wait:    </p>
+        <pre><code>Start←{
+     c←⍵,(0=≢⍵)/'Working...'
+     e←A.New'dialog'
+     e.class←'progress-bar'
+     e.id←'progress-bar'
+     e.TID←⎕TID
+     h1←e A.New'h1'c
+     p←e A.New'progress'
+     p.id←'progress'
+     b←e A.New'button' 'Cancel'
+     b.id←'Cancel'
+     b.Unqueued←1
+     b.Onclick←A.FQP'OnCancel'
+     _←⍺ A.ShowModal e
+     0
+ }
+</code></pre>
+        <p>And <code>Stop</code> just closes the dialog:</p>
+        <pre><code>Stop←{
+     d←⍺ A.GetElementById'progress-bar'
+     ⍺ A.DeleteElement d
+ }
+</code></pre>
+        <p>In the <code>Start</code> function the thread id of the current process is noted in the component, so when <em>Cancel</em> is pressed, we can kill it:</p>
+        <pre><code>OnCancel←{
+     d←⍵.CurrentTarget A.GetNearest'dialog'
+     _←⎕TKILL d.TID
+     ⍵.Document A.DeleteElement d
+ }
+</code></pre>
+        <p>This is a fairly crude technique, but useful in some circumstances.</p>
+        <p>There is another progress bar case that we have not handled. Consider a process of N discrete but non-iterative steps. As the code is running through these N steps, we want to provide feedback to the user about where we are in the process, and allow the process to be cancelled. For this we will need something like <code>Begin</code>, <code>Update</code> and <code>End</code> functions to sprinkle throughout our code.  </p>
+        <p>In addition we may want to consider what happens if and when these various processes are scripted and have no user interaction. </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/modal-dialog-boxes-progressbar">Modal Dialog
             Boxes 4: ProgressBar</a>
           </h1>
@@ -107,60 +160,6 @@
         <p>This line can fail!</p>
         <p>Now, as Uncle Bob points out, it would be silly to write a test for every line of code. But every line of code should be executed in the tests, because every line of code can break. There is no excuse for less than 100% code coverage. </p>
         <p>Please note that I have written a lot of code that has a lot less than 100% coverage, even 0% coverage, and I have no excuse.  </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/modal-dialog-boxes-prompt">Modal Dialog Boxes
-            3: Prompt</a>
-          </h1>
-          <h2>May 6, 2024</h2>
-        </header>
-        <p>The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/PromptBox">PromptBox</a>  component allows the user to enter a string, and then select <code>OK</code> or <code>Cancel</code>. This dialog behaves like the  <code>AlertBox</code> dialog as opposed to the <code>ConfirmBox</code> dialog; it does not suspend or wait. It takes action via a handler function attached to the <code>OK</code> button. Let's go to the code:</p>
-        <pre><code>Show←{
-     ⍺ ##.ShowModal New ⍵
- }
-  New←{
-     ⍝ ⍵ ←→ Title, Label, Value, OKHandler
-     ⍝ ← ←→ new dialog element
-     tv lv iv cb←⍵
-     d←A.New'dialog'
-     d.class←'prompt-box'
-     d.OnOK←cb
-     h1←d A.New'h1'tv
-     l←d A.New'label'lv
-     i←d A.New'input'
-     i.id←'Prompt'
-     i.value←iv
-     i.Oninput←A.FQP'OnInput'
-     m←d A.New'menu'
-     b←m A.New¨{'button'⍵}¨'OK' 'Cancel'
-     b.id←'OK' 'Cancel'
-     b.Onclick←A.FQP¨'OnOK' 'OnCancel'
-     d
- }
- OnInput←{
-     i←⍵.CurrentTarget
-     i.value←⍵.Value
-     0
- }
- OnOK←{
-     t←⍵.CurrentTarget
-     d←t A.GetNearest'dialog'
-     i←d A.ElementByTag'input'
-     v←i.value
-     f←⍎d.OnOK
-     r←⍵.Document f v
-     r:0
-     A.DeleteElement d
- }
- OnCancel←{
-     d←⍵.CurrentTarget A.GetNearest'dialog'
-     ##.DeleteElement d
- }
-</code></pre>
-        <p>The <code>OnOK</code> function covers the handler supplied as an argument to <code>Show</code>. If the supplied handler returns  a <code>0</code>, it is considered a success, and the prompt box is deleted. If it returns a <code>1</code>, it is considered a failure and the prompt box is left up for the user to interact with.</p>
-        <p>The prompt box functionality could be implemented to wait and suspend the calling APL function, just like we do with <code>ConfirmBox</code>, but there is generally no need to maintain state, and suspending the calling function is more complex and makes testing more difficult. The same is true for more general dialog boxes, with many more controls. It is better to have callback or handler functions to take action rather than inspecting the result of a <code>Show</code> function to see what action to take.  </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
