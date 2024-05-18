@@ -28,7 +28,7 @@
           </h1>
           <h2>May 18, 2024</h2>
         </header>
-        <p>The <code>ProgressBar.Run</code> operator, so far, handles iterative processes; we effectively have a loop, whether implemented using each of recursion. This gives us the opportunitiy to check for a <em>Pause</em> click on each iteration, to cleanly pause the process, and clean up if the operation is canceled.</p>
+        <p>The <code>ProgressBar.Run</code> operator, so far, handles iterative processes; we effectively have a loop, whether implemented using the each operator or recursion. This gives us the opportunitiy to check for a <em>Pause</em> click on each iteration, to cleanly pause the process, and clean up if the operation is canceled.</p>
         <p>Sometimes we have a potentially long running process that is not itererative, or it is iterative but we don't want to bother with refactoring it to fit the needs of the <code>Progress.Run</code> operator. We want to put up a spinner or <a href="https://www.w3schools.com/howto/howto_css_loader.asp">loader</a> - and provide a cancel button to kill the process.</p>
         <p>The HTML <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress">progress element</a> provides an oscillating bar when no <code>max</code> attribute is set, giving us a JavaScript-free and CSS-free spinner.</p>
         <p>For this case we can wrap our long running code with the <code>Start</code> and <code>Stop</code> functions: </p>
