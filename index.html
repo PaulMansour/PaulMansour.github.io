@@ -23,6 +23,35 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/beware-the-blur">Beware the Blur, and More</a>
+          </h1>
+          <h2>May 24, 2024</h2>
+        </header>
+        <p>Modal dialog boxes are trivial now with the <code>&lt;dialog&gt;</code> element and the JavaScript <code>showModal</code> method. Almost all of the demos and introductions to this functionality love to show off the associated CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop">backdrop pseudo-element</a>, which allows us to style the background of the dyalog when it is being shown in a modal state.                Usually we see some CSS like:</p>
+        <pre><code>dialog::backdrop {
+  backdrop-filter: blur(2px);
+}
+</code></pre>
+        <p>Which blurs out the background. This looks really nice. However, it turns out that it is a <a href="https://github.com/thirdweb-dev/dashboard/issues/703">ridiculously expensive effect</a>. If you have any changes to the dialog while it is open, the repaint is very slow. In our app, we have modal dialogs that contain small tables for editing. A background blur makes them unusable. </p>
+        <p>Another thing to watch out for is using <code>transform</code> to center a dialog element. It's a cute technique: put the upper left corner in the center, and then move it back and to the left by 50 percent. In Abacus-style CSS:</p>
+        <pre><code>     s.position←'fixed'
+     s.left←'50%'
+     s.top←'50%'
+     s.transform←'translate(-50%, -50%)'
+</code></pre>
+        <p>All well and good, but there is a side-effect of using <code>transform</code> that affects positioning. Elements with fixed position on a dialog box that is centered this way will be <a href="https://dev.to/salilnaik/the-uncanny-relationship-between-position-fixed-and-transform-property-32f6">fixed relative to the dialog, not the viewport</a>, which is what you would normally expect. We have autocomplete elements that pop up on dialogs, and this makes positioning them much harder. For now I have taken to fixing the size of the dialog, so I can center it directly with using <code>transform</code>.</p>
+        <p>To sum up, on &lt;dialog&gt; elements:</p>
+        <blockquote>
+          <p>Don't use <code>backdrop-filter: blur</code></p>
+        </blockquote>
+        <blockquote>
+          <p>Don't use <code>transform</code>. </p>
+        </blockquote>
+        <p>Time to start a CSS Don'ts page perhaps.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/a-high-performance-data-grid-in-html">A High
             Performance Data Grid in HTML</a>
           </h1>
@@ -155,73 +184,6 @@ _←d Progress.Stop ''
         <p>This is a fairly crude technique, but useful in some circumstances.</p>
         <p>There is another progress bar case that we have not handled. Consider a process of N discrete but non-iterative steps. As the code is running through these N steps, we want to provide feedback to the user about where we are in the process, and allow the process to be cancelled. For this we will need something like <code>Begin</code>, <code>Update</code> and <code>End</code> functions to sprinkle throughout our code.  </p>
         <p>In addition we may want to consider what happens if and when these various processes are scripted and have no user interaction. </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/modal-dialog-boxes-progressbar">Modal Dialog
-            Boxes 4: ProgressBar</a>
-          </h1>
-          <h2>May 14, 2024</h2>
-        </header>
-        <p>Implementing a general purpose, easy-to-use progress bar presents some challenges. Let's look at an attempt. The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ProgressBar">ProgressBar</a> is designed to handle  iterative processes where the number of iterations may or may not be known ahead of time. In either case, we want to provide some feedback on each iteration as well as the ability to cancel the process.</p>
-        <p>Rather than providing a <em>Cancel</em> button on the progess bar element, which would arguably require an "are-you-sure" confirmation, we provide a <em>Pause</em> button, which  pauses the operation between two iterations. This gives us the opportunity to add a bit more functionality, without additional complexity in the UI.  When <em>Pause</em> is clicked, the user is then offered two choices, <em>Cancel</em> and <em>Resume</em>, and optionally a 3rd choice: <em>Truncate</em>.  The <em>Cancel</em> option cancels the entire operation without further ado. The <em>Resume</em> option restarts the process at the next iteration. The <em>Truncate</em> option treats the last completed iteration as the final iteration and continues the operation. It simply ignores and does not process the remaining iterations. This option is only relevant for certain types of operations. For example, when importing a CSV file, the user may decide that reading a few million rows from a large file is sufficient for his purposes.</p>
-        <p>The progress bar is implemented with a monadic operator, <code>Run</code>. This operator  puts up a progress element with a <em>Pause</em> button, runs the iterations, allows the user to cancel the operation, and provides a useful result when control returns to the calling function. Here is the syntax:  </p>
-        <pre><code>      R←Y F ProgressBar.Run X
-</code></pre>
-        <p>The left argument <code>Y</code> is the document object. The left operand <code>F</code> is a function that implements the looping task at hand. <code>X</code> is a namespace provided as a right argument to <code>F</code>. </p>
-        <p>The namespace <code>X</code> must contain 3 properties: <code>Caption</code>, <code>Iterator</code> and <code>Status</code>. The <code>Caption</code> is a string specifying the title of the progress bar dialog box. The <code>Iterator</code> property is a vector. If the iteration vector is empty, the process is deemed <em>indeterminate</em>. We don't know how many iterations there may be. Otherwise the length of <code>Iterator</code> is the number of iterations, known ahead of time, and the process is deemed <em>determinate</em>. In the determinate case, the <code>Status</code> property is a vector of char vectors the same length as <code>Iterator</code>. In the indeterminate case, <code>Status</code> is a simple vector that should be reset inside <code>F</code> on every iteration.   </p>
-        <p>The namespace <code>X</code> may, and often will, contain all sorts of other variables and references that are needed to support the execution of <code>F</code>. </p>
-        <p>The iteration vector may be an array of any type of values. Associated with the iteration values are iterations numbers, given by <code>⍳≢X.Iterator</code>. For the determinate case, the iteration <em>number</em> (not the value) is provided as the left argument to <code>F</code>. </p>
-        <p>In the indeterminate case the result of <code>F</code> is a return code of <code>0</code> if another iteration is required, or <code>1</code> if it is not. There is no other return value. Data accumulation is accomplished by either writing to file or by accumulating an array inside <code>X</code>. In the determinate case, the result of <code>F</code> may be any useful value. </p>
-        <p>The result <code>R</code> (of <code>ProgressBar.Run</code>) is a scaler for the indeterminate case, and a two item vector for the determinate case. In both cases the first element of <code>R</code> is <code>0</code> if all itererations are executed, <code>1</code> if cancelled, and <code>2</code> if truncated. For determinate processes, the second element is an array of the result of each call to <code>F</code>.</p>
-        <p>Let's go to the code:</p>
-        <pre><code>Run←{
-     p←New ⍵.Caption ⍵.Iterator
-     _←⍺ A.ShowModal p
-     op←⍎(0=≢⍵.Iterator)⊃'Determinate' 'Indeterminate'
-     r←p ⍺⍺ op ⍵
-     r⊣A.DeleteElement p
- }
-</code></pre>
-        <p>In the <code>Run</code> operator, the first thing we do is create the dialog element (<code>New</code>) and display it (<code>ShowModal</code>). Next we have to pick the appropriate sub-operator. The techniques are different for the two cases. For the determinate case, we use the <code>each</code> operator (<code>¨</code>) to execute iteration:</p>
-        <pre><code>Determinate←{
-     b r←↓⍉↑(⊂⍺ ⍵)⍺⍺{
-         p w←⍺
-         p.Cancel:1 0
-         c←p Pause 0
-         c≡'Cancel':1 0⊣p.Cancel←1
-         c≡'Truncate':2 0⊣p.Cancel←1
-         _←p Update ⍵⊃w.Status
-         r←⍵ ⍺⍺ w
-         0 r
-     }¨⍳≢⍺.Iterator
-     (⌈/b)(r/⍨b=0)
- }
-</code></pre>
-        <p>First we check if <em>Cancel</em> has been previously pressed. If so, there is nothing to do, and we get out. (Note that we always run the inner function N times if there are N iterations, even if the user has canceled). Next we run the <code>Pause</code> function to see if the user has pressed <em>Pause</em>:</p>
-        <pre><code>Pause←{
-     ~⍺.Pause:'Resume'
-     ⍺.Pause←0
-     t←'Process paused'
-     c←''
-     b←'Cancel' 'Resume' 'Truncate'
-     ⍺.Document A.ConfirmBox.Show t c b
- }
-</code></pre>
-        <p>If the user has not clicked <em>Pause</em>, we exit, resuming the iterations. If the user has pressed Pause, we put a confirmation box and wait. Back in the <code>Determinate</code> operator we inspect what the user has selected in the confirmation box, exiting if <em>Cancel</em> or <em>Truncate</em>. Otherwise we update the status and execute the iteration function, the left operand of <code>Run</code>.</p>
-        <p>The indeterminate operator is a bit simpler (hmm, why is that?):</p>
-        <pre><code>Indeterminate←{
-     _←⍺ Update ⍵.Status
-     c←⍺ Pause ⍵
-     c≡'Cancel':1
-     c≡'Truncate':2
-     ⍺⍺ ⍵:0
-     ⍺ ∇ ⍵
- }
-</code></pre>
-        <p>Here we update the status before checking if the user clicked <em>Pause</em>. This is because in the indeterminate case, the status of an iteration is known after the iteration completes, while in the determinate case the status is known before the iteration is executed - usually. We check for `<em>Pause</em> etc., just as in the determinate case. We then run the iteration function, exiting if it returns a <code>1</code>, and continuing on to the next iteration via recursion otherwise.</p>
-        <p>Regardless of the iteration technique, be it looping, recursion, or the each operator, the fact that the argument to <code>F</code> is a namespace allows us to easily maintain and update state, and accumulate results, between iterations.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>

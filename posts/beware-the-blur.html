@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your code is until you write about it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/beware-the-blur">Beware the Blur, and More</a>
+          </h1>
+          <h2>May 24, 2024</h2>
+        </header>
+        <p>Modal dialog boxes are trivial now with the <code>&lt;dialog&gt;</code> element and the JavaScript <code>showModal</code> method. Almost all of the demos and introductions to this functionality love to show off the associated CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop">backdrop pseudo-element</a>, which allows us to style the background of the dyalog when it is being shown in a modal state.                Usually we see some CSS like:</p>
+        <pre><code>dialog::backdrop {
+  backdrop-filter: blur(2px);
+}
+</code></pre>
+        <p>Which blurs out the background. This looks really nice. However, it turns out that it is a <a href="https://github.com/thirdweb-dev/dashboard/issues/703">ridiculously expensive effect</a>. If you have any changes to the dialog while it is open, the repaint is very slow. In our app, we have modal dialogs that contain small tables for editing. A background blur makes them unusable. </p>
+        <p>Another thing to watch out for is using <code>transform</code> to center a dialog element. It's a cute technique: put the upper left corner in the center, and then move it back and to the left by 50 percent. In Abacus-style CSS:</p>
+        <pre><code>     s.position←'fixed'
+     s.left←'50%'
+     s.top←'50%'
+     s.transform←'translate(-50%, -50%)'
+</code></pre>
+        <p>All well and good, but there is a side-effect of using <code>transform</code> that affects positioning. Elements with fixed position on a dialog box that is centered this way will be <a href="https://dev.to/salilnaik/the-uncanny-relationship-between-position-fixed-and-transform-property-32f6">fixed relative to the dialog, not the viewport</a>, which is what you would normally expect. We have autocomplete elements that pop up on dialogs, and this makes positioning them much harder. For now I have taken to fixing the size of the dialog, so I can center it directly with using <code>transform</code>.</p>
+        <p>To sum up, on &lt;dialog&gt; elements:</p>
+        <blockquote>
+          <p>Don't use <code>backdrop-filter: blur</code></p>
+        </blockquote>
+        <blockquote>
+          <p>Don't use <code>transform</code>. </p>
+        </blockquote>
+        <p>Time to start a CSS Don'ts page perhaps.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
