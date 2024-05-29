@@ -23,6 +23,52 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/how-to-center-a-dialog-element">How to Center
+            a Dialog Element</a>
+          </h1>
+          <h2>May 29, 2024</h2>
+        </header>
+        <p>How to center a <em>modal</em> dialog box to be precise.</p>
+        <p>TL;DR:</p>
+        <pre><code>     
+</code></pre>
+        <p>Yes, that's right. Nothing. Nada. Zero. Zilch.</p>
+        <p>Now for the full story.</p>
+        <p>I have been using a <a href="https://www.toolofthought.com/posts/beware-the-blur">ubiquitous but archaic and problematic technique</a> to center a modal dialog box in the viewport. On this morning's drive listening to the <a href="https://syntax.fm/show/775/components-we-need-on-every-project">current episode</a> of the excellent web dev podcast <a href="https://syntax.fm/">Syntax</a>, the hosts hinted at another method for centering using the CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/inset">inset</a> property, which I was unfamiliar with. It turns out this property is just shorthand for top, right, bottom and left. Looking for more information, I stumbled on this <a href="https://www.youtube.com/shorts/9cSL5dP4rgM">video short</a>. Could it be that simple? All we need is <code>inset:0</code> and <code>margin:auto</code>? It turns out it is even simpler!</p>
+        <p>It is useful to inspect the user-agent styling for <code>&lt;dialog&gt;</code> (in Chrome):</p>
+        <pre><code>  dialog:-internal-modal {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    max-width: calc((100% - 6px) - 2em);
+    max-height: calc((100% - 6px) - 2em);
+    overflow: auto;
+}    
+  dialog {
+    display: block;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    width: fit-content;
+    height: fit-content;
+    color: -internal-light-dark(black, white);
+    margin: auto;
+    border-width: initial;
+    border-style: solid;
+    border-color: initial;
+    border-image: initial;
+    padding: 1em;
+    background: -internal-light-dark(white, black);
+}
+</code></pre>
+        <p>Note the default values for the <code>&lt;dialog&gt;</code> element properties <code>position</code>, <code>left</code>, <code>right</code>, and <code>margin</code>. Further note that that when the <code>&lt;dialog&gt;</code> element is opened in a modal state, additional properties are defaulted, and some are overridden. The net result is that for a modal dialog box, the default value of <code>inset</code> is <code>0</code>, and the default value of <code>margin</code> is <code>auto</code>. Therefore, to center a modal dialog, <strong><em>nothing needs to be done</em></strong>.    But it is likely you have a CSS reset that sets all margins to <code>0</code>. In that case you will need: </p>
+        <pre><code>    margin:auto;
+</code></pre>
+        <p>I don't think it likely that <code>inset</code> will have a different value than <code>0</code>, so no need to explicitly set it. </p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/beware-the-blur">Beware the Blur, and More</a>
           </h1>
           <h2>May 24, 2024</h2>
@@ -68,7 +114,7 @@
           <li>Editing</li>
           <li>Selection, cut, copy and paste </li>
         </ol>
-        <p>There a many different ways to tackle this problem. Everything from using a <code>&lt;div&gt;</code> for every cell, to drawing cells and borders on <code>&lt;canvas&gt;</code>. One thing you can't do is naively create a <code>&lt;table&gt;</code> with millions of rows, or even 100's of rows, and expect to efficiently render it or scroll around in it. However, the <code>&lt;table&gt;</code> element is, in the end, the right way go. It's for tabular data, and we have tabular data. It does a lot for us. Any other approach is going to require much more work and much more code. And, for what it's worth, which may not be much in an SPA, it is also semantically correct.</p>
+        <p>There are many different ways to tackle this problem. Everything from using a <code>&lt;div&gt;</code> for every cell, to drawing cells and borders on <code>&lt;canvas&gt;</code>. One thing you can't do is naively create a <code>&lt;table&gt;</code> with millions of rows, or even hyndreds of rows, and expect to efficiently render it or scroll around in it. However, the <code>&lt;table&gt;</code> element is, in the end, the right way go. It's for tabular data, and we have tabular data. It does a lot for us. Any other approach is going to require much more work and much more code. And, for what it's worth, which may not be much in an SPA, it is also semantically correct.</p>
         <p>We must also completely take over scrolling from the browser. </p>
         <p>How then do we make it work? Let's assume we have a table that fits comfortably in our APL workspace (our grid should handle both inverted and non-inverted data). At any one time, we are only going to display as much data as fits on the screen or window. Actually, a little more... we want the data to overflow a little bit down and to the right. This is not to make scrolling faster (as we shall see) by pre-drawing some out-of-sight content, but rather for two other reasons. There will almost always be a partial row on the bottom and a partial column on the right, so we certainly need at least one extra row and column. We also want to be able to resize the grid's container exposing more rows and columns, within reasonable limits, without having to resize the <code>&lt;table&gt;</code>, get more data, etc. Resizing a grid always results in more or less rows and columns at the bottom and right, never top and left. So given our screen size, and general limits to the size of the parent container, we can compute these dimensions. We will call this <strong><code>TableOverSize</code></strong>. This is a fairly fudgeable value. There is no precise way to compute it. If we make it too big, performance will suffer, if we make it too small, then the act of resizing will expose empty space, to be filled only when the resize is complete, which looks a little hokey.</p>
         <p>On the APL side, in the APL DOM, we will want to create a <code>&lt;table&gt;</code> element and all of its children elements once and only once. It will be the size specified by <code>TableOverSize</code>. We also need custom code to set the content and generate the innerHTML as this will be done repeatedly as we scroll around the grid. It must be as fast as possible. If a user is holding down a cursor key, scrolling through the grid, on every key press event we will be getting some data from the data source, constructing the innerHTML, and then sending it back to the browser.</p>
@@ -77,7 +123,7 @@
         <pre><code>      TableSize ←→ WindowSize+0,FixedColumns
 </code></pre>
         <p>If row numbers are off, and there are no frozen columns, then <code>TableSize</code> equals <code>WindowSize</code>.</p>
-        <p>How do we compute WindowSize? The number of rows is easy. We know the height of our element, we know the height of our rows, we do the division. This value is fixed as long as there is not a resize event. Columns are another story. Each column can have a different width, so the number of columns we can display varies with the column that is currently displayed on the far left.  Let's first define ar few more names: </p>
+        <p>How do we compute <code>WindowSize</code>? The number of rows is easy. We know the height of our element, we know the height of our rows, we do the division. This value is fixed as long as there is not a resize event. Columns are another story. Each column can have a different width, so the number of columns we can display varies with the column that is currently displayed on the far left.  Let's first define ar few more names: </p>
         <p> <strong><code>Values</code></strong> is the data, like the <code>⎕WC</code> grid more or less.    <strong><code>DataSize</code></strong> is the shape of <code>Values</code>.</p>
         <p> <strong><code>DataCell</code></strong> is analogous to <code>⎕WC</code>'s <code>CurCell</code> - an index into <code>Values</code>, representing the current cell. </p>
         <p> <strong><code>WindowCell</code></strong> is the index of the current cell in the window.  </p>
@@ -131,59 +177,6 @@
 </code></pre>
         <p>Once we have mastered scrolling one row or column at a time, up or down, left or right, then Page Up, Page Down, Home, End, etc., are all easy. </p>
         <p>In a future post we will look at editing, and various edit modes that mimic Excel behavior. We are also going to have to figure out how to put scroll bars on this thing.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/modal-dialog-boxes-progressbar-more">Modal
-            Dialog Boxes 5: More on ProgressBar</a>
-          </h1>
-          <h2>May 18, 2024</h2>
-        </header>
-        <p>The <code>ProgressBar.Run</code> operator, so far, handles iterative processes; we effectively have a loop, whether implemented using the each operator or recursion. This gives us the opportunitiy to check for a <em>Pause</em> click on each iteration, to cleanly pause the process, and clean up if the operation is canceled.</p>
-        <p>Sometimes we have a potentially long running process that is not itererative, or it is iterative but we don't want to bother with refactoring it to fit the needs of the <code>Progress.Run</code> operator. We want to put up a spinner or <a href="https://www.w3schools.com/howto/howto_css_loader.asp">loader</a> - and provide a cancel button to kill the process.</p>
-        <p>The HTML <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress">progress element</a> provides an oscillating bar when no <code>max</code> attribute is set, giving us a JavaScript-free and CSS-free spinner.</p>
-        <p>For this case we can wrap our long running code with the <code>Start</code> and <code>Stop</code> functions: </p>
-        <pre><code>_←d Progress.Start ''
-...
-... your code here
-...
-_←d Progress.Stop ''
-</code></pre>
-        <p>The <code>Start</code> function puts up a modal dialog, but does not wait:    </p>
-        <pre><code>Start←{
-     c←⍵,(0=≢⍵)/'Working...'
-     e←A.New'dialog'
-     e.class←'progress-bar'
-     e.id←'progress-bar'
-     e.TID←⎕TID
-     h1←e A.New'h1'c
-     p←e A.New'progress'
-     p.id←'progress'
-     b←e A.New'button' 'Cancel'
-     b.id←'Cancel'
-     b.Unqueued←1
-     b.Onclick←A.FQP'OnCancel'
-     _←⍺ A.ShowModal e
-     0
- }
-</code></pre>
-        <p>And <code>Stop</code> just closes the dialog:</p>
-        <pre><code>Stop←{
-     d←⍺ A.GetElementById'progress-bar'
-     ⍺ A.DeleteElement d
- }
-</code></pre>
-        <p>In the <code>Start</code> function the thread id of the current process is noted in the component, so when <em>Cancel</em> is pressed, we can kill it:</p>
-        <pre><code>OnCancel←{
-     d←⍵.CurrentTarget A.GetNearest'dialog'
-     _←⎕TKILL d.TID
-     ⍵.Document A.DeleteElement d
- }
-</code></pre>
-        <p>This is a fairly crude technique, but useful in some circumstances.</p>
-        <p>There is another progress bar case that we have not handled. Consider a process of N discrete but non-iterative steps. As the code is running through these N steps, we want to provide feedback to the user about where we are in the process, and allow the process to be cancelled. For this we will need something like <code>Begin</code>, <code>Update</code> and <code>End</code> functions to sprinkle throughout our code.  </p>
-        <p>In addition we may want to consider what happens if and when these various processes are scripted and have no user interaction. </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
