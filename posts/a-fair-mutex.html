@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your code is until you write about it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/a-fair-mutex">A Fair Mutex</a>
+          </h1>
+          <h2>June 24, 2024</h2>
+        </header>
+        <p>A mutex may be <em>fair</em> or <em>unfair</em>. A fair mutex lets threads into the  critical section in the order in which they request the lock. That is, FIFO; the thread waiting the longest, will be serviced first. That certainly seems fair.</p>
+        <p>An unfair mutex provides no such guarantee. This means that a thread can be starved - it may  never be allowed to proceed into the critical section. That certainly seems unfair.</p>
+        <p>In Dyalog:</p>
+        <pre><code>:Hold TokenString
+    ...
+    critical section
+    ...
+:EndHold
+</code></pre>
+        <p>implements an unfair mutex. And it <strong>will</strong> starve threads. A newly created thread that hits the <code>:Hold</code> will be serviced before any existing threads that may be waiting. The same is true for:</p>
+        <pre><code>⎕TGET TokenInt
+...
+critical section
+...
+⎕TPUT TokenInt
+</code></pre>
+        <p>No doubt the interpreter uses the same algorithm for servicing waiting threads in both cases. Unfair mutex implementations are the norm in the industry, for reasons I don't fully understand. A cursory glance at the literature indicates that unfair mutexes are more efficient in some way.  Presumably if it matters not in what order waiting threads are serviced, the interpreter has less to keep track of. One example often given is when a thread releases a mutex and then tries to reaquire it (not a good pattern I think anyway), a fair mutex will put it at the end of the line, whereas  an unfair mutex can put it at the head the line, and avoid some thread switching. It is not clear to me if these efficiency arguments hold for the type of threads that the Dyalog interpreter implements.     </p>
+        <p>Anyway, the question arises, can we implement a fair mutex in Dyalog? Let's look at a very simple implementation. Using the token pool we can create a new mutex object:</p>
+        <pre><code>NewMutex←{
+     m←⎕NS''
+     m.Key←{}&amp;0
+     m⊣⎕TPUT m.Key
+ }
+</code></pre>
+        <p>The mutex has a key, which must be aquired to gain access. At the same time, the key must be changed for the next thread. Any unique key value per thread could be used. We use the thread ID for convenience.</p>
+        <p>To initialize the mutex, we burn a thread and then put the key into the token pool.                                                       </p>
+        <p>To enter the critical section, a thread has to wait for the current mutex key, and then create a new key using the <code>Lock</code> function, which takes the mutex as the right argument:                                                      </p>
+        <pre><code>Lock←{
+     k←⍵.Key
+     ⍵.Key←⎕TID
+     ⎕TGET k
+ }
+</code></pre>
+        <p>When it exits the critical section, the thread has to unlock the mutex by putting the key into the token pool:                                                      </p>
+        <pre><code>Unlock←{
+     0⊣⎕TPUT ⎕TID
+}
+</code></pre>
+        <blockquote>
+          <p>the <code>0⊣</code> is needed only because I think there is a bug in the intepreter. In test code, I use <code>⎕TSYNC ⎕TNUMS~0</code>  to know when all the threads have completed. Without the <code>0⊣</code>,  the <code>⎕TSYNC</code> fails because "VALUE ERROR: No result was provided when the context expected one." This does not seem right.</p>
+        </blockquote>
+        <p>The <code>Unlock</code> function does not really need to know about the particular mutex instance, as the key is simply the thread id.</p>
+        <p>I don't think it is as simple to implement a fair mutex using <code>:Hold</code>, as it is not natural construct for waiting on one token and then releasing a different token.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
