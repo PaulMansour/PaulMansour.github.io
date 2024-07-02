@@ -24,6 +24,45 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/styles-themes-and-layouts">Styles, Themes,
+            and Layouts</a>
+          </h1>
+          <h2>July 2, 2024</h2>
+        </header>
+        <p>For an Abacus application, we need a way to organize our CSS, apply themes, provide some default application layout and styling, and also let the programmer override everything.</p>
+        <p>An Abacus document (and any element) has a <code>Style</code> property which is a vector of CSS rules. For static documents, this property is generally set directly by the programmer. When a document represents an SPA built on Abacus components, we need to be able to assemble additional rules, and provide a way for the programmer to organize them. Two additional properties are provided to specify CSS rules: <code>LayoutStyle</code> and <code>ApplicationStyle</code>. </p>
+        <p>The <code>LayoutStyle</code> property contains CSS rules for top level layout. This might be something like the header, main and footer elements of the app.   </p>
+        <p>For an SPA, the <code>Style</code> property of the root <code>&lt;html&gt;</code> element should not be set (it will be overridden if it is set). Abacus will automatically set this property, constructing it from the 'LayoutStyle<code> and </code>ApplicationStyle` properties, as well as the component library styles.  </p>
+        <p>The order in which styles are applied is as follows:</p>
+        <ol>
+          <li>LayoutStyle (user provided, though Abacus should have a library of useful ones)  </li>
+          <li>Abacus Styles (provided by Abacus, including built-in component ) </li>
+          <li>ApplicationStyle (user provided)  </li>
+        </ol>
+        <p>In other words, the programmer can provide styles to be applied before and after the built in styles provided by Abacus. These groups of CSS rules are, in the end, arbitrary. I'm not even sure the programmer needs to be able specify rules before the Abacus rules, but certainly after. However I do think it is useful to split apart, for example, a rule that says the button radius should be 5px, from a rule that says the &lt;body&gt; element of the document should flex.</p>
+        <p>It should be possible to create an attractive application by simply specifying a layout provided by Abacus.      Abacus uses APL functions to construct CSS. We call these CSS functions. A CSS function takes a <strong>theme</strong> as its right argument. A theme is simply a namespace of names and values, defining colors, font names and size, and other parameters. It performs the same function as CSS custom properties.</p>
+        <p>Much or all of this will probably change.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/a-websocket-experiment">A WebSocket Experiment</a>
+          </h1>
+          <h2>July 1, 2024</h2>
+        </header>
+        <p>First, grab a coffee and spend 32 entertaining minutes with <a href="https://www.youtube.com/watch?v=5jIwILYjXrU">Theo</a>.</p>
+        <p>Ok, now that you have enjoyed his sartorial stylings, lets talk about WebSockets and avoiding JavaScript. </p>
+        <p>We have been experimenting with WebSockets and the HTMLRenderer. The goal is to see if it is possible to build a highly interactive desktop app with almost no JavaScript, where every UI interaction is handled by APL. This appears to work, and be a viable approach. We have implemented a datagrid which is probably the most intensive user interaction case for a business app.</p>
+        <p>With the Abacus DataGrid, every single keystroke event is sent to the browser over a websocket. On each press of the down-cursor key, for examle, the event is sent to APL, which must determine if the grid should scroll, extract and prepare the data to display, render the HTML, send it back over the websocket to the client, which must then replace the innerHMTL of the table element. You can press and hold the cursor key and the datagrid will scroll as smooth and fast as an Excel user would expect. No latency. Awesome. </p>
+        <p>But we are on one machine. What would happen if we tried to run the datagrid in a web app? Over the internet. From a client in Rome to a server in Los Angeles? At the Carlisle Group 2024 Italy Moot, we tried just that. Amazingly there hardly appeared to be any difference. Scrolling appeared to be just as smooth and fast. I assume it had to be a little slower, we just couldn't really notice it. It was not a scientific test, we just just scrolled around and observed how the performance felt.</p>
+        <p>Next, we tried 3 connections/users in Rome to the same server in LA. What would happen if all 3 users tried to scroll around? Here we assumed the performance would degrade significantly. Asking a single APL server to handle a flood of keystroke events from multiple clients, where each requires not trivial processing, would be asking too much. We were not wrong, the performance degraded profoundly.</p>
+        <p>It remains to be seen what architectural options there are for heavily interactive single-user  web apps in this model that require a lot of server power for each user. Maybe a different Docker container for each user, each with its own APL instance is viable, for a relatively small number users. Not sure how this would work, or even if it could, for a multi-user app if the users have their own APL instance.   </p>
+        <p>For multiuser apps that do not require that much server power per user, the Abacus model of the  client passing every event to APL via a WebSocket may turn out to be quite viable.</p>
+        <p>We'll see.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/an-abacus-application">An Abacus Application</a>
           </h1>
           <h2>June 30, 2024</h2>
@@ -94,103 +133,6 @@
 </code></pre>
         <p>This runs the build function to create the document, then, in <code>NewForm</code>, creates an HTMLRenderer object and returns it.   </p>
         <p>In a future post we will look at styles, themes and layouts, which we are still trying to figure out, and bring some order to the chaos.  </p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/a-fair-mutex">A Fair Mutex</a>
-          </h1>
-          <h2>June 24, 2024</h2>
-        </header>
-        <p>A mutex may be <em>fair</em> or <em>unfair</em>. A fair mutex lets threads into the  critical section in the order in which they request the lock. That is, FIFO; the thread waiting the longest, will be serviced first. That certainly seems fair.</p>
-        <p>An unfair mutex provides no such guarantee. This means that a thread can be starved - it may  never be allowed to proceed into the critical section. That certainly seems unfair.</p>
-        <p>In Dyalog:</p>
-        <pre><code>:Hold TokenString
-    ...
-    critical section
-    ...
-:EndHold
-</code></pre>
-        <p>implements an unfair mutex. And it <strong>will</strong> starve threads. A newly created thread that hits the <code>:Hold</code> will be serviced before any existing threads that may be waiting. The same is true for:</p>
-        <pre><code>⎕TGET TokenInt
-...
-critical section
-...
-⎕TPUT TokenInt
-</code></pre>
-        <p>No doubt the interpreter uses the same algorithm for servicing waiting threads in both cases. Unfair mutex implementations are the norm in the industry, for reasons I don't fully understand. A cursory glance at the literature indicates that unfair mutexes are more efficient in some way.  Presumably if it matters not in what order waiting threads are serviced, the interpreter has less to keep track of. One example often given is when a thread releases a mutex and then tries to reaquire it (not a good pattern I think anyway), a fair mutex will put it at the end of the line, whereas  an unfair mutex can put it at the head the line, and avoid some thread switching. It is not clear to me if these efficiency arguments hold for the type of threads that the Dyalog interpreter implements.     </p>
-        <p>Anyway, the question arises, can we implement a fair mutex in Dyalog? Let's look at a very simple implementation. Using the token pool we can create a new mutex object:</p>
-        <pre><code>NewMutex←{
-     m←⎕NS''
-     m.Key←{}&amp;0
-     m⊣⎕TPUT m.Key
- }
-</code></pre>
-        <p>The mutex has a key, which must be aquired to gain access. At the same time, the key must be changed for the next thread. Any unique key value per thread could be used. We use the thread ID for convenience.</p>
-        <p>To initialize the mutex, we burn a thread and then put the key into the token pool.                                                       </p>
-        <p>To enter the critical section, a thread has to wait for the current mutex key, and then create a new key using the <code>Lock</code> function, which takes the mutex as the right argument:                                                      </p>
-        <pre><code>Lock←{
-     k←⍵.Key
-     ⍵.Key←⎕TID
-     ⎕TGET k
- }
-</code></pre>
-        <p>When it exits the critical section, the thread has to unlock the mutex by putting the key into the token pool:                                                      </p>
-        <pre><code>Unlock←{
-     ⊢⎕TPUT ⎕TID
-}
-</code></pre>
-        <blockquote>
-          <p>the <code>⊢</code> is needed only because I think there is a bug in the intepreter. In test code, I use <code>⎕TSYNC ⎕TNUMS~0</code>  to know when all the threads have completed. Without the <code>⊢</code>,  the <code>⎕TSYNC</code> fails because "VALUE ERROR: No result was provided when the context expected one." This does not seem right. Must have something to do with the fact the result of <code>⎕TPUT</code> is shy.</p>
-        </blockquote>
-        <p>The <code>Unlock</code> function does not really need to know about the particular mutex instance, as the key is simply the thread id.</p>
-        <p>I don't think it is as simple to implement a fair mutex using <code>:Hold</code>, as it is not natural construct for waiting on one token and then releasing a different token.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/how-to-center-a-dialog-element">How to Center
-            a Dialog Element</a>
-          </h1>
-          <h2>May 29, 2024</h2>
-        </header>
-        <p>How to center a <em>modal</em> dialog box to be precise.</p>
-        <p>TL;DR:</p>
-        <pre><code>     
-</code></pre>
-        <p>Yes, that's right. Nothing. Nada. Zero. Zilch.</p>
-        <p>Now for the full story.</p>
-        <p>I have been using a <a href="https://www.toolofthought.com/posts/beware-the-blur">ubiquitous but archaic and problematic technique</a> to center a modal dialog box in the viewport. On this morning's drive listening to the <a href="https://syntax.fm/show/775/components-we-need-on-every-project">current episode</a> of the excellent web dev podcast <a href="https://syntax.fm/">Syntax</a>, the hosts hinted at another method for centering using the CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/inset">inset</a> property, which I was unfamiliar with. It turns out this property is just shorthand for top, right, bottom and left. Looking for more information, I stumbled on this <a href="https://www.youtube.com/shorts/9cSL5dP4rgM">video short</a>. Could it be that simple? All we need is <code>inset:0</code> and <code>margin:auto</code>? It turns out it is even simpler!</p>
-        <p>It is useful to inspect the user-agent styling for <code>&lt;dialog&gt;</code> (in Chrome):</p>
-        <pre><code>  dialog:-internal-modal {
-    position: fixed;
-    top: 0px;
-    bottom: 0px;
-    max-width: calc((100% - 6px) - 2em);
-    max-height: calc((100% - 6px) - 2em);
-    overflow: auto;
-}    
-  dialog {
-    display: block;
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    width: fit-content;
-    height: fit-content;
-    color: -internal-light-dark(black, white);
-    margin: auto;
-    border-width: initial;
-    border-style: solid;
-    border-color: initial;
-    border-image: initial;
-    padding: 1em;
-    background: -internal-light-dark(white, black);
-}
-</code></pre>
-        <p>Note the default values for the <code>&lt;dialog&gt;</code> element properties <code>position</code>, <code>left</code>, <code>right</code>, and <code>margin</code>. Further note that that when the <code>&lt;dialog&gt;</code> element is opened in a modal state, additional properties are defaulted, and some are overridden. The net result is that for a modal dialog box, the default value of <code>inset</code> is <code>0</code>, and the default value of <code>margin</code> is <code>auto</code>. Therefore, to center a modal dialog, <strong><em>nothing needs to be done</em></strong>.    But it is likely you have a CSS reset that sets all margins to <code>0</code>. In that case you will need: </p>
-        <pre><code>    margin:auto;
-</code></pre>
-        <p>I don't think it likely that <code>inset</code> will have a different value than <code>0</code>, so no need to explicitly set it. </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
