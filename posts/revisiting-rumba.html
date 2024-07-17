@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your design is until you write about
+      it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/revisiting-rumba">Revisiting Rumba</a>
+          </h1>
+          <h2>July 17, 2024</h2>
+        </header>
+        <p><a href="https://github.com/the-carlisle-group/Rumba">Rumba</a> has been around a long time. Mostly it was written as an exercise to understand HTTP, but is has also proved quite useful for testing sites and applications that may be served by other means in production.</p>
+        <p>When Rumba was originally written, Dyalog's TCP toolkit <a href="https://docs.dyalog.com/latest/Conga%20User%20Guide.pdf">Conga</a>, on which Rumba is based, did not support HTTP directly. Much code in Rumba is devoted to parsing TCP messages to know where the header ends and the body starts, where chunks start and end, etc. Now Conga supports HTTP. Furthermore it supports WebSockets, which requires the new HTTP functionality. In addition Conga has made some improvements to the event handling that clean up some things. The need for Abacus to use WebSockets is the catalyst for updating Rumba to take advantage of all that Conga now has to offer.</p>
+        <p>Rather than jettisoning the original code, we have a new Rumba server property <code>UseCongaHTTP</code> which  defaults to 0. Setting to <code>1</code> does the obvious, instructing Rumba to use Conga's HTTP mode. Being able run a Rumba server both ways is useful for testing.</p>
+        <p>The new code is, for now in a <a href="https://github.com/the-carlisle-group/Rumba/tree/feature/WebSockets">temporary branch</a>, where it will probably remain for a few months.</p>
+        <p>Conga also now has features to fully parse the header and trailer. These features are not taken advantage of yet in Rumba, as we don't want to introduce too many changes at once.      We are, however, taking advantage of the new Conga <code>EventMode</code> property to streamline code and get rid of some magic numbers that Conga used to produce.</p>
+        <p>Because Rumba is heavily threaded and written largely in dfns, it has to use some tradfn workarounds to avoid a long-standing bug in the interpreter. This bug is now fixed in Dyalog version 19, so we can eliminate the workarounds.  </p>
+        <p>Taking advantage of Conga's HTTP mode while not substantially rewriting Rumba required certain decisions about threading. The current threading model may not be the best. In a future post we will review the threading model for Rumba, see how it was adapted to use Conga's HTTP mode, compare it to what Dyalog's <a href="https://github.com/Dyalog/Jarvis">Jarvis</a> does, and see if there are any better alternatives.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>

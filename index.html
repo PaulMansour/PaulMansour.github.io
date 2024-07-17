@@ -24,6 +24,21 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/revisiting-rumba">Revisiting Rumba</a>
+          </h1>
+          <h2>July 17, 2024</h2>
+        </header>
+        <p><a href="https://github.com/the-carlisle-group/Rumba">Rumba</a> has been around a long time. Mostly it was written as an exercise to understand HTTP, but is has also proved quite useful for testing sites and applications that may be served by other means in production.</p>
+        <p>When Rumba was originally written, Dyalog's TCP toolkit <a href="https://docs.dyalog.com/latest/Conga%20User%20Guide.pdf">Conga</a>, on which Rumba is based, did not support HTTP directly. Much code in Rumba is devoted to parsing TCP messages to know where the header ends and the body starts, where chunks start and end, etc. Now Conga supports HTTP. Furthermore it supports WebSockets, which requires the new HTTP functionality. In addition Conga has made some improvements to the event handling that clean up some things. The need for Abacus to use WebSockets is the catalyst for updating Rumba to take advantage of all that Conga now has to offer.</p>
+        <p>Rather than jettisoning the original code, we have a new Rumba server property <code>UseCongaHTTP</code> which  defaults to 0. Setting to <code>1</code> does the obvious, instructing Rumba to use Conga's HTTP mode. Being able run a Rumba server both ways is useful for testing.</p>
+        <p>The new code is, for now in a <a href="https://github.com/the-carlisle-group/Rumba/tree/feature/WebSockets">temporary branch</a>, where it will probably remain for a few months.</p>
+        <p>Conga also now has features to fully parse the header and trailer. These features are not taken advantage of yet in Rumba, as we don't want to introduce too many changes at once.      We are, however, taking advantage of the new Conga <code>EventMode</code> property to streamline code and get rid of some magic numbers that Conga used to produce.</p>
+        <p>Because Rumba is heavily threaded and written largely in dfns, it has to use some tradfn workarounds to avoid a long-standing bug in the interpreter. This bug is now fixed in Dyalog version 19, so we can eliminate the workarounds.  </p>
+        <p>Taking advantage of Conga's HTTP mode while not substantially rewriting Rumba required certain decisions about threading. The current threading model may not be the best. In a future post we will review the threading model for Rumba, see how it was adapted to use Conga's HTTP mode, compare it to what Dyalog's <a href="https://github.com/Dyalog/Jarvis">Jarvis</a> does, and see if there are any better alternatives.</p>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/styles-themes-and-layouts">Styles, Themes,
             and Layouts</a>
           </h1>
@@ -60,80 +75,6 @@
         <p>It remains to be seen what architectural options there are for heavily interactive single-user  web apps in this model that require a lot of server power for each user. Maybe a different Docker container for each user, each with its own APL instance is viable, for a relatively small number users. Not sure how this would work, or even if it could, for a multi-user app if the users have their own APL instance.   </p>
         <p>For multiuser apps that do not require that much server power per user, the Abacus model of the  client passing every event to APL via a WebSocket may turn out to be quite viable.</p>
         <p>We'll see.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/an-abacus-application">An Abacus Application</a>
-          </h1>
-          <h2>June 30, 2024</h2>
-        </header>
-        <p>To figure out and demonstrate how to write an application in Abacus, we need a useful test application. At this point, we don't even know what we need to know, we don't know the tools we need, how the tools should be structured and fit together. We need a test app to help us find out.    The app must be simple enough to easily understand, but complex enough to explore all the major functionality of the framework. A CSV file viewer and editor will fit the bill. This will require a high-performance, editable datagrid, menus, progress bars, message boxes, confirmation boxes, dialog boxes for properties and settings and more. Furthermore, we want to be be able to run the application locally, as a desktop app, or remotely as a single page web app (SPA). Let's imaginatively name it the "Abacus CSV Editor". It might even be a useful app!</p>
-        <p>What follows is a first pass at structuring a framework for building apps in Abacus.</p>
-        <p>We will need a <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/CSVEditor">namepace</a> to encapsulate the code for the app. This will be a relatively simple app, so a single namespace will hold all the code. A complex app will generally require splitting things up into more namespaces. This namespace (let's call it the <strong>application namespace</strong>) will contain a <strong>build function</strong> that builds an APL DOM for the app. Here is the build function for the CSV Editor:</p>
-        <pre><code>Build←{
-     d←A.NewDocument''
-     b←A.GetBody d
-     a←b A.AutoComplete.New''
-     d.AutoCompleteElement←a
-     h←b A.New'header'
-     h1←h A.New'h1' 'filename'
-     mb←b BuildMenu''
-     m←b A.New'main'
-     g←m A.DataGrid.New''
-     f←b A.New'footer'
-     h2←f A.New'h2' 'x rows by n columns'
-     d.Theme←##.Themes.Dark 0
-     d.Layout←##.Layouts.Doric d.Theme
-     d.Style←CSS d.Theme
-     d
- }  
-</code></pre>
-        <p>The build function creates and returns a document. It will generally have calls to the  main Abacus API (<code>A</code>), and of course it can call custom sub functions (like <code>BuildMenu</code> above) to keep things manageable. This is the heart of the app. It defines the UI, and all the callbacks to events on the UI. For a single user desktop app, the function will be run once. For a multi-user web app, this function will be run everytime a user logs in, returning the rendered document to their browser. All state is managed in the document in APL. For a multi-user app, the document is a <strong>session</strong>.</p>
-        <p>The application workspace will also have a something like this <code>CreateApplication</code> function:  </p>
-        <pre><code>CreateApplication←{
-     a←A.NewApplication 0
-     a.Name←'Abacus CSV Editor'
-     a.BuildFunction←'#.Abacus.CSVEditor.Build'
-     a
- }
-</code></pre>
-        <p>This formally creates and returns an Abacus application object. At a minimum it will specify the name of the application and the build function. Let's take a look at the internals of <code>NewApplication</code>: </p>
-        <pre><code>NewApplication←{
-     a←⎕NS''
-     s←#.Rumba.Core.NewServer 0
-     s.Trap←0
-     s.UseCongaHTTP←1
-     s.Context←⎕THIS
-     s.OnRequest←'OnRequestRumba'
-     s.OnWebSocketUpgrade←'OnWSUpgradeRumba'
-     s.OnWebSocketReceive←'OnWSReceiveRumba'
-     s.Application←a
-     a.Name←'[Application]'
-     a.Server←s
-     a.Sessions←⍬
-     a.BuildFunction←''
-     a
- }
-</code></pre>
-        <p>The first thing it does is create a Rumba server. The server is not needed if the app is to be run as a desktop app, but it costs nothing to create, so we throw it in regardless. The server knows the application, and the application knows the server. The application requires a name and a build function. The application will track sessions (an array of documents) if it is run as a multi-user web app. </p>
-        <p>So, we have created an Abacus application object and provided it our build function. With the application object in hand, we can start up a web app using the Abacus API function <code>StartWebApplication</code>: </p>
-        <pre><code>StartWebApplication←{
-     s←⍺.Server
-     s #.Rumba.Core.Start 0
- }
-</code></pre>
-        <p>The Rumba server is now listening for new connections, will run the build function and deliver a document to the client, establish a websocket, and respond to user actions on the client.</p>
-        <p>Alternatively, we can start up a desktop app with the API function <code>StartDesktopApplication</code>:</p>
-        <pre><code>StartDesktopApplication←{
-     d←(⍎⍺.BuildFunction)0
-     d.Style←CollectCSS d
-     d.Caption←⍺.Name
-     NewForm d
- }
-</code></pre>
-        <p>This runs the build function to create the document, then, in <code>NewForm</code>, creates an HTMLRenderer object and returns it.   </p>
-        <p>In a future post we will look at styles, themes and layouts, which we are still trying to figure out, and bring some order to the chaos.  </p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
