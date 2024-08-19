@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your design is until you write about
+      it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/tool-tips">Tool Tips</a>
+          </h1>
+          <h2>August 19, 2024</h2>
+        </header>
+        <p>Abacus now supports <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ToolTip">tool tips</a>. The relatively new (Chrome 125) CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning">anchor positioning module</a> makes this almost easy. More about anchor positioning can be found <a href="https://developer.chrome.com/blog/anchor-positioning-api">here.</a>. However, both of these articles actually raise more questions than they answer. For example, it appears that anchor names should be unique. However, in many of the examples, an anchor name is defined for a class, not an id, which seem a bit odd. Thus we need to go to the <a href="https://www.w3.org/TR/css-anchor-position-1/">source</a>. Here we learn that anchor names do not in fact not need to be unique, and that they can be scoped. Unfortunately the <code>anchor-scope</code> property is not yet implemented in Chrome, let alone any other browser. Another, bigger problem is that anchors can currently only be defined in CSS. The spec allows for defining them  in HTML with the <code>anchor</code> attribute which points to an id, but this is not yet implemented. If every tool button needs a specific CSS rule to define it as an anchor for it's associated tool tip,  <em>and</em> vice versa, every tool-tip needs an id and CSS to point to the right anchor, that is annoying to say the least. While much of the API is not yet implemented, the important stuff for us is there: the browser will automatically display the tool tip just where we want it, moving it around as necessary if it would otherwise be off the screen. So for now, given what is currently supported in Chrome, here is our approach.  We can totally change our approach in the future as the anchor position API is further implemented.</p>
+        <p>To use tool tips in Abacus, all we need to do is set the ToolTip property of an element in the APL DOM, there is no need to explicitly use the ToolTip component:</p>
+        <pre><code>b←A.New 'button' 'OK'   
+b.ToolTip←'This is the OK button'
+</code></pre>
+        <p>Abacus automatically adds a single tool tip element to the page behind the scenes with:</p>
+        <pre><code>New←{
+     ⍝ ⍺ ←→ Parent (Body)
+     ⍺←0
+     t←⍺ A.New'div'
+     t.class←'tool-tip'
+     t.LastAnchor←0
+     t
+ }
+</code></pre>
+        <p>(We could use an id here instead of a class, as there is only one tool tip element on a page.) This one element is used to display all tools tips. We will move it around the page to different locations by dynamically setting the associated tool button to be its anchor for the moment the tool tip appears. </p>
+        <p>Abacus then finds all elements on the page that have the ToolTip property and initializes them: </p>
+        <pre><code>Init←{
+     ⍝ ⍵ ←→ Element(s)
+     b←{0=⍵.⎕NC'ToolTip':0 ⋄ 1}¨⍵
+     e←b/⍵
+     0=≢e:0
+     e.Onmouseenter←⊂A.FQP'OnMouseEnter'
+     e.Onmouseleave←⊂A.FQP'OnMouseLeave'
+     e.Unqueued←⊂'mouseenter' 'mouseleave'
+     0
+ }
+</code></pre>
+        <p>Now each tool button has events attached for <code>mouseenter</code> and <code>mouseleave</code>. On mouseenter, we start a timer:</p>
+        <pre><code>OnMouseEnter←{
+     t←⍎'tmT'⎕WC'Timer' 200 1('FireOnce' 1)
+     t.onTimer←'OnMouseEnterTimer'⍵
+     0
+ }
+</code></pre>
+        <p>And then when the timer fires, we set the text of the tool tip, and change the anchor from the previous element that displayed a tool tip, to the current element that should display a tool tip. We also set <code>opacity</code> to  get a nice transition from invisible to visible:</p>
+        <pre><code>OnMouseEnterTimer←{
+     e←⍺.CurrentTarget
+     t←⍺.Document.ToolTip
+     _←t A.SetInnerHTML A.New'p'e.ToolTip
+     P←t.LastAnchor A.RemoveProperty'anchor-name'
+     t.LastAnchor←e
+     _←e A.SetAnchorName'--tool-tip'
+     _←t A.SetStyle'opacity' '1'
+     0
+ }
+</code></pre>
+        <p>On mouse leave we kill the timer, and make the tooltip invisible:</p>
+        <pre><code>OnMouseLeave←{
+     tmT.Active←0
+     t←⍵.Document.ToolTip
+     _←t A.SetStyle'opacity' '0'
+     0
+ }
+</code></pre>
+        <p>Note that we do not clear the <code>anchor-name</code> property at this point, as this would affect the  fade-out opacity transition; the tool tip would change locations before fully fading out.</p>
+        <p>The important CSS is:</p>
+        <pre><code>CSS←{
+     Rule←##.NewRule
+     s←Rule'.tool-tip'
+     s.position←'absolute'
+     s.z_index←'99'
+     s.position_anchor←'--tool-tip'
+     s.inset_area←'bottom right'
+     s.position_try_options←'flip-block, flip-inline, flip-block flip-inline'
+     s.opacity←0
+     s.transition←'opacity .5s'
+     s
+ }
+</code></pre>
+        <p>So, to recap, there is single tool tip element, that always points to a floating anchor named '--tool-tip'. As the mouse hovers over a tool button, we assign that button the anchor-name (clearing the name from the previous tool button), and make the tool-tip visible. </p>
+        <p>Some observations on this implementation:</p>
+        <ol>
+          <li>The tool tips are not in the HTML. This is probably not a good idea for accessibilty, but probably won't change until the API is fully implemented.</li>
+          <li>We do not use the popover API for the tool tip, just the hack of setting <code>z-index</code>. The popover API does not currently support triggering the popover on mouseover, so JavaScript is required anyway.</li>
+          <li>This is a very dynamic solution, which has pros and cons. It requires server side APL code (JavaScript!). It's possible that when both the popover API and the anchor positioning API are fully implemented in the browser, that this could be done declaratively in HTML and CSS only. Short of that, much more of the current solution could be moved into the HTML.</li>
+        </ol>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>

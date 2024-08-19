@@ -24,6 +24,91 @@
       <article>
         <header>
           <h1>
+            <a href="/posts/tool-tips">Tool Tips</a>
+          </h1>
+          <h2>August 19, 2024</h2>
+        </header>
+        <p>Abacus now supports <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ToolTip">tool tips</a>. The relatively new (Chrome 125) CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning">anchor positioning module</a> makes this almost easy. More about anchor positioning can be found <a href="https://developer.chrome.com/blog/anchor-positioning-api">here.</a>. However, both of these articles actually raise more questions than they answer. For example, it appears that anchor names should be unique. However, in many of the examples, an anchor name is defined for a class, not an id, which seem a bit odd. Thus we need to go to the <a href="https://www.w3.org/TR/css-anchor-position-1/">source</a>. Here we learn that anchor names do not in fact not need to be unique, and that they can be scoped. Unfortunately the <code>anchor-scope</code> property is not yet implemented in Chrome, let alone any other browser. Another, bigger problem is that anchors can currently only be defined in CSS. The spec allows for defining them  in HTML with the <code>anchor</code> attribute which points to an id, but this is not yet implemented. If every tool button needs a specific CSS rule to define it as an anchor for it's associated tool tip,  <em>and</em> vice versa, every tool-tip needs an id and CSS to point to the right anchor, that is annoying to say the least. While much of the API is not yet implemented, the important stuff for us is there: the browser will automatically display the tool tip just where we want it, moving it around as necessary if it would otherwise be off the screen. So for now, given what is currently supported in Chrome, here is our approach.  We can totally change our approach in the future as the anchor position API is further implemented.</p>
+        <p>To use tool tips in Abacus, all we need to do is set the ToolTip property of an element in the APL DOM, there is no need to explicitly use the ToolTip component:</p>
+        <pre><code>b←A.New 'button' 'OK'   
+b.ToolTip←'This is the OK button'
+</code></pre>
+        <p>Abacus automatically adds a single tool tip element to the page behind the scenes with:</p>
+        <pre><code>New←{
+     ⍝ ⍺ ←→ Parent (Body)
+     ⍺←0
+     t←⍺ A.New'div'
+     t.class←'tool-tip'
+     t.LastAnchor←0
+     t
+ }
+</code></pre>
+        <p>(We could use an id here instead of a class, as there is only one tool tip element on a page.) This one element is used to display all tools tips. We will move it around the page to different locations by dynamically setting the associated tool button to be its anchor for the moment the tool tip appears. </p>
+        <p>Abacus then finds all elements on the page that have the ToolTip property and initializes them: </p>
+        <pre><code>Init←{
+     ⍝ ⍵ ←→ Element(s)
+     b←{0=⍵.⎕NC'ToolTip':0 ⋄ 1}¨⍵
+     e←b/⍵
+     0=≢e:0
+     e.Onmouseenter←⊂A.FQP'OnMouseEnter'
+     e.Onmouseleave←⊂A.FQP'OnMouseLeave'
+     e.Unqueued←⊂'mouseenter' 'mouseleave'
+     0
+ }
+</code></pre>
+        <p>Now each tool button has events attached for <code>mouseenter</code> and <code>mouseleave</code>. On mouseenter, we start a timer:</p>
+        <pre><code>OnMouseEnter←{
+     t←⍎'tmT'⎕WC'Timer' 200 1('FireOnce' 1)
+     t.onTimer←'OnMouseEnterTimer'⍵
+     0
+ }
+</code></pre>
+        <p>And then when the timer fires, we set the text of the tool tip, and change the anchor from the previous element that displayed a tool tip, to the current element that should display a tool tip. We also set <code>opacity</code> to  get a nice transition from invisible to visible:</p>
+        <pre><code>OnMouseEnterTimer←{
+     e←⍺.CurrentTarget
+     t←⍺.Document.ToolTip
+     _←t A.SetInnerHTML A.New'p'e.ToolTip
+     P←t.LastAnchor A.RemoveProperty'anchor-name'
+     t.LastAnchor←e
+     _←e A.SetAnchorName'--tool-tip'
+     _←t A.SetStyle'opacity' '1'
+     0
+ }
+</code></pre>
+        <p>On mouse leave we kill the timer, and make the tooltip invisible:</p>
+        <pre><code>OnMouseLeave←{
+     tmT.Active←0
+     t←⍵.Document.ToolTip
+     _←t A.SetStyle'opacity' '0'
+     0
+ }
+</code></pre>
+        <p>Note that we do not clear the <code>anchor-name</code> property at this point, as this would affect the  fade-out opacity transition; the tool tip would change locations before fully fading out.</p>
+        <p>The important CSS is:</p>
+        <pre><code>CSS←{
+     Rule←##.NewRule
+     s←Rule'.tool-tip'
+     s.position←'absolute'
+     s.z_index←'99'
+     s.position_anchor←'--tool-tip'
+     s.inset_area←'bottom right'
+     s.position_try_options←'flip-block, flip-inline, flip-block flip-inline'
+     s.opacity←0
+     s.transition←'opacity .5s'
+     s
+ }
+</code></pre>
+        <p>So, to recap, there is single tool tip element, that always points to a floating anchor named '--tool-tip'. As the mouse hovers over a tool button, we assign that button the anchor-name (clearing the name from the previous tool button), and make the tool-tip visible. </p>
+        <p>Some observations on this implementation:</p>
+        <ol>
+          <li>The tool tips are not in the HTML. This is probably not a good idea for accessibilty, but probably won't change until the API is fully implemented.</li>
+          <li>We do not use the popover API for the tool tip, just the hack of setting <code>z-index</code>. The popover API does not currently support triggering the popover on mouseover, so JavaScript is required anyway.</li>
+          <li>This is a very dynamic solution, which has pros and cons. It requires server side APL code (JavaScript!). It's possible that when both the popover API and the anchor positioning API are fully implemented in the browser, that this could be done declaratively in HTML and CSS only. Short of that, much more of the current solution could be moved into the HTML.</li>
+        </ol>
+      </article>
+      <article>
+        <header>
+          <h1>
             <a href="/posts/rumba-threading-model">Rumba Threading Model</a>
           </h1>
           <h2>July 28, 2024</h2>
@@ -55,29 +140,6 @@
         <p>Conga also now has features to fully parse the header and trailer. These features are not taken advantage of yet in Rumba, as we don't want to introduce too many changes at once.      We are, however, taking advantage of the new Conga <code>EventMode</code> property to streamline code and get rid of some magic numbers that Conga used to produce.</p>
         <p>Because Rumba is heavily threaded and written largely in dfns, it has to use some tradfn workarounds to avoid a long-standing bug in the interpreter. This bug is now fixed in Dyalog version 19, so we can eliminate the workarounds.  </p>
         <p>Taking advantage of Conga's HTTP mode while not substantially rewriting Rumba required certain decisions about threading. The current threading model may not be the best. In a future post we will review the threading model for Rumba, see how it was adapted to use Conga's HTTP mode, compare it to what Dyalog's <a href="https://github.com/Dyalog/Jarvis">Jarvis</a> does, and see if there are any better alternatives.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/styles-themes-and-layouts">Styles, Themes,
-            and Layouts</a>
-          </h1>
-          <h2>July 2, 2024</h2>
-        </header>
-        <p>For an Abacus application, we need a way to organize our CSS, apply themes, provide some default application layout and styling, and also let the programmer override everything.</p>
-        <p>An Abacus document (and any element) has a <code>Style</code> property which is a vector of CSS rules. For static documents, this property is generally set directly by the programmer. When a document represents an SPA built on Abacus components, we need to be able to assemble additional rules, and provide a way for the programmer to organize them. Two additional properties are provided to specify CSS rules: <code>LayoutStyle</code> and <code>ApplicationStyle</code>. </p>
-        <p>The <code>LayoutStyle</code> property contains CSS rules for top level layout. This might be something like the header, main and footer elements of the app.   </p>
-        <p>For an SPA, the <code>Style</code> property of the root <code>&lt;html&gt;</code> element should not be set (it will be overridden if it is set). Abacus will automatically set this property, constructing it from the 'LayoutStyle<code> and </code>ApplicationStyle` properties, as well as the component library styles.  </p>
-        <p>The order in which styles are applied is as follows:</p>
-        <ol>
-          <li>LayoutStyle (user provided, though Abacus should have a library of useful ones)  </li>
-          <li>Abacus Styles (provided by Abacus, including built-in component ) </li>
-          <li>ApplicationStyle (user provided)  </li>
-        </ol>
-        <p>In other words, the programmer can provide styles to be applied before and after the built in styles provided by Abacus. These groups of CSS rules are, in the end, arbitrary. I'm not even sure the programmer needs to be able specify rules before the Abacus rules, but certainly after. However I do think it is useful to split apart, for example, a rule that says the button radius should be 5px, from a rule that says the &lt;body&gt; element of the document should flex.</p>
-        <p>It should be possible to create an attractive application by simply specifying a layout provided by Abacus.</p>
-        <p>Abacus uses APL functions to construct CSS. We call these CSS functions. A CSS function takes a <strong>theme</strong> as its right argument. A theme is simply a namespace of names and values, defining colors, font names and size, and other parameters. It performs the same function as CSS custom properties.</p>
-        <p>Much or all of this will probably change.</p>
       </article>
       <h2>
         <a href="/posts">More posts...</a>
