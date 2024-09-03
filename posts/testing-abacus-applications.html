@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your design is until you write about
+      it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/testing-abacus-applications">Testing Abacus
+            Applications</a>
+          </h1>
+          <h2>September 2, 2024</h2>
+        </header>
+        <p>A while back we looked at the automated testing of <code>⎕WC</code> based <a href="/posts/testing-guis">GUI applications</a> and some of the <a href="/posts/testing-guis-wrestling-with-events">gnarly challenges</a> involved. Automated testing of Abacus applications and the HTMLRenderer presents similar challenges. Some of the issues were addressed in a previous post on the <a href="/posts/abacus-threading-model">Abacus threading model</a>. Now that we have a sample Abacus <a href="/posts/an-abacus-application">application</a> it's time to see what actual tests look like.</p>
+        <p>It is imperative that an HTMLRenderer testing framework can work in one APL process, all in APL, that the tests can be executed automatically, and that they can be traced. (With asynchronous events, it's easy to get into a situation where things  work when running a function, but not when tracing, and vice versa). We must be able to sit in the APL session, write tests, write code, run tests, and write more tests and code seamlessly.</p>
+        <p>Testing in Abacus builds on the <a href="/posts/provanto">Provanto</a> testing framework, and Abacus tests and test suites should be structured in the same way they are for Provanto. The Abacus <code>RunTests</code> function is a cover for the Provanto <code>Run</code> function:</p>
+        <pre><code>RunTests←{
+     ⍝ ⍺ ←→ ¯1 ←→ Setup only
+     ⍝ ⍺ ←→ [Stop 0|1 [Quiet 0|1|2]]
+     ⍝ ⍵ ←→ Test space, [Code space]
+     ⍝ ← ←→ Result space
+     ⍺←0
+     s←⊃⍵
+     d←s.Start 0
+     _←s InitTestSuite d
+     _←WaitForApp d.Client
+     ⍺≡¯1:0
+     ⍺ #.Provanto.Main.Run&amp;⍵
+ }
+</code></pre>
+        <p>This function starts the Abacus application, intitializes it along with the test namespace for testing purposes, and waits for the application to complete its start up. This last is critical as before the tests can run, the HTMLRenderer <code>OnWebSocketUpgrade</code> event must fire and its callback must complete. Finally the test namespace is handed off to Provanto to execute <strong>in a new thread</strong>. Abacus tests <strong>must</strong> run in a thread other than 0. </p>
+        <p>The Abacus testing framework enhances the Provanto testing framework, injecting additional functions into the test namespace including  <code>Click</code>, <code>Press</code>, <code>Enter</code> and <code>GetElementById</code>.</p>
+        <p>While Provanto allows for a user supplied <code>Startup</code> and <code>Teardown</code> function to run before and after a  test suite, the Abacus framework requires an additional function <code>Start</code>, which should build the  application, create the HTMLRenderer, and return the application document. The <code>Startup</code> and <code>Teardown</code> functions may still be used for additional functionality, but note they will run in the test thread, while <code>Start</code> executes in thread 0.  </p>
+        <p>Note that a left argument of <code>¯1</code> will start the application and initialize the test suite,  but not run the tests. This is handy when you want to work on and run one test at a time. When  running an individual test it must be threaded, or else it will hang due to thread lock. You can avoid accidentally doing this by including this line at the start of your test function:</p>
+        <pre><code>      0=⎕TID:∇&amp;0
+</code></pre>
+        <p>When testing an Abacus application, we want to dispatch events on the browser under program control in APL, then examine the APLDOM and the state of the application, as well as the the  state of the browser, and make assertions. Let's look now at a sample test:</p>
+        <pre><code>TestScrollingAroundBattingFile←{
+     Click'File':
+     Click'Open':
+     Enter GetFileName'Batting.csv':
+     Click'OK':
+     g←GetElementById'CSVdata'
+     Assert 22=≢g.Values:
+     Assert 107429=≢⊃g.Values:
+     Assert g.DataCell≡0 0:
+     Press'ArrowRight':
+     Assert g.DataCell=0 1:
+     Press'ArrowLeft':
+     Assert g.DataCell=0 0:
+     Press'End':
+     Assert g.DataCell=0 21:
+     Press'Home':
+     Assert g.DataCell=0 0:
+     Press'Ctrl' 'End':
+     Assert g.DataCell=107428 21:
+     Press'Ctrl' 'Home':
+     Assert g.DataCell=0 0:
+     0
+ }
+</code></pre>
+        <p>Note that the naked guard technique is used not just for assertions, but for  the Abacus-specific functions  <code>Click</code>, <code>Press</code>, and <code>Enter</code>, which have no use for a result. Note also that there is no reference to the application document. The test framework establishes a global reference in the test namespace named <code>Document</code>.</p>
+        <p>The <code>Click</code> function takes an element id as its right argument, with the global <code>Document</code> as an implicit argument.</p>
+        <p>The <code>Enter</code> function takes a string to enter into an &lt;input&gt; or &lt;text-area&gt; element as its  right argument.  The left argument defaults to the input element of the PromptBox component if one is open.</p>
+        <p>The <code>GetElementById</code> function returns an element, and in addition establishes a global reference named <code>Element</code>. Subsequent calls to functions that require an element reference that is not explicitly provided will use this value. The element returned is an element in the APLDOM, not the browser. In this case it is instance of the Abacus DataGrid component, and thus has a <code>Values</code> and  <code>DataCell</code> property that we can inspect.</p>
+        <p>The <code>Press</code> function fires a keystroke on the element provided as a left argument, or the last element spcified by <code>GetElementById</code>. </p>
+        <p>The net result of having the globals <code>Document</code> and <code>Element</code> is a very clean test function with a minimum of fuss. Any framework function that requires a DOM element to run will  use the global <code>Element</code> if an element is not explicitly provided.</p>
+        <p>The above test function fires events and inspects the APL DOM, or the state of the  application in APL. It is useful to also be able to make assertions about the state of the browser as well. This can be done using the <code>GetElementFromBrowser</code> function which  takes an element id as its right argument, and returns the element from the browser. For example:</p>
+        <pre><code> TestOpenBattingFile←{
+     Click'File':
+     Click'Open':
+     Enter GetFileName'Batting.csv':
+     Click'OK':
+     sg←GetElementById'CSVdata'
+     Assert 22=≢sg.Values:
+     Assert 107429=≢0⊃sg.Values:
+     cg←GetElementFromBrowser'CSVdata'
+     v←A.BodyValues cg
+     Assert'abercda01' '1871'≡v[0;1 2]:
+     Press'ArrowDown':
+     Press'ArrowDown':
+     Press'End':
+     Assert sg.DataCell≡2 21:
+     cg←GetElementFromBrowser'CSVdata'
+     v←A.BodyValues cg
+     Assert(2⊃⊢/v)≡,'1':
+     0
+ }
+</code></pre>
+        <p>Here in addition to inspecting the APL DOM element CSVdata (in var <code>sg</code>), we look at the corresponding browser-side element (<code>cg</code>). Note that <code>sg</code> is a live reference - it only needs to be extracted once and we can test the same instance as the application state changes. On the other hand, <code>cg</code> is static as it comes  over the websocket as text, and is then deserialized into an object. It must be repeatedly retrieved to see changes in the browser.</p>
+        <p>Note also that in addition to the few functions injected into the test namespace for convenience like <code>Click</code> and <code>Press</code>, the entire Abacus library is available via the reference <code>A</code>.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
