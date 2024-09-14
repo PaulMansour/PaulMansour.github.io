@@ -45,7 +45,7 @@ DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
         <p>This last one is a <a href="https://jakearchibald.com/2023/against-self-closing-tags-in-html/">trick question</a>.</p>
         <p>And consider a million other things the browser will handle, but <code>⎕XML</code> won't handle or will handle differently.</p>
         <p>What to do?</p>
-        <p>Once we are committed to carting around the 200 megabyte HTMLRenderer, we can just hand off converting HTML to XHTML to the browser, yielding a suitable argument to ⎕XML:</p>
+        <p>Once we are committed to carting around the 200 megabyte HTMLRenderer, we can just hand off converting HTML to XHTML to the browser, yielding a suitable argument to <code>⎕XML</code>:</p>
         <pre><code>GetXML←{
      j←'new XMLSerializer().serializeToString(document.getElementById(''',⍵,'''))'
      ⍺ ExecuteJavaScriptSync j
