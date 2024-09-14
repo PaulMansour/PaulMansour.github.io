@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"></meta>
+    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
+    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
+  </head>
+  <body>
+    <header>
+      <h1>Tool of Thought</h1>
+      <h2>APL for the Practical Man</h2>
+      <h3>"You don't know how bad your design is until you write about
+      it."</h3>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/posts">Posts</a>
+        <a href="/projects">Projects</a>
+        <a href="/donts">Don'ts</a>
+        <a href="/links">Links</a>
+        <a href="/about">About</a>
+      </nav>
+    </header>
+    <main>
+      <article>
+        <header>
+          <h1>
+            <a href="/posts/converting-html-to-xhtml">Converting HTML to
+            XHTML</a>
+          </h1>
+          <h2>September 14, 2024</h2>
+        </header>
+        <p>Consider:</p>
+        <pre><code>      ⎕XML'&lt;p class=myclass&gt;hello world&lt;/p&gt;'
+DOMAIN ERROR: Quote expected at start of attribute value at character 10 (line 1, column 10)
+</code></pre>
+        <p>or:      </p>
+        <pre><code>      ⎕XML'&lt;div&gt;hello&lt;br&gt;world&lt;/div&gt;'
+DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
+</code></pre>
+        <p>or even:</p>
+        <pre><code>      ⎕XML'&lt;div /&gt;&lt;p&gt;hello world&lt;/p&gt;'
+0  div                     1
+0  p    hello world        5
+</code></pre>
+        <p>This last one is a <a href="https://jakearchibald.com/2023/against-self-closing-tags-in-html/">trick question</a>.</p>
+        <p>And consider a million other things the browser will handle, but <code>⎕XML</code> won't handle or will handle differently.</p>
+        <p>What to do?</p>
+        <p>Once we are committed to carting around the 200 megabyte HTMLRenderer, we can just hand off converting HTML to XHTML to the browser, yielding a suitable argument to ⎕XML:</p>
+        <pre><code>GetXML←{
+     j←'new XMLSerializer().serializeToString(document.getElementById(''',⍵,'''))'
+     ⍺ ExecuteJavaScriptSync j
+ }
+</code></pre>
+        <p>The browser is a mighty thing, and it's now as integral to the APL interpreter as anything.</p>
+      </article>
+    </main>
+    <footer>
+      <p>Copyright 2024 Paul S. Mansour</p>
+    </footer>
+  </body>
+</html>
