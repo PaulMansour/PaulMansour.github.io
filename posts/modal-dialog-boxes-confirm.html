@@ -1,37 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/modal-dialog-boxes-confirm">Modal Dialog Boxes
-            2: Confirm</a>
-          </h1>
-          <h2>April 30, 2024</h2>
-        </header>
-        <p>The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ConfirmBox">ConfirmBox</a>  component displays a message and one or more buttons, allowing the user to make a choice and for the programmer to control the flow  of execution of an APL function. To implement this, on the server-side APL, Abacus must be able to wait in a suspended function, while over in the client browser, the user is pondering a modal dialog box with multiple choices. When the user makes a choice, the suspended APL function must be notified of the choice and allowed to continue execution.</p>
-        <p>Let's look at some code:</p>
-        <pre><code>Show←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/modal-dialog-boxes-confirm">Modal Dialog Boxes 2: Confirm</a></h1><h2>April 30, 2024</h2></header><p>The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ConfirmBox">ConfirmBox</a>  component displays a message and one or more buttons, allowing the user to make a choice and for the programmer to control the flow  of execution of an APL function. To implement this, on the server-side APL, Abacus must be able to wait in a suspended function, while over in the client browser, the user is pondering a modal dialog box with multiple choices. When the user makes a choice, the suspended APL function must be notified of the choice and allowed to continue execution.</p><p>Let's look at some code:</p><pre><code>Show←{
      ⍺ ##.ShowModalAndWait New ⍵
  }
  
@@ -69,13 +37,4 @@ OnSelect←{
      v←⍵.CurrentTarget.Name
      0⊣v ⎕TPUT d.Tid
  }
-</code></pre>
-        <p>The <code>New</code> function takes a title, caption, and optional list of one or more  button captions, which defaults to <code>Yes</code> and <code>No</code>. The thread ID is noted in the dialog element. This will be used as a token when the user clicks on one of the choices. The button elements are flagged as being <em>Unqueued</em> (as is the parent dialog, which  has an onclose event handler). This is critical. Normally browser events are handled serially  on the APL server side. If <code>Unqueued</code> is not to set to <code>1</code>, then the <code>OnSelect</code> (and <code>OnClose</code>) handler will wait until the handler function that called <code>ShowModalAndWait</code> is complete, which is waiting for token from <code>OnSelect</code>, which is waiting for... well you get the idea, and it's not good. Setting <code>Unqueued</code> to <code>1</code> tells Abacus to execute the APL event handler immediately. This allows it to put the token into the pool that satisfies the <code>⎕TGET</code> in <code>ShowModalAndWait</code>. The token value, the name or caption of the button, is returned by <code>ShowModalAndWait</code>.</p>
-        <p>Note the advantage of having an APL DOM that can store all kinds of useful info like  <code>Tid</code>, <code>Unqueued</code>, and <code>Name</code> - none of which are in the browser DOM.   </p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>The <code>New</code> function takes a title, caption, and optional list of one or more  button captions, which defaults to <code>Yes</code> and <code>No</code>. The thread ID is noted in the dialog element. This will be used as a token when the user clicks on one of the choices. The button elements are flagged as being <em>Unqueued</em> (as is the parent dialog, which  has an onclose event handler). This is critical. Normally browser events are handled serially  on the APL server side. If <code>Unqueued</code> is not to set to <code>1</code>, then the <code>OnSelect</code> (and <code>OnClose</code>) handler will wait until the handler function that called <code>ShowModalAndWait</code> is complete, which is waiting for token from <code>OnSelect</code>, which is waiting for... well you get the idea, and it's not good. Setting <code>Unqueued</code> to <code>1</code> tells Abacus to execute the APL event handler immediately. This allows it to put the token into the pool that satisfies the <code>⎕TGET</code> in <code>ShowModalAndWait</code>. The token value, the name or caption of the button, is returned by <code>ShowModalAndWait</code>.</p><p>Note the advantage of having an APL DOM that can store all kinds of useful info like  <code>Tid</code>, <code>Unqueued</code>, and <code>Name</code> - none of which are in the browser DOM.   </p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

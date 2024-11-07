@@ -1,70 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/converting-html-to-xhtml">Converting HTML to
-            XHTML</a>
-          </h1>
-          <h2>September 14, 2024</h2>
-        </header>
-        <p>Consider:</p>
-        <pre><code>      ⎕XML'&lt;p class=myclass&gt;hello world&lt;/p&gt;'
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/find-and-replace-with-interval-index">Find and Replace with Interval Index</a></h1><h2>November 7, 2024</h2></header><p>We recently had to revamp find and replace functionality, similar to Excel, in a grid. The original implementation predated <a href="https://help.dyalog.com/latest/Content/Language/Primitive%20Functions/Interval%20Index.htm">interval index</a> so it was time for a fresh look.   Consider a Boolean matrix representing the cells in a grid where a string or substring is found:</p><pre><code>      b←.9&lt;?10 7⍴0
+      b
+0 0 0 0 0 0 0
+1 0 0 0 0 0 0
+0 0 0 0 1 0 0
+0 0 0 0 0 0 0
+0 1 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 1 0 0 0 0
+1 0 0 0 0 0 0
+0 0 1 1 0 0 0
+</code></pre><p>Given any location in the grid, we want to be able to find the location of the next <code>1</code>. The meaning of "next" will depend on whether searching by row or by column. </p><p>The location of ths <code>1</code>'s is given, not coincidentally, using the same glyph as interval index, but in its monadic form <a href="https://help.dyalog.com/latest/Content/Language/Primitive%20Functions/Where.htm">where</a>:</p><pre><code>      i←⍸b
+      i
+┌───┬───┬───┬───┬───┬───┬───┐
+│1 0│2 4│4 1│7 2│8 0│9 2│9 3│
+└───┴───┴───┴───┴───┴───┴───┘
+</code></pre><p>Given a current location of say, row 7 and column 0: </p><pre><code>k←7 0
+</code></pre><p>then the next <code>1</code>, when searching by rows, is located at:</p><pre><code>    (1+i⍸⊂k)⊃i
+7 2
+</code></pre><p>When searching by column we can transpose the Boolean matrix and find the <code>1</code>'s:</p><pre><code>      j←⍸⍉b
+      j
+┌───┬───┬───┬───┬───┬───┬───┐
+│0 1│0 8│1 4│2 7│2 9│3 9│4 2│
+└───┴───┴───┴───┴───┴───┴───┘
+</code></pre><p>then the next <code>1</code> is given by:</p><pre><code>      ⌽(1+j⍸⊂⌽k)⊃j
+8 0
+</code></pre><p>Note that <code>j</code> may be computed directly from <code>i</code> by rotating and sorting:</p><pre><code>       {⍵[⍋⍵]}⌽¨i
+┌───┬───┬───┬───┬───┬───┬───┐
+│0 1│0 8│1 4│2 7│2 9│3 9│4 2│
+└───┴───┴───┴───┴───┴───┴───┘
+</code></pre><p>Note further that interval index is happy to trade depth for rank:</p><pre><code>      m←↑i
+      m
+1 0
+2 4
+4 1
+7 2
+8 0
+9 2
+9 3
+      m⍸k
+2
+      m[1+m⍸k;]
+7 2
+</code></pre><p>Which is quite nice. Thank you Roger!</p><p>For finding the previous <code>1</code>, simply elide the <code>1+</code>, but an adjustment will need to be made if the current location contains a <code>1</code>.</p></article><article><header><h1><a href="/posts/converting-html-to-xhtml">Converting HTML to XHTML</a></h1><h2>September 14, 2024</h2></header><p>Consider:</p><pre><code>      ⎕XML'&lt;p class=myclass&gt;hello world&lt;/p&gt;'
 DOMAIN ERROR: Quote expected at start of attribute value at character 10 (line 1, column 10)
-</code></pre>
-        <p>or:      </p>
-        <pre><code>      ⎕XML'&lt;div&gt;hello&lt;br&gt;world&lt;/div&gt;'
+</code></pre><p>or:      </p><pre><code>      ⎕XML'&lt;div&gt;hello&lt;br&gt;world&lt;/div&gt;'
 DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
-</code></pre>
-        <p>or even:</p>
-        <pre><code>      ⎕XML'&lt;div /&gt;&lt;p&gt;hello world&lt;/p&gt;'
+</code></pre><p>or even:</p><pre><code>      ⎕XML'&lt;div /&gt;&lt;p&gt;hello world&lt;/p&gt;'
 0  div                     1
 0  p    hello world        5
-</code></pre>
-        <p>This last one is a <a href="https://jakearchibald.com/2023/against-self-closing-tags-in-html/">trick question</a>.</p>
-        <p>And consider a million other things the browser will handle, but <code>⎕XML</code> won't handle or will handle differently.</p>
-        <p>What to do?</p>
-        <p>Once we are committed to carting around the 200 megabyte HTMLRenderer, we can just hand off converting HTML to XHTML to the browser, yielding a suitable argument to <code>⎕XML</code>:</p>
-        <pre><code>GetXML←{
+</code></pre><p>This last one is a <a href="https://jakearchibald.com/2023/against-self-closing-tags-in-html/">trick question</a>.</p><p>And consider a million other things the browser will handle, but <code>⎕XML</code> won't handle or will handle differently.</p><p>What to do?</p><p>Once we are committed to carting around the 200 megabyte HTMLRenderer, we can just hand off converting HTML to XHTML to the browser, yielding a suitable argument to <code>⎕XML</code>:</p><pre><code>GetXML←{
      j←'new XMLSerializer().serializeToString(document.getElementById(''',⍵,'''))'
      ⍺ ExecuteJavaScriptSync j
  }
-</code></pre>
-        <p>The browser is a mighty thing, and it's now as integral to the APL interpreter as anything.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/testing-abacus-applications">Testing Abacus
-            Applications</a>
-          </h1>
-          <h2>September 2, 2024</h2>
-        </header>
-        <p>A while back we looked at the automated testing of <code>⎕WC</code> based <a href="/posts/testing-guis">GUI applications</a> and some of the <a href="/posts/testing-guis-wrestling-with-events">gnarly challenges</a> involved. Automated testing of Abacus applications and the HTMLRenderer presents similar challenges. Some of the issues were addressed in a previous post on the <a href="/posts/abacus-threading-model">Abacus threading model</a>. Now that we have a sample Abacus <a href="/posts/an-abacus-application">application</a> it's time to see what actual tests look like.</p>
-        <p>It is imperative that an HTMLRenderer testing framework can work in one APL process, all in APL, that the tests can be executed automatically, and that they can be traced. (With asynchronous events, it's easy to get into a situation where things  work when running a function, but not when tracing, and vice versa). We must be able to sit in the APL session, write tests, write code, run tests, and write more tests and code seamlessly.</p>
-        <p>Testing in Abacus builds on the <a href="/posts/provanto">Provanto</a> testing framework, and Abacus tests and test suites should be structured in the same way they are for Provanto. The Abacus <code>RunTests</code> function is a cover for the Provanto <code>Run</code> function:</p>
-        <pre><code>RunTests←{
+</code></pre><p>The browser is a mighty thing, and it's now as integral to the APL interpreter as anything.</p></article><article><header><h1><a href="/posts/testing-abacus-applications">Testing Abacus Applications</a></h1><h2>September 2, 2024</h2></header><p>A while back we looked at the automated testing of <code>⎕WC</code> based <a href="/posts/testing-guis">GUI applications</a> and some of the <a href="/posts/testing-guis-wrestling-with-events">gnarly challenges</a> involved. Automated testing of Abacus applications and the HTMLRenderer presents similar challenges. Some of the issues were addressed in a previous post on the <a href="/posts/abacus-threading-model">Abacus threading model</a>. Now that we have a sample Abacus <a href="/posts/an-abacus-application">application</a> it's time to see what actual tests look like.</p><p>It is imperative that an HTMLRenderer testing framework can work in one APL process, all in APL, that the tests can be executed automatically, and that they can be traced. (With asynchronous events, it's easy to get into a situation where things  work when running a function, but not when tracing, and vice versa). We must be able to sit in the APL session, write tests, write code, run tests, and write more tests and code seamlessly.</p><p>Testing in Abacus builds on the <a href="/posts/provanto">Provanto</a> testing framework, and Abacus tests and test suites should be structured in the same way they are for Provanto. The Abacus <code>RunTests</code> function is a cover for the Provanto <code>Run</code> function:</p><pre><code>RunTests←{
      ⍝ ⍺ ←→ ¯1 ←→ Setup only
      ⍝ ⍺ ←→ [Stop 0|1 [Quiet 0|1|2]]
      ⍝ ⍵ ←→ Test space, [Code space]
@@ -77,15 +67,8 @@ DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
      ⍺≡¯1:0
      ⍺ #.Provanto.Main.Run&amp;⍵
  }
-</code></pre>
-        <p>This function starts the Abacus application, intitializes it along with the test namespace for testing purposes, and waits for the application to complete its start up. This last is critical as before the tests can run, the HTMLRenderer <code>OnWebSocketUpgrade</code> event must fire and its callback must complete. Finally the test namespace is handed off to Provanto to execute <strong>in a new thread</strong>. Abacus tests <strong>must</strong> run in a thread other than 0. </p>
-        <p>The Abacus testing framework enhances the Provanto testing framework, injecting additional functions into the test namespace including  <code>Click</code>, <code>Press</code>, <code>Enter</code> and <code>GetElementById</code>.</p>
-        <p>While Provanto allows for a user supplied <code>Startup</code> and <code>Teardown</code> function to run before and after a  test suite, the Abacus framework requires an additional function <code>Start</code>, which should build the  application, create the HTMLRenderer, and return the application document. The <code>Startup</code> and <code>Teardown</code> functions may still be used for additional functionality, but note they will run in the test thread, while <code>Start</code> executes in thread 0.  </p>
-        <p>Note that a left argument of <code>¯1</code> will start the application and initialize the test suite,  but not run the tests. This is handy when you want to work on and run one test at a time. When  running an individual test it must be threaded, or else it will hang due to thread lock. You can avoid accidentally doing this by including this line at the start of your test function:</p>
-        <pre><code>      0=⎕TID:∇&amp;0
-</code></pre>
-        <p>When testing an Abacus application, we want to dispatch events on the browser under program control in APL, then examine the APLDOM and the state of the application, as well as the the  state of the browser, and make assertions. Let's look now at a sample test:</p>
-        <pre><code>TestScrollingAroundBattingFile←{
+</code></pre><p>This function starts the Abacus application, intitializes it along with the test namespace for testing purposes, and waits for the application to complete its start up. This last is critical as before the tests can run, the HTMLRenderer <code>OnWebSocketUpgrade</code> event must fire and its callback must complete. Finally the test namespace is handed off to Provanto to execute <strong>in a new thread</strong>. Abacus tests <strong>must</strong> run in a thread other than 0. </p><p>The Abacus testing framework enhances the Provanto testing framework, injecting additional functions into the test namespace including  <code>Click</code>, <code>Press</code>, <code>Enter</code> and <code>GetElementById</code>.</p><p>While Provanto allows for a user supplied <code>Startup</code> and <code>Teardown</code> function to run before and after a  test suite, the Abacus framework requires an additional function <code>Start</code>, which should build the  application, create the HTMLRenderer, and return the application document. The <code>Startup</code> and <code>Teardown</code> functions may still be used for additional functionality, but note they will run in the test thread, while <code>Start</code> executes in thread 0.  </p><p>Note that a left argument of <code>¯1</code> will start the application and initialize the test suite,  but not run the tests. This is handy when you want to work on and run one test at a time. When  running an individual test it must be threaded, or else it will hang due to thread lock. You can avoid accidentally doing this by including this line at the start of your test function:</p><pre><code>      0=⎕TID:∇&amp;0
+</code></pre><p>When testing an Abacus application, we want to dispatch events on the browser under program control in APL, then examine the APLDOM and the state of the application, as well as the the  state of the browser, and make assertions. Let's look now at a sample test:</p><pre><code>TestScrollingAroundBattingFile←{
      Click'File':
      Click'Open':
      Enter GetFileName'Batting.csv':
@@ -108,15 +91,7 @@ DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
      Assert g.DataCell=0 0:
      0
  }
-</code></pre>
-        <p>Note that the naked guard technique is used not just for assertions, but for  the Abacus-specific functions  <code>Click</code>, <code>Press</code>, and <code>Enter</code>, which have no use for a result. Note also that there is no reference to the application document. The test framework establishes a global reference in the test namespace named <code>Document</code>.</p>
-        <p>The <code>Click</code> function takes an element id as its right argument, with the global <code>Document</code> as an implicit argument.</p>
-        <p>The <code>Enter</code> function takes a string to enter into an &lt;input&gt; or &lt;text-area&gt; element as its  right argument.  The left argument defaults to the input element of the PromptBox component if one is open.</p>
-        <p>The <code>GetElementById</code> function returns an element, and in addition establishes a global reference named <code>Element</code>. Subsequent calls to functions that require an element reference that is not explicitly provided will use this value. The element returned is an element in the APLDOM, not the browser. In this case it is instance of the Abacus DataGrid component, and thus has a <code>Values</code> and  <code>DataCell</code> property that we can inspect.</p>
-        <p>The <code>Press</code> function fires a keystroke on the element provided as a left argument, or the last element spcified by <code>GetElementById</code>. </p>
-        <p>The net result of having the globals <code>Document</code> and <code>Element</code> is a very clean test function with a minimum of fuss. Any framework function that requires a DOM element to run will  use the global <code>Element</code> if an element is not explicitly provided.</p>
-        <p>The above test function fires events and inspects the APL DOM, or the state of the  application in APL. It is useful to also be able to make assertions about the state of the browser as well. This can be done using the <code>GetElementFromBrowser</code> function which  takes an element id as its right argument, and returns the element from the browser. For example:</p>
-        <pre><code> TestOpenBattingFile←{
+</code></pre><p>Note that the naked guard technique is used not just for assertions, but for  the Abacus-specific functions  <code>Click</code>, <code>Press</code>, and <code>Enter</code>, which have no use for a result. Note also that there is no reference to the application document. The test framework establishes a global reference in the test namespace named <code>Document</code>.</p><p>The <code>Click</code> function takes an element id as its right argument, with the global <code>Document</code> as an implicit argument.</p><p>The <code>Enter</code> function takes a string to enter into an &lt;input&gt; or &lt;text-area&gt; element as its  right argument.  The left argument defaults to the input element of the PromptBox component if one is open.</p><p>The <code>GetElementById</code> function returns an element, and in addition establishes a global reference named <code>Element</code>. Subsequent calls to functions that require an element reference that is not explicitly provided will use this value. The element returned is an element in the APLDOM, not the browser. In this case it is instance of the Abacus DataGrid component, and thus has a <code>Values</code> and  <code>DataCell</code> property that we can inspect.</p><p>The <code>Press</code> function fires a keystroke on the element provided as a left argument, or the last element spcified by <code>GetElementById</code>. </p><p>The net result of having the globals <code>Document</code> and <code>Element</code> is a very clean test function with a minimum of fuss. Any framework function that requires a DOM element to run will  use the global <code>Element</code> if an element is not explicitly provided.</p><p>The above test function fires events and inspects the APL DOM, or the state of the  application in APL. It is useful to also be able to make assertions about the state of the browser as well. This can be done using the <code>GetElementFromBrowser</code> function which  takes an element id as its right argument, and returns the element from the browser. For example:</p><pre><code> TestOpenBattingFile←{
      Click'File':
      Click'Open':
      Enter GetFileName'Batting.csv':
@@ -136,101 +111,4 @@ DOMAIN ERROR: Tag mismatch at end of text; expected &lt;/br&gt;
      Assert(2⊃⊢/v)≡,'1':
      0
  }
-</code></pre>
-        <p>Here in addition to inspecting the APL DOM element CSVdata (in var <code>sg</code>), we look at the corresponding browser-side element (<code>cg</code>). Note that <code>sg</code> is a live reference - it only needs to be extracted once and we can test the same instance as the application state changes. On the other hand, <code>cg</code> is static as it comes  over the websocket as text, and is then deserialized into an object. It must be repeatedly retrieved to see changes in the browser.</p>
-        <p>Note also that in addition to the few functions injected into the test namespace for convenience like <code>Click</code> and <code>Press</code>, the entire Abacus library is available via the reference <code>A</code>.</p>
-      </article>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/tool-tips">Tool Tips</a>
-          </h1>
-          <h2>August 19, 2024</h2>
-        </header>
-        <p>Abacus now supports <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/ToolTip">tool tips</a>. The relatively new (Chrome 125) CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning">anchor positioning module</a> makes this almost easy. More about anchor positioning can be found <a href="https://developer.chrome.com/blog/anchor-positioning-api">here.</a>. However, both of these articles actually raise more questions than they answer. For example, it appears that anchor names should be unique. However, in many of the examples, an anchor name is defined for a class, not an id, which seem a bit odd. Thus we need to go to the <a href="https://www.w3.org/TR/css-anchor-position-1/">source</a>. Here we learn that anchor names do not in fact not need to be unique, and that they can be scoped. Unfortunately the <code>anchor-scope</code> property is not yet implemented in Chrome, let alone any other browser. Another, bigger problem is that anchors can currently only be defined in CSS. The spec allows for defining them  in HTML with the <code>anchor</code> attribute which points to an id, but this is not yet implemented. If every tool button needs a specific CSS rule to define it as an anchor for it's associated tool tip,  <em>and</em> vice versa, every tool-tip needs an id and CSS to point to the right anchor, that is annoying to say the least. While much of the API is not yet implemented, the important stuff for us is there: the browser will automatically display the tool tip just where we want it, moving it around as necessary if it would otherwise be off the screen. So for now, given what is currently supported in Chrome, here is our approach.  We can totally change our approach in the future as the anchor position API is further implemented.</p>
-        <p>To use tool tips in Abacus, all we need to do is set the ToolTip property of an element in the APL DOM, there is no need to explicitly use the ToolTip component:</p>
-        <pre><code>b←A.New 'button' 'OK'   
-b.ToolTip←'This is the OK button'
-</code></pre>
-        <p>Abacus automatically adds a single tool tip element to the page behind the scenes with:</p>
-        <pre><code>New←{
-     ⍝ ⍺ ←→ Parent (Body)
-     ⍺←0
-     t←⍺ A.New'div'
-     t.class←'tool-tip'
-     t.LastAnchor←0
-     t
- }
-</code></pre>
-        <p>(We could use an id here instead of a class, as there is only one tool tip element on a page.) This one element is used to display all tools tips. We will move it around the page to different locations by dynamically setting the associated tool button to be its anchor for the moment the tool tip appears. </p>
-        <p>Abacus then finds all elements on the page that have the ToolTip property and initializes them: </p>
-        <pre><code>Init←{
-     ⍝ ⍵ ←→ Element(s)
-     b←{0=⍵.⎕NC'ToolTip':0 ⋄ 1}¨⍵
-     e←b/⍵
-     0=≢e:0
-     e.Onmouseenter←⊂A.FQP'OnMouseEnter'
-     e.Onmouseleave←⊂A.FQP'OnMouseLeave'
-     e.Unqueued←⊂'mouseenter' 'mouseleave'
-     0
- }
-</code></pre>
-        <p>Now each tool button has events attached for <code>mouseenter</code> and <code>mouseleave</code>. On mouseenter, we start a timer:</p>
-        <pre><code>OnMouseEnter←{
-     t←⍎'tmT'⎕WC'Timer' 200 1('FireOnce' 1)
-     t.onTimer←'OnMouseEnterTimer'⍵
-     0
- }
-</code></pre>
-        <p>And then when the timer fires, we set the text of the tool tip, and change the anchor from the previous element that displayed a tool tip, to the current element that should display a tool tip. We also set <code>opacity</code> to  get a nice transition from invisible to visible:</p>
-        <pre><code>OnMouseEnterTimer←{
-     e←⍺.CurrentTarget
-     t←⍺.Document.ToolTip
-     _←t A.SetInnerHTML A.New'p'e.ToolTip
-     P←t.LastAnchor A.RemoveProperty'anchor-name'
-     t.LastAnchor←e
-     _←e A.SetAnchorName'--tool-tip'
-     _←t A.SetStyle'opacity' '1'
-     0
- }
-</code></pre>
-        <p>On mouse leave we kill the timer, and make the tooltip invisible:</p>
-        <pre><code>OnMouseLeave←{
-     tmT.Active←0
-     t←⍵.Document.ToolTip
-     _←t A.SetStyle'opacity' '0'
-     0
- }
-</code></pre>
-        <p>Note that we do not clear the <code>anchor-name</code> property at this point, as this would affect the  fade-out opacity transition; the tool tip would change locations before fully fading out.</p>
-        <p>The important CSS is:</p>
-        <pre><code>CSS←{
-     Rule←##.NewRule
-     s←Rule'.tool-tip'
-     s.position←'absolute'
-     s.z_index←'99'
-     s.position_anchor←'--tool-tip'
-     s.inset_area←'bottom right'
-     s.position_try_options←'flip-block, flip-inline, flip-block flip-inline'
-     s.opacity←0
-     s.transition←'opacity .5s'
-     s
- }
-</code></pre>
-        <p>So, to recap, there is single tool tip element, that always points to a floating anchor named '--tool-tip'. As the mouse hovers over a tool button, we assign that button the anchor-name (clearing the name from the previous tool button), and make the tool-tip visible. </p>
-        <p>Some observations on this implementation:</p>
-        <ol>
-          <li>The tool tips are not in the HTML. This is probably not a good idea for accessibilty, but probably won't change until the API is fully implemented.</li>
-          <li>We do not use the popover API for the tool tip, just the hack of setting <code>z-index</code>. The popover API does not currently support triggering the popover on mouseover, so JavaScript is required anyway.</li>
-          <li>This is a very dynamic solution, which has pros and cons. It requires server side APL code (JavaScript!). It's possible that when both the popover API and the anchor positioning API are fully implemented in the browser, that this could be done declaratively in HTML and CSS only. Short of that, much more of the current solution could be moved into the HTML.</li>
-        </ol>
-      </article>
-      <h2>
-        <a href="/posts">More posts...</a>
-      </h2>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Here in addition to inspecting the APL DOM element CSVdata (in var <code>sg</code>), we look at the corresponding browser-side element (<code>cg</code>). Note that <code>sg</code> is a live reference - it only needs to be extracted once and we can test the same instance as the application state changes. On the other hand, <code>cg</code> is static as it comes  over the websocket as text, and is then deserialized into an object. It must be repeatedly retrieved to see changes in the browser.</p><p>Note also that in addition to the few functions injected into the test namespace for convenience like <code>Click</code> and <code>Press</code>, the entire Abacus library is available via the reference <code>A</code>.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

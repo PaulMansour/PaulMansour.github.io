@@ -1,36 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/dom-via-json-performance">DOM via JSON Performance</a>
-          </h1>
-          <h2>April 12, 2023</h2>
-        </header>
-        <p>In the <a href="/posts/the-dom-via-json">previous post</a> we looked at building an APL DOM from a <code>⎕XML</code>-style matrix using <code>⎕JSON</code> rather than recursively creating namespaces by hand. Now let's look at some performance characteristics.</p>
-        <p>First let's create a relatively large document and convert it to HTML:</p>
-        <pre><code>      A←#.Abacus.Main
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/dom-via-json-performance">DOM via JSON Performance</a></h1><h2>April 12, 2023</h2></header><p>In the <a href="/posts/the-dom-via-json">previous post</a> we looked at building an APL DOM from a <code>⎕XML</code>-style matrix using <code>⎕JSON</code> rather than recursively creating namespaces by hand. Now let's look at some performance characteristics.</p><p>First let's create a relatively large document and convert it to HTML:</p><pre><code>      A←#.Abacus.Main
   
       LargeDoc←{
             v←25000 20⍴⍕¨⍳500000
@@ -45,16 +14,11 @@
       h←A.DOM2HTML d 
       ≢h
 20127817
-</code></pre>
-        <p>Now let's convert the HTML to a <code>⎕XML</code> matrix, and test the performance of the two techniques from the previous post for converting a <code>⎕XML</code> matrix to a ⎕JSON matrix: </p>
-        <pre><code>  xm←⎕XML h
+</code></pre><p>Now let's convert the HTML to a <code>⎕XML</code> matrix, and test the performance of the two techniques from the previous post for converting a <code>⎕XML</code> matrix to a ⎕JSON matrix: </p><pre><code>  xm←⎕XML h
       cmpx 'XM2JM_NoLoop xm' 'XM2JM_Loop xm'
   XM2JM_NoLoop xm → 5.2E¯1 |    0% ⎕⎕⎕⎕⎕⎕⎕⎕                                
   XM2JM_Loop xm   → 2.4E0  | +372% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that the looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p>
-        <p>Of more interest is the relative performance of the complete task of using <code>⎕JSON</code> verses recursion to build the DOM:</p>
-        <pre><code>      HTML2DOMviaJSON←{
+</code></pre><p>While it's no surprise that the non-looping algorithm is faster, it is remarkable that the looping technique is not that bad. In addition no attempt has been made to sqeeze any more performance out of the non-looping function, other than the initial act of removing the loop, so there may be more speed to be had.   </p><p>Of more interest is the relative performance of the complete task of using <code>⎕JSON</code> verses recursion to build the DOM:</p><pre><code>      HTML2DOMviaJSON←{
                 ⎕JSON(⎕JSON⍠'M')XM2JM ⎕XML ⍵
             }
       
@@ -62,20 +26,10 @@
       cmpx 'HTML2DOMviaJSON h'  'A.HTML2DOM h'
   HTML2DOMviaJSON h → 9.4E0  |   0% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕                   
 * A.HTML2DOM h      → 1.8E1  | +91% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
-</code></pre>
-        <p>Note that the results of these two functions don't match as they are namespaces not arrays. Note further that <code>⎕JSON</code> creates a tree where the child namespaces are true children of the parent, as opposed to the (this particular) recursive technique:  </p>
-        <pre><code>        d1←HTML2DOMviaJSON h
+</code></pre><p>Note that the results of these two functions don't match as they are namespaces not arrays. Note further that <code>⎕JSON</code> creates a tree where the child namespaces are true children of the parent, as opposed to the (this particular) recursive technique:  </p><pre><code>        d1←HTML2DOMviaJSON h
         d2←A.HTML2DOM h 
         ⊃⊃⊃d1.Content.Content.Content
 #.[JSON object].[JSON object].[JSON object].[JSON object]
         ⊃⊃⊃d2.Content.Content.Content
 #.Abacus.Main.[Namespace]
-</code></pre>
-        <p>Recursion is clearly slower, but more testing should be done on reasonably sized and more realistic documents, especially docs with more depth.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Recursion is clearly slower, but more testing should be done on reasonably sized and more realistic documents, especially docs with more depth.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

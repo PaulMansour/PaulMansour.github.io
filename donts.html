@@ -1,153 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <h1>Don'ts</h1>
-      <p>Or how not to program in Dyalog APL.</p>
-      <h2>Don't use trad functions and control structures</h2>
-      <p>There is almost never a reason to use a trad function.  First, naming things is difficult (one of the hardest tasks in programming someone famous once said). Dfns name your arguments for you, and do not require you to name your result. That is three difficult decisions that are made for you, every time you write a function, by the wisdom of our ancestors. </p>
-      <p>More importantly, the biggest problem with traditional functions are control structures. Control structures make it much too easy to accumulate technical dept, and much too easy to write really long, meandering functions. When a bug or design issue is encountered it is tempting to just <code>:If :Then :Else</code> around it, or worse yet, <code>:Trap 0</code> around it, when re-thinking and refactoring should be done. But the heart of the problem is that control structures let us avoid naming a new function. As noted, naming is hard, and programmers are lazy. Wherever a control structure is used to avoid naming a new function, we see an ill-defined comment that attempts to accomplish the task. Let your functions do the talking! Use dfns, and let you functions themselves be the control structures. If your functions are well-named, there is almost no need to comment the code.     </p>
-      <h2>Don't nest control structures</h2>
-      <p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>. But if you must, don't nest them.</p>
-      <h2>Don't mix code golf with control structures</h2>
-      <p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>, But if you do,  don't write a long string of jots and tacks, with a tilda diaresis thrown in for good measure, all dangling off the end of an :If statement in the middle of a 100 line function full of loops and case statements. Write functions at the same level of abstraction. Functions should be mostly primitives, or mostly calls to other functions. Functions should be mostly readable in English, or in APL.</p>
-      <h2>
-        Don't dangle major functionality off the end of an
-        <code>:If</code>
-        clause
-      </h2>
-      <p>Don't use control structures, but if you do, keep it simple. Don't do this:</p>
-      <pre><code>:If 0=⊃r←ThisReallyBigTask x
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><h1>Don'ts</h1><p>Or how not to program in Dyalog APL.</p><h2>Don't use trad functions and control structures</h2><p>There is almost never a reason to use a trad function.  First, naming things is difficult (one of the hardest tasks in programming someone famous once said). Dfns name your arguments for you, and do not require you to name your result. That is three difficult decisions that are made for you, every time you write a function, by the wisdom of our ancestors. </p><p>More importantly, the biggest problem with traditional functions are control structures. Control structures make it much too easy to accumulate technical dept, and much too easy to write really long, meandering functions. When a bug or design issue is encountered it is tempting to just <code>:If :Then :Else</code> around it, or worse yet, <code>:Trap 0</code> around it, when re-thinking and refactoring should be done. But the heart of the problem is that control structures let us avoid naming a new function. As noted, naming is hard, and programmers are lazy. Wherever a control structure is used to avoid naming a new function, we see an ill-defined comment that attempts to accomplish the task. Let your functions do the talking! Use dfns, and let you functions themselves be the control structures. If your functions are well-named, there is almost no need to comment the code.     </p><h2>Don't nest control structures</h2><p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>. But if you must, don't nest them.</p><h2>Don't mix code golf with control structures</h2><p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use control structures</a>, But if you do,  don't write a long string of jots and tacks, with a tilda diaresis thrown in for good measure, all dangling off the end of an :If statement in the middle of a 100 line function full of loops and case statements. Write functions at the same level of abstraction. Functions should be mostly primitives, or mostly calls to other functions. Functions should be mostly readable in English, or in APL.</p><h2>Don't dangle major functionality off the end of an <code>:If</code> clause </h2><p>Don't use control structures, but if you do, keep it simple. Don't do this:</p><pre><code>:If 0=⊃r←ThisReallyBigTask x
        blah blah flah
 :EndIf
-</code></pre>
-      <p>I mean, you are already using control structures. Why are you trying to save  a line of code? ThisReallyBigTask is important, and deserves a line of its own. Do this:</p>
-      <pre><code>r←ThisReallyBigTask x
+</code></pre><p>I mean, you are already using control structures. Why are you trying to save  a line of code? ThisReallyBigTask is important, and deserves a line of its own. Do this:</p><pre><code>r←ThisReallyBigTask x
 :If 0=⊃r
       blah blah flah
 :EndIf
-</code></pre>
-      <h2>Don't pack control structures into a single diamondized line</h2>
-      <p>Don't use control structures, but if you do, don't pack them with diamonds. If you already have 8 levels of indentation what are you saving?   And don't pack them with diamonds <em>and</em> embedded assignments!</p>
-      <h2>Don't nest parentheses</h2>
-      <p>One level is fine. Even multiple non-nested pairs on a line is OK. There is nothing wrong with using parenthesis to change the order of execution (that's what they are for):</p>
-      <pre><code>(+/⍵)÷⍴⍵
-</code></pre>
-      <h2>Don't use namespace scripts</h2>
-      <p>Does anyone know exactly what these things really are? <a href="/posts/the-problem-with-namespace-scripts">Here is the problem</a>.</p>
-      <h2>
-        Don't use
-        <code>⎕CS</code>
-      </h2>
-      <p>I have forgotten exactly why, but I'm pretty sure there is simply no need to, and bad things happen when you do.</p>
-      <h2>
-        Don't use
-        <code>:With</code>
-      </h2>
-      <p>Don't use control structures, but if you do, don't use <code>:With</code>. </p>
-      <h2>
-        Don't use
-        <code>⎕PATH</code>
-      </h2>
-      <p>To make functions in other namespaces easily accessible, simply assign a reference in the function, or even in the namepace:</p>
-      <pre><code>      R←#.This.That.TheOtherSpace
+</code></pre><h2>Don't pack control structures into a single diamondized line</h2><p>Don't use control structures, but if you do, don't pack them with diamonds. If you already have 8 levels of indentation what are you saving?   And don't pack them with diamonds <em>and</em> embedded assignments!</p><h2>Don't nest parentheses</h2><p>One level is fine. Even multiple non-nested pairs on a line is OK. There is nothing wrong with using parenthesis to change the order of execution (that's what they are for):</p><pre><code>(+/⍵)÷⍴⍵
+</code></pre><h2>Don't use namespace scripts</h2><p>Does anyone know exactly what these things really are? <a href="/posts/the-problem-with-namespace-scripts">Here is the problem</a>.</p><h2>Don't use <code>⎕CS</code></h2><p>I have forgotten exactly why, but I'm pretty sure there is simply no need to, and bad things happen when you do.</p><h2>Don't use <code>:With</code></h2><p>Don't use control structures, but if you do, don't use <code>:With</code>. </p><h2>Don't use <code>⎕PATH</code></h2><p>To make functions in other namespaces easily accessible, simply assign a reference in the function, or even in the namepace:</p><pre><code>      R←#.This.That.TheOtherSpace
       z←R.Foo x
-</code></pre>
-      <h2>Don't embed assignment</h2>
-      <p>Unless you are doing code golf. </p>
-      <h2>Don't use classes</h2>
-      <p>Don't use classes unless you intend to properly encapsulate. That is, if your class definition begins with 50 public fields, and you can't be bothered to write the getters and setters that would make them properties, what's the point? This would eliminate 99.9 percent of all classes ever written in Dyalog APL. Use regular functions in a (named) namespace to act as methods of a class. Use unnamed namespaces for instances. Pass the the instance to the method as the left argument. Thus, instead of writing;</p>
-      <pre><code>  i.MethodName x
-</code></pre>
-      <p>we would write:</p>
-      <pre><code>  i MethodName x
-</code></pre>
-      <h2>
-        Don't use a naked
-        <code>⎕NEW</code>
-      </h2>
-      <p>Don't use classes, but if you do, don't directly use <code>⎕NEW</code>.  Have an static method named <code>New</code> in the class that calls <code>⎕NEW</code>. This forces all instances of the class to be in a known place, where they can find friendly classes by doing something <code>##.FriendlyClass.New</code>.   </p>
-      <h2>
-        Don't use
-        <code>⎕NEW</code>
-        for GUI objects
-      </h2>
-      <p>Use <code>⎕WC</code>, which creates named objects, not <code>⎕NEW</code> which creates unnamed objects. Other than returning a reference, which can easily be obtained by executing the result of <code>⎕WC</code>, there are no advantages to using <code>⎕NEW</code>, and plenty of disadvantages to not being able to reference objects by name.</p>
-      <h2>Don't micro trap</h2>
-      <p>Don't trap around regularly expected errors if there is a simple test that will do the job. Don't do:</p>
-      <pre><code>   {6::0 ⋄ ⍺⍎⍵ }
-</code></pre>
-      <p>Do instead:</p>
-      <pre><code>   {0=⍺.⎕NC ⍵:0 ⋄ ⍺⍎⍵}
-</code></pre>
-      <h2>Don't trap 0 except for top level traps</h2>
-      <p>If you trap 0 around anything more than trivial code,  you have no idea if your code works the way you think it works,  and it probably does not.  Use a specific error number (like 6 for VALUE ERROR) if you can.  If you must trap, use a dfn with a specific error guard to trap trivial code. </p>
-      <h2>
-        Don't use
-        <code>⍬</code>
-        as a place holder for a namespace or class
-      </h2>
-      <p>Use 0 instead. Namespaces and classes are scalar items and may be compared with each other or any scaler with <code>=</code> rather than <code>≡</code>.  Inserting a <code>⍬</code> into an array of namespaces increases the depth, and makes many operations more complex. A zero keeps the depth at 1. Thus a zero is a perfect value to use for a missing or unknown instance of a class or namespace. </p>
-      <p>Compare:</p>
-      <pre><code>     0=(⎕NS '') 0 (⎕NS '') 
+</code></pre><h2>Don't embed assignment</h2><p>Unless you are doing code golf. </p><h2>Don't use classes</h2><p>Don't use classes unless you intend to properly encapsulate. That is, if your class definition begins with 50 public fields, and you can't be bothered to write the getters and setters that would make them properties, what's the point? This would eliminate 99.9 percent of all classes ever written in Dyalog APL. Use regular functions in a (named) namespace to act as methods of a class. Use unnamed namespaces for instances. Pass the the instance to the method as the left argument. Thus, instead of writing;</p><pre><code>  i.MethodName x
+</code></pre><p>we would write:</p><pre><code>  i MethodName x
+</code></pre><h2>Don't use a naked <code>⎕NEW</code></h2><p>Don't use classes, but if you do, don't directly use <code>⎕NEW</code>.  Have an static method named <code>New</code> in the class that calls <code>⎕NEW</code>. This forces all instances of the class to be in a known place, where they can find friendly classes by doing something <code>##.FriendlyClass.New</code>.   </p><h2>Don't use <code>⎕NEW</code> for GUI objects</h2><p>Use <code>⎕WC</code>, which creates named objects, not <code>⎕NEW</code> which creates unnamed objects. Other than returning a reference, which can easily be obtained by executing the result of <code>⎕WC</code>, there are no advantages to using <code>⎕NEW</code>, and plenty of disadvantages to not being able to reference objects by name.</p><h2>Don't micro trap</h2><p>Don't trap around regularly expected errors if there is a simple test that will do the job. Don't do:</p><pre><code>   {6::0 ⋄ ⍺⍎⍵ }
+</code></pre><p>Do instead:</p><pre><code>   {0=⍺.⎕NC ⍵:0 ⋄ ⍺⍎⍵}
+</code></pre><h2>Don't trap 0 except for top level traps</h2><p>If you trap 0 around anything more than trivial code,  you have no idea if your code works the way you think it works,  and it probably does not.  Use a specific error number (like 6 for VALUE ERROR) if you can.  If you must trap, use a dfn with a specific error guard to trap trivial code. </p><h2>Don't use <code>⍬</code> as a place holder for a namespace or class </h2><p>Use 0 instead. Namespaces and classes are scalar items and may be compared with each other or any scaler with <code>=</code> rather than <code>≡</code>.  Inserting a <code>⍬</code> into an array of namespaces increases the depth, and makes many operations more complex. A zero keeps the depth at 1. Thus a zero is a perfect value to use for a missing or unknown instance of a class or namespace. </p><p>Compare:</p><pre><code>     0=(⎕NS '') 0 (⎕NS '') 
 0 1 0
      (⊂⍬)≡¨(⎕NS'') ⍬ (⎕NS'')
 0 1 0
-</code></pre>
-      <h2>Don't write operators that never take functions as operands</h2>
-      <p>Don't do:</p>
-      <pre><code>{⍵⊃⍨⍵⍵⍳⊂⍺⍺}
-</code></pre>
-      <p>If you must, just do something like: </p>
-      <pre><code>{n v←⍵ ⋄ v⊃⍨n⍳⊂⍺}
-</code></pre>
-      <h2>Don't abbreviate names</h2>
-      <p>In the proper circumstances, the letter <code>d</code> is an excellent name. Again, in the proper circumstances, the string <code>NextRateAdjustmentDate</code> may be an excellent name, as is the string <code>NRADate</code>. These names have in common the following property: they may be spoken over the phone, and the hearer has a reasonable chance of understanding what is being communicated. The string <code>NxtRtAdjDt</code> is _never_ a good name. It sows confusion. It is the Voldemort of names by force: it must not be spoken because it cannot be spoken. </p>
-      <h2>Don't use long names for short-lived variables</h2>
-      <p>In dfns, the left argument is <code>⍺</code>, and the right argument is <code>⍵</code>. Not <code>alpha</code> and <code>omega</code>, but <code>⍺</code> and <code>⍵</code>. The 26 individual letters of the alphabet provide the next best 26 choices for local variable names. If you need more, your function is probably trying to do too much.  Long names obscure the relationship between primitive functions, and make anything more than a trivial expressions hard to read. </p>
-      <h2>Don't use short names for long-lived variables</h2>
-      <p>Use long, descriptive names for long-lived variables. A long-lived variable is is either a global or semi-global (both of which should generally be avoided), or a property or field in class, or a variable in an unnamed namespace.  Marshal long variables names into short names by assignment when you don't want long names for short-lived variables.  </p>
-      <h2>Don't write long function headers</h2>
-      <p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use trad functions</a> But if you do, don't have your header so long that you have to scroll. And don't put the header on multiple lines! Use a namespace to encapsulate local variables if you really need a lot.  </p>
-      <h2>Don't write long lines of code</h2>
-      <p>Keep your functions thin. If you need to scroll to the right, your lines of code are too damn long! </p>
-      <h2>Don't write long functions</h2>
-      <p>Keep your functions short. If you need to scroll down, or use collapsing tree views, or control structures to divide it into sections, or an Uber car to get from one end to the other, your function is too damn long! </p>
-      <h2>Don't require multiple, ordered arguments</h2>
-      <p>Use a namespace to pass multiple named arguments to a function. Order is then unimportant, and it is easier to default specific items.</p>
-      <h2>Don't trap errors in utility or low-level functions</h2>
-      <p>Expect the arguments to be valid. Trap as high up the stack as possible.</p>
-      <h2>Don't comment lines of code</h2>
-      <p>You read that correctly. Carefully choose the name of your function, its arguments, and its result. Provide a comment line or two or three at the top of the function describing the arguments and the result.  </p>
-      <h2>
-        Don't use the result of
-        <code>⎕DQ</code>
-      </h2>
-      <p>Or of the <code>Wait</code> method. Use callbacks on your GUI objects. Do not exit <code>⎕DQ</code> and inspect the result and take action based it. If you do this, you will be unable to write automated GUI tests. If you need to run <code>⎕DQ</code> to make a form modal, it must be on the last line of the function, and the result thrown away. There should be a guard or a no-op in cover function that bypasses the <code>Wait</code> when running tests.  </p>
-      <h2>Don't write tests that look at the internals of your project</h2>
-      <p>Tests should be code that is useful as documentation for a user of the API. Tests should exercise the API, making sure results are appropriate given inputs. Tests should not test and expose internal architecture or data structures that are not exposed by the API.</p>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><h2>Don't write operators that never take functions as operands</h2><p>Don't do:</p><pre><code>{⍵⊃⍨⍵⍵⍳⊂⍺⍺}
+</code></pre><p>If you must, just do something like: </p><pre><code>{n v←⍵ ⋄ v⊃⍨n⍳⊂⍺}
+</code></pre><h2>Don't abbreviate names</h2><p>In the proper circumstances, the letter <code>d</code> is an excellent name. Again, in the proper circumstances, the string <code>NextRateAdjustmentDate</code> may be an excellent name, as is the string <code>NRADate</code>. These names have in common the following property: they may be spoken over the phone, and the hearer has a reasonable chance of understanding what is being communicated. The string <code>NxtRtAdjDt</code> is _never_ a good name. It sows confusion. It is the Voldemort of names by force: it must not be spoken because it cannot be spoken. </p><h2>Don't use long names for short-lived variables</h2><p>In dfns, the left argument is <code>⍺</code>, and the right argument is <code>⍵</code>. Not <code>alpha</code> and <code>omega</code>, but <code>⍺</code> and <code>⍵</code>. The 26 individual letters of the alphabet provide the next best 26 choices for local variable names. If you need more, your function is probably trying to do too much.  Long names obscure the relationship between primitive functions, and make anything more than a trivial expressions hard to read. </p><h2>Don't use short names for long-lived variables</h2><p>Use long, descriptive names for long-lived variables. A long-lived variable is is either a global or semi-global (both of which should generally be avoided), or a property or field in class, or a variable in an unnamed namespace.  Marshal long variables names into short names by assignment when you don't want long names for short-lived variables.  </p><h2>Don't write long function headers</h2><p><a href="#don'tusetradfunctionsandcontrolstructures">Don't use trad functions</a> But if you do, don't have your header so long that you have to scroll. And don't put the header on multiple lines! Use a namespace to encapsulate local variables if you really need a lot.  </p><h2>Don't write long lines of code</h2><p>Keep your functions thin. If you need to scroll to the right, your lines of code are too damn long! </p><h2>Don't write long functions</h2><p>Keep your functions short. If you need to scroll down, or use collapsing tree views, or control structures to divide it into sections, or an Uber car to get from one end to the other, your function is too damn long! </p><h2>Don't require multiple, ordered arguments</h2><p>Use a namespace to pass multiple named arguments to a function. Order is then unimportant, and it is easier to default specific items.</p><h2>Don't trap errors in utility or low-level functions</h2><p>Expect the arguments to be valid. Trap as high up the stack as possible.</p><h2>Don't comment lines of code</h2><p>You read that correctly. Carefully choose the name of your function, its arguments, and its result. Provide a comment line or two or three at the top of the function describing the arguments and the result.  </p><h2>Don't use the result of <code>⎕DQ</code></h2><p>Or of the <code>Wait</code> method. Use callbacks on your GUI objects. Do not exit <code>⎕DQ</code> and inspect the result and take action based it. If you do this, you will be unable to write automated GUI tests. If you need to run <code>⎕DQ</code> to make a form modal, it must be on the last line of the function, and the result thrown away. There should be a guard or a no-op in cover function that bypasses the <code>Wait</code> when running tests.  </p><h2>Don't write tests that look at the internals of your project</h2><p>Tests should be code that is useful as documentation for a user of the API. Tests should exercise the API, making sure results are appropriate given inputs. Tests should not test and expose internal architecture or data structures that are not exposed by the API.</p></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

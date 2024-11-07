@@ -1,38 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/the-problem-with-namespace-scripts">The Problem
-            with Namespace Scripts</a>
-          </h1>
-          <h4>April 6, 2021</h4>
-        </header>
-        <p>In my list of <a href="/donts">Dyalog APL Don'ts</a> I have <strong><em>Don't use namespace scripts</em></strong>. Why? Namespace scripts are strange beasts. Like classes, they are a combination of  code and stuff that gets executed and who knows what else. It's even hard to talk about namespace scripts - you would thinks they would be scripts that define a namespace, but they define a namespace script, not a namespace. Maybe they are not really scripts at all.</p>
-        <p>However, I would like to use namespace scripts to have a  <a href="/posts/building-namespace-scripts">text file that represents an arbitrary namepace</a> or even an entire workspace. Unfortunately, this does not quite work for a number of reasons.</p>
-        <p>Consider the following script:</p>
-        <pre><code>:Namespace Parent
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/the-problem-with-namespace-scripts">The Problem with Namespace Scripts</a></h1><h4>April 6, 2021</h4></header><p>In my list of <a href="/donts">Dyalog APL Don'ts</a> I have <strong><em>Don't use namespace scripts</em></strong>. Why? Namespace scripts are strange beasts. Like classes, they are a combination of  code and stuff that gets executed and who knows what else. It's even hard to talk about namespace scripts - you would thinks they would be scripts that define a namespace, but they define a namespace script, not a namespace. Maybe they are not really scripts at all.</p><p>However, I would like to use namespace scripts to have a  <a href="/posts/building-namespace-scripts">text file that represents an arbitrary namepace</a> or even an entire workspace. Unfortunately, this does not quite work for a number of reasons.</p><p>Consider the following script:</p><pre><code>:Namespace Parent
       ParentFoo←{
           Child1.Child1Foo ⍵
       }
@@ -52,23 +19,11 @@
           }
     :EndNamespace
 :EndNamespace
-</code></pre>
-        <p>Here we have a namespace, with two child namespaces, one of which has a child itself. All well and good. When this is fixed, however, references are injected  all over the place:</p>
-        <pre><code>      Parent.GrandChild
+</code></pre><p>Here we have a namespace, with two child namespaces, one of which has a child itself. All well and good. When this is fixed, however, references are injected  all over the place:</p><pre><code>      Parent.GrandChild
 #.Parent.Child1.GrandChild
       Parent.Child1.Child2
 #.Parent.Child2 
-</code></pre>
-        <p>By inspection we can see that every namespace has a reference to it injected  into every sibling and direct ancestor (grandparent, great grandparent, etc.) </p>
-        <p>And indeed, the Dyalog documentation somewhat incompletely, and I think incorrectly, and definitely unclearly, states this as:</p>
-        <blockquote>
-          <p>The names of Classes defined within a Namespace Script which are parents, children, or siblings are visible both to one another and to code and expressions defined  in the same script, regardless of the namespace hierarchy within it. Names of Classes which are nieces or nephews and their descendants  are however not visible.</p>
-        </blockquote>
-        <p>Classes rather than plain namespace scripts were probably the motivating factor to this design (See <strong><em>Don't use a naked <code>⎕NEW</code></em></strong>, another <a href="/donts">APL Don't</a>.) Regardless, the interpreter should not be injecting references to things when fixing. </p>
-        <p>I cannot imagine that anyone relies on this behavior, but a simple non-breaking fix  would be to allow some additional values as the left argument of <code>⎕FIX</code>, which already allows 0, 1 or 2. </p>
-        <p>I would propose that a value of 3 would fix the namespace as 1 does now, with the exception that is does no reference injection. Even more useful, and perhaps in addition or instead, a value of 4 would fix everthing, do no reference injection, and then <strong><em>disassociate the code from the script</em></strong>.  In other words, after fixing the namespace script, the workspace contains  regular namespaces, not a namespace script.</p>
-        <p>In addition, we should be able to specifiy the root, currently illegal, so an entire worksapce may be represented in a single file:</p>
-        <pre><code>:Namespace #
+</code></pre><p>By inspection we can see that every namespace has a reference to it injected  into every sibling and direct ancestor (grandparent, great grandparent, etc.) </p><p>And indeed, the Dyalog documentation somewhat incompletely, and I think incorrectly, and definitely unclearly, states this as:</p><blockquote><p>The names of Classes defined within a Namespace Script which are parents, children, or siblings are visible both to one another and to code and expressions defined  in the same script, regardless of the namespace hierarchy within it. Names of Classes which are nieces or nephews and their descendants  are however not visible.</p></blockquote><p>Classes rather than plain namespace scripts were probably the motivating factor to this design (See <strong><em>Don't use a naked <code>⎕NEW</code></em></strong>, another <a href="/donts">APL Don't</a>.) Regardless, the interpreter should not be injecting references to things when fixing. </p><p>I cannot imagine that anyone relies on this behavior, but a simple non-breaking fix  would be to allow some additional values as the left argument of <code>⎕FIX</code>, which already allows 0, 1 or 2. </p><p>I would propose that a value of 3 would fix the namespace as 1 does now, with the exception that is does no reference injection. Even more useful, and perhaps in addition or instead, a value of 4 would fix everthing, do no reference injection, and then <strong><em>disassociate the code from the script</em></strong>.  In other words, after fixing the namespace script, the workspace contains  regular namespaces, not a namespace script.</p><p>In addition, we should be able to specifiy the root, currently illegal, so an entire worksapce may be represented in a single file:</p><pre><code>:Namespace #
   ⎕IO←0 
   ⎕ML←1
     :Namespace Rumba
@@ -78,14 +33,4 @@
         ...
     :EndNamespace
 :EndNamespace
-</code></pre>
-        <p>A few other issues arise as well.  There are at least two conditions where a function that happily exists in a namespace is unhappy to be in a namespace script. First, if the function has unmatched quotes. Second, if the function has <code>:Implements Constructor</code>, but <strong>not</strong> <code>:Access Public</code>. The interpreter is happy to fix these functions all by themselves, but not within a namespace script. Thus the rules for fixing functions within a script are different and tighter than fixing normal functions in the workspace.</p>
-        <p>With these enhancements and fixes to <code>⎕FIX</code>, namespace scripts can fulfill their proper purpose.</p>
-        <p>             </p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>A few other issues arise as well.  There are at least two conditions where a function that happily exists in a namespace is unhappy to be in a namespace script. First, if the function has unmatched quotes. Second, if the function has <code>:Implements Constructor</code>, but <strong>not</strong> <code>:Access Public</code>. The interpreter is happy to fix these functions all by themselves, but not within a namespace script. Thus the rules for fixing functions within a script are different and tighter than fixing normal functions in the workspace.</p><p>With these enhancements and fixes to <code>⎕FIX</code>, namespace scripts can fulfill their proper purpose.</p><p>             </p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

@@ -1,44 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/towards-a-chart-wizard">Towards a Chart Wizard</a>
-          </h1>
-          <h2>September 20, 2023</h2>
-        </header>
-        <p>What might a good, embeddable, re-usable chart wizard, wrapping the <a href="https://sharpplot.com">SharpPlot library</a>, look like? This wizard should be easy to add to an application, and could be used in the Dyalog APL session as well. Before designing a GUI for a chart wizard, however, we must design an appropriate, lower-level wrapper for the library.</p>
-        <p>SharpPlot is powerful, comprehensive, and well designed. Despite this fact, we still need a thin layer over the top of it to insulate us from the details and idiosyncrasies of .NET, to have a clearer separation of source data and chart properties, and to provide a more declarative language for defining charts.    For example, there are many "set" methods like <code>SetMargins</code> and <code>SetPenWidth</code> that are  conceptually just properties. We should be able to specify them as such. There are also draw methods for each chart type, and we should be able to specify a chart type property rather than call a method. Finally, there is often overlap of the  the primary data of a chart with the argument to the draw method and some additional  properties. For example, the <code>DrawBarChart</code> method requires one or more vectors of bar heights. The corresponding categories, however, are specified via the <code>SetXLabels</code> method. The vast majority of the time, the categories and the corresponding values will be  provided to us as two or more columns in a table, and we should be able to specify the data as such, and have our chart language take care of the rest.  </p>
-        <p>For the sake of simplicity, we assume the data is provided in a namespace enclosing a vector of names, and a corresponding vector (of vectors) of values. The particular form of this data is not important. What is important is that it is essentially a table, with named and ordered columns. Using the data from the first example in the SharpPlot <a href="https://sharpplot.com/BarCharts.htm">tutorial on bar charts</a>  we can construct the data space <code>d</code>:</p>
-        <pre><code>      v←⊂'Project'('A2' '18' 'Q5' 'T6' 'T8' '32')
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/towards-a-chart-wizard">Towards a Chart Wizard</a></h1><h2>September 20, 2023</h2></header><p>What might a good, embeddable, re-usable chart wizard, wrapping the <a href="https://sharpplot.com">SharpPlot library</a>, look like? This wizard should be easy to add to an application, and could be used in the Dyalog APL session as well. Before designing a GUI for a chart wizard, however, we must design an appropriate, lower-level wrapper for the library.</p><p>SharpPlot is powerful, comprehensive, and well designed. Despite this fact, we still need a thin layer over the top of it to insulate us from the details and idiosyncrasies of .NET, to have a clearer separation of source data and chart properties, and to provide a more declarative language for defining charts.    For example, there are many "set" methods like <code>SetMargins</code> and <code>SetPenWidth</code> that are  conceptually just properties. We should be able to specify them as such. There are also draw methods for each chart type, and we should be able to specify a chart type property rather than call a method. Finally, there is often overlap of the  the primary data of a chart with the argument to the draw method and some additional  properties. For example, the <code>DrawBarChart</code> method requires one or more vectors of bar heights. The corresponding categories, however, are specified via the <code>SetXLabels</code> method. The vast majority of the time, the categories and the corresponding values will be  provided to us as two or more columns in a table, and we should be able to specify the data as such, and have our chart language take care of the rest.  </p><p>For the sake of simplicity, we assume the data is provided in a namespace enclosing a vector of names, and a corresponding vector (of vectors) of values. The particular form of this data is not important. What is important is that it is essentially a table, with named and ordered columns. Using the data from the first example in the SharpPlot <a href="https://sharpplot.com/BarCharts.htm">tutorial on bar charts</a>  we can construct the data space <code>d</code>:</p><pre><code>      v←⊂'Project'('A2' '18' 'Q5' 'T6' 'T8' '32')
       v,←⊂'Last Year'(6 18 27 31 40 43)
       v,←⊂'This Year'(17 33 42 54 71 78)
       d←⎕NS''
       d.(Names Values)←↓⍉⊃v
-</code></pre>
-        <p>Defining a chart is then an exercise in specifying properties:  </p>
-        <pre><code>      c←New 0
+</code></pre><p>Defining a chart is then an exercise in specifying properties:  </p><pre><code>      c←New 0
       c.ChartType←'BarChart'
       c.Heading←'Comparative Spend 2004-5'
       c.BarChartStyle←'TicksBetween,ValueTags,ForceZero'
@@ -51,9 +17,7 @@
       c.Colors←'Color.Green Color.Maroon'
       c.XLabelFormat←'Proj-XX'
       c
-</code></pre>
-        <p>Where <code>New</code> just creates a namespace with a few default properties:</p>
-        <pre><code>New←{
+</code></pre><p>Where <code>New</code> just creates a namespace with a few default properties:</p><pre><code>New←{
      p←⎕NS''
      p.Size←360 240
      p.Multi←0
@@ -61,156 +25,129 @@
      p.Select←''
      p
  }
-</code></pre>
-        <p>Which produces: </p>
-        <svg baseProfile="full" ev="http://www.w3.org/2001/xml-events" height="329.33" version="1.1" viewBox="0 0 3690 2470" width="492" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-          <title>Comparative Spend 2004-5</title>
-          <desc>Created by Causeway SVG engine - SharpPlot v3.71.0</desc>
-          <g stroke-miterlimit="100">
-            <rect fill="silver" height="2410" width="3610" x="80" y="60"></rect>
-            <rect fill="white" height="2405" stroke="black" stroke-width="5" width="3605" x="43" y="33"></rect>
-            <desc>Paint the paper =====</desc>
-            <g fill="White">
-              <rect height="2400" width="3600" x="45" y="35"></rect>
-            </g>
-            <desc>Border =====</desc>
-            <desc>Y-axis labels</desc>
-            <g font-family="Times New Roman" font-size="80" text-anchor="end">
-              <text x="353" y="1995">0</text>
-              <text x="353" y="1804">10</text>
-              <text x="353" y="1613">20</text>
-              <text x="353" y="1421">30</text>
-              <text x="353" y="1230">40</text>
-              <text x="353" y="1039">50</text>
-              <text x="353" y="848">60</text>
-              <text x="353" y="656">70</text>
-              <text x="353" y="465">80</text>
-            </g>
-            <desc>Heading, subheading and footnotes =====</desc>
-            <desc>Heading</desc>
-            <g fill="SteelBlue" font-family="Times New Roman" font-size="150" text-anchor="middle">
-              <text x="1845" y="285">Comparative Spend 2004-5</text>
-            </g>
-            <desc>Region =====</desc>
-            <desc>for X-axis labels</desc>
-            <g font-family="Times New Roman" font-size="80" text-anchor="middle">
-              <text x="667" y="2086">Proj-A2</text>
-              <text x="1170" y="2086">Proj-18</text>
-              <text x="1673" y="2086">Proj-Q5</text>
-              <text x="2177" y="2086">Proj-T6</text>
-              <text x="2680" y="2086">Proj-T8</text>
-              <text x="3183" y="2086">Proj-32</text>
-            </g>
-            <desc>X-Axis Ticks =====</desc>
-            <desc>X-Axis Grid</desc>
-            <path d="M415 1975L415 445M918 1975L918 445M1422 1975L1422 445M1925 1975L1925 445M2428 1975L2428 445M2932 1975L2932 445M3435 1975L3435 445" fill="none" stroke="Silver" stroke-width="1.64"></path>
-            <desc>X-Axis tickmarks</desc>
-            <path d="M415 1975L415 2016M918 1975L918 2016M1422 1975L1422 2016M1925 1975L1925 2016M2428 1975L2428 2016M2932 1975L2932 2016M3435 1975L3435 2016" fill="none" stroke="DarkGray" stroke-width="6.45"></path>
-            <desc>Y-Axis Ticks =====</desc>
-            <desc>Y-Axis tickmarks</desc>
-            <path d="M415 1975L384 1975M415 1784L384 1784M415 1593L384 1593M415 1401L384 1401M415 1210L384 1210M415 1019L384 1019M415 828L384 828M415 636L384 636M415 445L384 445" fill="none" stroke="DarkGray" stroke-width="6.45"></path>
-            <desc>Start of Barchart ===========</desc>
-            <g fill="SteelBlue" stroke="Black" stroke-width="4">
-              <rect height="115" width="201" x="465" y="1860"></rect>
-              <rect height="344" width="201" x="969" y="1631"></rect>
-              <rect height="516" width="201" x="1472" y="1459"></rect>
-              <rect height="593" width="201" x="1975" y="1382"></rect>
-              <rect height="765" width="201" x="2479" y="1210"></rect>
-              <rect height="822" width="201" x="2982" y="1153"></rect>
-            </g>
-            <g fill="DarkOrange" stroke="Black" stroke-width="4">
-              <rect height="325" width="201" x="667" y="1650"></rect>
-              <rect height="631" width="201" x="1170" y="1344"></rect>
-              <rect height="803" width="201" x="1673" y="1172"></rect>
-              <rect height="1033" width="201" x="2177" y="942"></rect>
-              <rect height="1358" width="201" x="2680" y="617"></rect>
-              <rect height="1492" width="201" x="3183" y="483"></rect>
-            </g>
-            <desc>Axes =====</desc>
-            <path d="M415 2016L415 404M374 1975L3476 1975" fill="none" stroke="DarkGray" stroke-width="10.8"></path>
-            <desc>Data value labels ...</desc>
-            <desc>Flip colour</desc>
-            <g fill="SteelBlue" font-family="Arial" font-size="100" font-weight="bold" transform="translate(608 1820) rotate(-90)">
-              <text>6 Units</text>
-            </g>
-            <g fill="SteelBlue" font-family="Arial" font-size="100" font-weight="bold" transform="translate(1111 1591) rotate(-90)">
-              <text>18 Units</text>
-            </g>
-            <desc>Unflip colour</desc>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1615 1519) rotate(-90)">
-              <text>27 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2118 1442) rotate(-90)">
-              <text>31 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2621 1270) rotate(-90)">
-              <text>40 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(3125 1213) rotate(-90)">
-              <text>43 Units</text>
-            </g>
-            <desc>Data value labels ...</desc>
-            <desc>Flip colour</desc>
-            <g fill="DarkOrange" font-family="Arial" font-size="100" font-weight="bold" transform="translate(809 1610) rotate(-90)">
-              <text>17 Units</text>
-            </g>
-            <desc>Unflip colour</desc>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1313 1404) rotate(-90)">
-              <text>33 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1816 1232) rotate(-90)">
-              <text>42 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2319 1002) rotate(-90)">
-              <text>54 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2823 677) rotate(-90)">
-              <text>71 Units</text>
-            </g>
-            <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(3326 543) rotate(-90)">
-              <text>78 Units</text>
-            </g>
-            <desc>Key =====</desc>
-            <desc>Block key</desc>
-            <g fill="SteelBlue" stroke="Black" stroke-width="4">
-              <rect height="56" width="136" x="495" y="2206"></rect>
-            </g>
-            <desc>Block key</desc>
-            <g fill="DarkOrange" stroke="Black" stroke-width="4">
-              <rect height="56" width="136" x="1056" y="2206"></rect>
-            </g>
-            <g fill="Navy" font-family="Times New Roman" font-size="80">
-              <text x="671" y="2262">Last Year</text>
-            </g>
-            <g fill="Navy" font-family="Times New Roman" font-size="80">
-              <text x="1232" y="2262">This Year</text>
-            </g>
-            <desc>Reset to original origin</desc>
-          </g>
-        </svg>
-        <p>Let's note a few things about this chart definition, comparing it  to the <a href="https://sharpplot.com/BarCharts.htm">C# definition</a>. </p>
-        <p>First, all property values are simple numeric or text vectors or scalars.</p>
-        <p>Second, SharpPlot methods like <code>SetValueFont</code> and <code>SetColors</code> are called by setting the properties <code>ValueFont</code> and <code>SetColors</code>.</p>
-        <p>Third, a text vector will be evaluated if the property it is defining is a cover for an underlying SharpPlot method, as is the case for for <code>ValueFont</code>. </p>
-        <p>Fourth, in evaluated property values, double quotes are replaced by single quotes before evaluation. </p>
-        <p>Fifth, the various style properties that are normally specified as  the sum of one or more enums, like <code>BarChartStyle</code> and <code>YAxisStyle</code>, are specified as comma or space delimited strings. In addition, the dot-qualifying name may be elided if it refers to the name as the property itself.</p>
-        <p>Finally, the <code>ChartType</code> property determines which draw method is executed.  </p>
-        <p>Now, given the chart definition space <code>c</code> and the data space <code>d</code>, we can create the SVG <code>v</code> with:</p>
-        <pre><code>      v←c BuildChart d
-</code></pre>
-        <p>Note that the <code>ChartType</code> property defines how the data is interpreted, and how specific properties will be automatically set. Any property set by default for the chart type by may also be set by the chart definition. For example, for a bar chart, the <code>XLabels</code> (cover for <code>SetXLabels</code> method) property is automatically set using the values from the first column of the data. Nothing prevents the user from specifying the <code>XLabels</code> property explicitly in the chart definition, overiding the default behavior.</p>
-        <h2>The Input Data Table and the Chart Type</h2>
-        <p>In the example above, the input data table consisted of 3 columns, <code>Project</code>, <code>Last Year</code>, and <code>This Year</code>. Each <code>ChartType</code> processes the input data table by default in a certain way. For a bar chart, the first column is taken to be the category, and all subsequent columns are taken to be values passed to the <code>DrawBarChart</code> method. Thus, in the case above we get a multi-bar chart, with two bars per category. Most of the time it is easy enough to simply pass the proper table with the proper columns in the proper order to the <code>BuildChart</code> function, from the calling application. Sometimes, however, we have certain columns we want to ignore, or that will be used to split or group data inside SharpPlot. Alternatively the columns may not be in correct order. To facilitate this, we provide a <code>Select</code> method that specifies a list of column names. This is used to select, re-order, and by definition, omit, columns from the input data table for the default processing of the chart type.     </p>
-        <h2>Multi Charts</h2>
-        <p>One nice feature of SharpPlot is the ability, for certain chart types, to do <a href="https://sharpplot.com/Multiples.htm">multiple mini charts</a> in one go. We add a Boolean property <code>Multi</code> to cover this. If set to <code>1</code>, then each series is drawn on it's own chart. </p>
-        <h2>A Fly in the Ointment</h2>
-        <p>The chart definition outlined above is just a set of name/value pairs. They can be executed in any order, as they just set the state of the SharpPlot chart object before the appropriate draw method is executed. But there are times when we may want to draw additional things on charts, additional graphs, or lines, perhaps in different colors, and it is important that additional properties are set after the draw method is executed, and then we need to specify the next draw method. Order becomes an issue here. One solution is for <code>BuildChart</code> to accept a list of name/value pairs rather than a namespace. As a chart definition needs to be stored to disk somehow, and a namespace is no good for that, we will need this feature anyway. Now we will have order. The namespace is then just a convenience for writing charts in code, rather than defining the chart in an array of name/value pairs. The result of the wizard should be this array. </p>
-        <h2>Next Steps</h2>
-        <p>Now that we have a tidy way of defining charts in code or as an array, we can think about a GUI to make it really easy. This is perhaps a good opportunity to look at the HTMLRenderer for a cross-platform solution. </p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Which produces: </p><svg baseProfile="full" ev="http://www.w3.org/2001/xml-events" height="329.33" version="1.1" viewBox="0 0 3690 2470" width="492" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+ <title>Comparative Spend 2004-5</title>
+<desc>Created by Causeway SVG engine - SharpPlot v3.71.0</desc>
+<g stroke-miterlimit="100">
+ <rect fill="silver" height="2410" width="3610" x="80" y="60"></rect>
+ <rect fill="white" height="2405" stroke="black" stroke-width="5" width="3605" x="43" y="33"></rect>
+<desc>Paint the paper =====</desc>
+ <g fill="White">
+  <rect height="2400" width="3600" x="45" y="35"></rect>
+ </g>
+<desc>Border =====</desc>
+<desc>Y-axis labels</desc>
+ <g font-family="Times New Roman" font-size="80" text-anchor="end">
+  <text x="353" y="1995">0</text>
+  <text x="353" y="1804">10</text>
+  <text x="353" y="1613">20</text>
+  <text x="353" y="1421">30</text>
+  <text x="353" y="1230">40</text>
+  <text x="353" y="1039">50</text>
+  <text x="353" y="848">60</text>
+  <text x="353" y="656">70</text>
+  <text x="353" y="465">80</text>
+ </g>
+<desc>Heading, subheading and footnotes =====</desc>
+<desc>Heading</desc>
+ <g fill="SteelBlue" font-family="Times New Roman" font-size="150" text-anchor="middle">
+  <text x="1845" y="285">Comparative Spend 2004-5</text>
+ </g>
+<desc>Region =====</desc>
+<desc>for X-axis labels</desc>
+ <g font-family="Times New Roman" font-size="80" text-anchor="middle">
+  <text x="667" y="2086">Proj-A2</text>
+  <text x="1170" y="2086">Proj-18</text>
+  <text x="1673" y="2086">Proj-Q5</text>
+  <text x="2177" y="2086">Proj-T6</text>
+  <text x="2680" y="2086">Proj-T8</text>
+  <text x="3183" y="2086">Proj-32</text>
+ </g>
+<desc>X-Axis Ticks =====</desc>
+<desc>X-Axis Grid</desc>
+ <path d="M415 1975L415 445M918 1975L918 445M1422 1975L1422 445M1925 1975L1925 445M2428 1975L2428 445M2932 1975L2932 445M3435 1975L3435 445" fill="none" stroke="Silver" stroke-width="1.64"></path>
+<desc>X-Axis tickmarks</desc>
+ <path d="M415 1975L415 2016M918 1975L918 2016M1422 1975L1422 2016M1925 1975L1925 2016M2428 1975L2428 2016M2932 1975L2932 2016M3435 1975L3435 2016" fill="none" stroke="DarkGray" stroke-width="6.45"></path>
+<desc>Y-Axis Ticks =====</desc>
+<desc>Y-Axis tickmarks</desc>
+ <path d="M415 1975L384 1975M415 1784L384 1784M415 1593L384 1593M415 1401L384 1401M415 1210L384 1210M415 1019L384 1019M415 828L384 828M415 636L384 636M415 445L384 445" fill="none" stroke="DarkGray" stroke-width="6.45"></path>
+<desc>Start of Barchart ===========</desc>
+ <g fill="SteelBlue" stroke="Black" stroke-width="4">
+  <rect height="115" width="201" x="465" y="1860"></rect>
+  <rect height="344" width="201" x="969" y="1631"></rect>
+  <rect height="516" width="201" x="1472" y="1459"></rect>
+  <rect height="593" width="201" x="1975" y="1382"></rect>
+  <rect height="765" width="201" x="2479" y="1210"></rect>
+  <rect height="822" width="201" x="2982" y="1153"></rect>
+ </g>
+ <g fill="DarkOrange" stroke="Black" stroke-width="4">
+  <rect height="325" width="201" x="667" y="1650"></rect>
+  <rect height="631" width="201" x="1170" y="1344"></rect>
+  <rect height="803" width="201" x="1673" y="1172"></rect>
+  <rect height="1033" width="201" x="2177" y="942"></rect>
+  <rect height="1358" width="201" x="2680" y="617"></rect>
+  <rect height="1492" width="201" x="3183" y="483"></rect>
+ </g>
+<desc>Axes =====</desc>
+ <path d="M415 2016L415 404M374 1975L3476 1975" fill="none" stroke="DarkGray" stroke-width="10.8"></path>
+<desc>Data value labels ... </desc>
+<desc>Flip colour </desc>
+ <g fill="SteelBlue" font-family="Arial" font-size="100" font-weight="bold" transform="translate(608 1820) rotate(-90)">
+  <text>6 Units</text>
+ </g>
+ <g fill="SteelBlue" font-family="Arial" font-size="100" font-weight="bold" transform="translate(1111 1591) rotate(-90)">
+  <text>18 Units</text>
+ </g>
+<desc>Unflip colour </desc>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1615 1519) rotate(-90)">
+  <text>27 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2118 1442) rotate(-90)">
+  <text>31 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2621 1270) rotate(-90)">
+  <text>40 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(3125 1213) rotate(-90)">
+  <text>43 Units</text>
+ </g>
+<desc>Data value labels ... </desc>
+<desc>Flip colour </desc>
+ <g fill="DarkOrange" font-family="Arial" font-size="100" font-weight="bold" transform="translate(809 1610) rotate(-90)">
+  <text>17 Units</text>
+ </g>
+<desc>Unflip colour </desc>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1313 1404) rotate(-90)">
+  <text>33 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(1816 1232) rotate(-90)">
+  <text>42 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2319 1002) rotate(-90)">
+  <text>54 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(2823 677) rotate(-90)">
+  <text>71 Units</text>
+ </g>
+ <g fill="LightYellow" font-family="Arial" font-size="100" font-weight="bold" text-anchor="end" transform="translate(3326 543) rotate(-90)">
+  <text>78 Units</text>
+ </g>
+<desc>Key =====</desc>
+<desc>Block key</desc>
+ <g fill="SteelBlue" stroke="Black" stroke-width="4">
+  <rect height="56" width="136" x="495" y="2206"></rect>
+ </g>
+<desc>Block key</desc>
+ <g fill="DarkOrange" stroke="Black" stroke-width="4">
+  <rect height="56" width="136" x="1056" y="2206"></rect>
+ </g>
+ <g fill="Navy" font-family="Times New Roman" font-size="80">
+  <text x="671" y="2262">Last Year</text>
+ </g>
+ <g fill="Navy" font-family="Times New Roman" font-size="80">
+  <text x="1232" y="2262">This Year</text>
+ </g>
+<desc>Reset to original origin</desc>
+</g>
+</svg><p>Let's note a few things about this chart definition, comparing it  to the <a href="https://sharpplot.com/BarCharts.htm">C# definition</a>. </p><p>First, all property values are simple numeric or text vectors or scalars.</p><p>Second, SharpPlot methods like <code>SetValueFont</code> and <code>SetColors</code> are called by setting the properties <code>ValueFont</code> and <code>SetColors</code>.</p><p>Third, a text vector will be evaluated if the property it is defining is a cover for an underlying SharpPlot method, as is the case for for <code>ValueFont</code>. </p><p>Fourth, in evaluated property values, double quotes are replaced by single quotes before evaluation. </p><p>Fifth, the various style properties that are normally specified as  the sum of one or more enums, like <code>BarChartStyle</code> and <code>YAxisStyle</code>, are specified as comma or space delimited strings. In addition, the dot-qualifying name may be elided if it refers to the name as the property itself.</p><p>Finally, the <code>ChartType</code> property determines which draw method is executed.  </p><p>Now, given the chart definition space <code>c</code> and the data space <code>d</code>, we can create the SVG <code>v</code> with:</p><pre><code>      v←c BuildChart d
+</code></pre><p>Note that the <code>ChartType</code> property defines how the data is interpreted, and how specific properties will be automatically set. Any property set by default for the chart type by may also be set by the chart definition. For example, for a bar chart, the <code>XLabels</code> (cover for <code>SetXLabels</code> method) property is automatically set using the values from the first column of the data. Nothing prevents the user from specifying the <code>XLabels</code> property explicitly in the chart definition, overiding the default behavior.</p><h2>The Input Data Table and the Chart Type</h2><p>In the example above, the input data table consisted of 3 columns, <code>Project</code>, <code>Last Year</code>, and <code>This Year</code>. Each <code>ChartType</code> processes the input data table by default in a certain way. For a bar chart, the first column is taken to be the category, and all subsequent columns are taken to be values passed to the <code>DrawBarChart</code> method. Thus, in the case above we get a multi-bar chart, with two bars per category. Most of the time it is easy enough to simply pass the proper table with the proper columns in the proper order to the <code>BuildChart</code> function, from the calling application. Sometimes, however, we have certain columns we want to ignore, or that will be used to split or group data inside SharpPlot. Alternatively the columns may not be in correct order. To facilitate this, we provide a <code>Select</code> method that specifies a list of column names. This is used to select, re-order, and by definition, omit, columns from the input data table for the default processing of the chart type.     </p><h2>Multi Charts</h2><p>One nice feature of SharpPlot is the ability, for certain chart types, to do <a href="https://sharpplot.com/Multiples.htm">multiple mini charts</a> in one go. We add a Boolean property <code>Multi</code> to cover this. If set to <code>1</code>, then each series is drawn on it's own chart. </p><h2>A Fly in the Ointment</h2><p>The chart definition outlined above is just a set of name/value pairs. They can be executed in any order, as they just set the state of the SharpPlot chart object before the appropriate draw method is executed. But there are times when we may want to draw additional things on charts, additional graphs, or lines, perhaps in different colors, and it is important that additional properties are set after the draw method is executed, and then we need to specify the next draw method. Order becomes an issue here. One solution is for <code>BuildChart</code> to accept a list of name/value pairs rather than a namespace. As a chart definition needs to be stored to disk somehow, and a namespace is no good for that, we will need this feature anyway. Now we will have order. The namespace is then just a convenience for writing charts in code, rather than defining the chart in an array of name/value pairs. The result of the wizard should be this array. </p><h2>Next Steps</h2><p>Now that we have a tidy way of defining charts in code or as an array, we can think about a GUI to make it really easy. This is perhaps a good opportunity to look at the HTMLRenderer for a cross-platform solution. </p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

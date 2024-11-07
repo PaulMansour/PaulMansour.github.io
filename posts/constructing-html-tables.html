@@ -1,36 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/constructing-html-tables">Constructing HTML
-            Tables</a>
-          </h1>
-          <h4>June 4, 2021</h4>
-        </header>
-        <p>In my HTML project, I have been constructing HTML tables like so:</p>
-        <pre><code>NewTable←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/constructing-html-tables">Constructing HTML Tables</a></h1><h4>June 4, 2021</h4></header><p>In my HTML project, I have been constructing HTML tables like so:</p><pre><code>NewTable←{
      ⍝ ⍵ ←→ Namepace
      ⍝      ⍵.Titles (vec of char vecs)
      ⍝      ⍵.Values (Matrix of char vecs)
@@ -58,9 +27,7 @@
      fc.class←⍵.Classes
      t
  }
-</code></pre>
-        <p>I was not really happy about this, the primary reason being  the definition of the argument; it seemed somewhat over specified  for the general style of the project.  When I had to inject additional class settings into particular rows and columns, I realized I had done it all  wrong, and now have:</p>
-        <pre><code> NewTable←{
+</code></pre><p>I was not really happy about this, the primary reason being  the definition of the argument; it seemed somewhat over specified  for the general style of the project.  When I had to inject additional class settings into particular rows and columns, I realized I had done it all  wrong, and now have:</p><pre><code> NewTable←{
      ⍝ ⍺ ←→ [Parent Element]
      ⍝ ⍵ ←→ Rows, Columns, [Header Rows, [Footer Rows]]
      ⍝ ← ←→ Table
@@ -84,9 +51,7 @@
      t.Content,←'tfoot'newHF nf nc
      t
  }
-</code></pre>
-        <p>Now, the table is initially created with no data, just the properly structured DOM elements with no cell content, no attributes, no nothing:</p>
-        <pre><code>      t←H.NewTable 2 3 1
+</code></pre><p>Now, the table is initially created with no data, just the properly structured DOM elements with no cell content, no attributes, no nothing:</p><pre><code>      t←H.NewTable 2 3 1
       H.DOM2HTML t
 &lt;table&gt;        
   &lt;thead&gt;      
@@ -109,9 +74,7 @@
     &lt;/tr&gt;      
   &lt;/tbody&gt;     
 &lt;/table&gt;       
-</code></pre>
-        <p>In addition I added a small set of functions for extracting table-specfic elements, for assigning content, setting attributes, etc.:</p>
-        <pre><code>      b←H.BodyCells t
+</code></pre><p>In addition I added a small set of functions for extracting table-specfic elements, for assigning content, setting attributes, etc.:</p><pre><code>      b←H.BodyCells t
       b.Content←2 3⍴⍕¨⍳6
       h←,H.HeaderCells t 
       h.Content←'Column '∘,¨'One' 'Two' 'Three'
@@ -139,12 +102,4 @@
     &lt;/tr&gt;                                
   &lt;/tbody&gt;                               
 &lt;/table&gt;        
-</code></pre>
-        <p>Much better, much lighter, much more freedom for the APL programmer.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Much better, much lighter, much more freedom for the APL programmer.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

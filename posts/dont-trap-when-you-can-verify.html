@@ -1,55 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/dont-trap-when-you-can-verify">Don't Trap When
-            You Can Verify</a>
-          </h1>
-          <h2>May 11, 2023</h2>
-        </header>
-        <p>The other day I turned trapping off:</p>
-        <pre><code>      600⌶1
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/dont-trap-when-you-can-verify">Don't Trap When You Can Verify</a></h1><h2>May 11, 2023</h2></header><p>The other day I turned trapping off:</p><pre><code>      600⌶1
 2 
-</code></pre>
-        <p>And attempted to run a user command:</p>
-        <pre><code>      ]display ⍳10
+</code></pre><p>And attempted to run a user command:</p><pre><code>      ]display ⍳10
 VALUE ERROR: Undefined name: exact
 findCmdPos[1] exact←{6::⍵ ⋄ exact}~ASN ⍝ exact match?
-</code></pre>
-        <p>...which fails due to a <strong>micro trap</strong>.</p>
-        <p>I'm not picking on user commands here, my apps do this all over the place and it's a bad idea. With trap control set to 1, virtually no aspect of my apps will run. I don't think that should be. Error guards are seductive because they are terse. It's a little annoying to write: </p>
-        <pre><code>      {0=⎕NC 'exact':⍵ ⋄ exact}
-</code></pre>
-        <p>But the explicit test is a better practice. Sure, we can turn trap control on and off, we can put a stop flag in a function to get us to the point where we can safely turn trapping off to proceed to the error we are looking for, but it's all messy.</p>
-        <p>There is virtually no scenario during development where we want a micro trap like this to not work. We are abusing the error guard. </p>
-        <p>Many times we can avoid micro traps and even guards by refactoring.  Micro traps are often a sign of technical debt: we have no idea how or why a certain state arises, but it does, so we trap around it. Regardless, if we must handle the case instead of finding and eliminating the root cause, it is better to explicitly test for it.</p>
-        <p>So this proscription is now added to the <a href="/donts">Dyalog APL Dont's</a> </p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>...which fails due to a <strong>micro trap</strong>.</p><p>I'm not picking on user commands here, my apps do this all over the place and it's a bad idea. With trap control set to 1, virtually no aspect of my apps will run. I don't think that should be. Error guards are seductive because they are terse. It's a little annoying to write: </p><pre><code>      {0=⎕NC 'exact':⍵ ⋄ exact}
+</code></pre><p>But the explicit test is a better practice. Sure, we can turn trap control on and off, we can put a stop flag in a function to get us to the point where we can safely turn trapping off to proceed to the error we are looking for, but it's all messy.</p><p>There is virtually no scenario during development where we want a micro trap like this to not work. We are abusing the error guard. </p><p>Many times we can avoid micro traps and even guards by refactoring.  Micro traps are often a sign of technical debt: we have no idea how or why a certain state arises, but it does, so we trap around it. Regardless, if we must handle the case instead of finding and eliminating the root cause, it is better to explicitly test for it.</p><p>So this proscription is now added to the <a href="/donts">Dyalog APL Dont's</a> </p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

@@ -1,38 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/a-new-workspace-file-format">A New Workspace
-            File Format</a>
-          </h1>
-          <h2>February 26, 2022</h2>
-        </header>
-        <p>I have documented how namespace scripts are a <a href="/posts/building-namespace-scripts">practical and efficient</a> way to store and transport source code.  I have also documented that <a href="/posts/the-problem-with-namespace-scripts">they have problems</a> that prevent using them to their full potential.</p>
-        <p>When we are able to define both scripted and unscripted namespaces, and when we are able to define the root namespace, all in a script, many very useful possibilites follow effortlessly.</p>
-        <p>First the Dyalog interpreter should be able to simply open a script that defines the root. Thus if we have a simple text file <code>myworksapce.apln</code>:</p>
-        <pre><code>:Namespace #
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/a-new-workspace-file-format">A New Workspace File Format</a></h1><h2>February 26, 2022</h2></header><p>I have documented how namespace scripts are a <a href="/posts/building-namespace-scripts">practical and efficient</a> way to store and transport source code.  I have also documented that <a href="/posts/the-problem-with-namespace-scripts">they have problems</a> that prevent using them to their full potential.</p><p>When we are able to define both scripted and unscripted namespaces, and when we are able to define the root namespace, all in a script, many very useful possibilites follow effortlessly.</p><p>First the Dyalog interpreter should be able to simply open a script that defines the root. Thus if we have a simple text file <code>myworksapce.apln</code>:</p><pre><code>:Namespace #
    ⎕IO←0
    A←⍳10
    :Namespace MySpace 
@@ -40,17 +7,5 @@
        f←{+/⍵}
    :EndNamespace 
 :EndNamespace
-</code></pre>
-        <p>Then in the session all we need to do is:</p>
-        <pre><code>      )load myworkspace.apln
-</code></pre>
-        <p>In other words, we have a new, non-binary file format for the workspace. Furthermore, it zips up very well, so we could have, say, <code>.dwsx</code> files that are compressed text versions of dws files, analagous to Microsoft Excel <code>.xls</code> and <code>.xlsx</code> files. (In my sample, a 13 MB binary workspace is 750 KB as compressed text.)</p>
-        <p>All sorts of possibilites arise with a zipped <code>.dwsx</code> file format, as it can contain, like <code>.xlsx</code> files, multiple files and folders.  For example, it could contain a <a href="https://help.dyalog.com/18.0/#UserGuide/Installation%20and%20Configuration/Configuration%20Files.htm#Configuration_Files">configuration file</a>.    It could have multiple namespace scripts and only load and fix code on demand.</p>
-        <p>A <code>.dwsx</code> would probably not be appropriate for developement, as it would have the same drawbacks as a binary <code>.dws</code> file, but for sharing code, transport and application distribution it may be ideal. A non-zipped <code>.apln</code> file, however, may be quite useful for development: Open a clear workspace, start coding, <code>)saveastext</code> and have a text file representation of the workspace.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Then in the session all we need to do is:</p><pre><code>      )load myworkspace.apln
+</code></pre><p>In other words, we have a new, non-binary file format for the workspace. Furthermore, it zips up very well, so we could have, say, <code>.dwsx</code> files that are compressed text versions of dws files, analagous to Microsoft Excel <code>.xls</code> and <code>.xlsx</code> files. (In my sample, a 13 MB binary workspace is 750 KB as compressed text.)</p><p>All sorts of possibilites arise with a zipped <code>.dwsx</code> file format, as it can contain, like <code>.xlsx</code> files, multiple files and folders.  For example, it could contain a <a href="https://help.dyalog.com/18.0/#UserGuide/Installation%20and%20Configuration/Configuration%20Files.htm#Configuration_Files">configuration file</a>.    It could have multiple namespace scripts and only load and fix code on demand.</p><p>A <code>.dwsx</code> would probably not be appropriate for developement, as it would have the same drawbacks as a binary <code>.dws</code> file, but for sharing code, transport and application distribution it may be ideal. A non-zipped <code>.apln</code> file, however, may be quite useful for development: Open a clear workspace, start coding, <code>)saveastext</code> and have a text file representation of the workspace.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

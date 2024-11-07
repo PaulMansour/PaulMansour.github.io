@@ -1,35 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/provanto">Provanto: A Test Framework</a>
-          </h1>
-          <h2>February 13, 2023</h2>
-        </header>
-        <p>Framework is a big word for what is going on here. But testing <strong>utility</strong>, or testing <strong>application</strong> seem no better. Anyway, for years my testing "framework" has been more or less:</p>
-        <pre><code>RunTests←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/provanto">Provanto: A Test Framework</a></h1><h2>February 13, 2023        </h2></header><p>Framework is a big word for what is going on here. But testing <strong>utility</strong>, or testing <strong>application</strong> seem no better. Anyway, for years my testing "framework" has been more or less:</p><pre><code>RunTests←{
      f←'T'⍵.⎕NL ¯3
      b←⍵{
         b←⍺⍎⍵,' 0'
@@ -41,10 +11,7 @@
      r,←⊂'Failed: ',⍕+/b
      ⊃r
  } 
-</code></pre>
-        <p>This runs on a namespace full of test functions that return a 1 or 0 for success and  failure respectively. I would just copy this snippet to each new project, making a little application specific modification here and there. This could use a little improvement, but I don't want it to become a huge, unwieldy framework with lots of options, classes, methods, etc. I don't really want to write tests for my test framework, or much documentation. But I do want it to report code coverage, to have an option for stopping on failure, and to handle broken tests and other conditions.  </p>
-        <p>My new and improved "framework" is now its own Github repository <a href="https://github.com/the-carlisle-group/Provanto">Provanto</a>. Unfortunately, despite my best efforts, is has grown from  one function of a dozen lines to 8 functions nearing a total of 100 lines: </p>
-        <pre><code>:Namespace Provanto
+</code></pre><p>This runs on a namespace full of test functions that return a 1 or 0 for success and  failure respectively. I would just copy this snippet to each new project, making a little application specific modification here and there. This could use a little improvement, but I don't want it to become a huge, unwieldy framework with lots of options, classes, methods, etc. I don't really want to write tests for my test framework, or much documentation. But I do want it to report code coverage, to have an option for stopping on failure, and to handle broken tests and other conditions.  </p><p>My new and improved "framework" is now its own Github repository <a href="https://github.com/the-carlisle-group/Provanto">Provanto</a>. Unfortunately, despite my best efforts, is has grown from  one function of a dozen lines to 8 functions nearing a total of 100 lines: </p><pre><code>:Namespace Provanto
  ⎕IO ⎕ML←0 1
  Assert←{
      0⊣'TEST FAILED'⎕SIGNAL 789/⍨~⍵
@@ -126,16 +93,9 @@
      0⊣⍺ ⍺⍺ ⍵
  }
 :EndNamespace
-</code></pre>
-        <p>The API is limited to the <code>Run</code> function:</p>
-        <pre><code>      {Z}←[X [Y]] Provanto.Run A [B]  
-</code></pre>
-        <p>Where <code>A</code> is a namespace full of test functions, <code>B</code> is an optional namespace full of code that triggers a code coverage feature, <code>X</code> is a flag for stopping on failing or broken tests and <code>Y</code> is a flag for suppressing session output.  <code>Z</code>, the shy result, is a namespace full of test results, if needed for further processing or reporting. </p>
-        <p>The run function injects a function <code>Assert</code> and an operator <code>Try</code> into the test namespace. In a test, the Assert function is called to the left of a naked guard. I first saw this technique, and use of word <strong>assert</strong> in this context, from the late great Roger Hui. Like Roger's, the Provanto <code>Assert</code> function uses only a right argument and does not embed the <code>match</code> function inside <code>Assert</code>. Thus a line in a test function looks like:</p>
-        <pre><code>      Assert 4=2+2:
-</code></pre>
-        <p>This reads a little better than putting a value to the left, and in addition it leaves open the option of applying other functions besides <code>match</code> to produce a boolean without additional logic. A test function is thus a gauntlet of assertions terminated by a <code>0</code>:</p>
-        <pre><code>TestPlus←{
+</code></pre><p>The API is limited to the <code>Run</code> function:</p><pre><code>      {Z}←[X [Y]] Provanto.Run A [B]  
+</code></pre><p>Where <code>A</code> is a namespace full of test functions, <code>B</code> is an optional namespace full of code that triggers a code coverage feature, <code>X</code> is a flag for stopping on failing or broken tests and <code>Y</code> is a flag for suppressing session output.  <code>Z</code>, the shy result, is a namespace full of test results, if needed for further processing or reporting. </p><p>The run function injects a function <code>Assert</code> and an operator <code>Try</code> into the test namespace. In a test, the Assert function is called to the left of a naked guard. I first saw this technique, and use of word <strong>assert</strong> in this context, from the late great Roger Hui. Like Roger's, the Provanto <code>Assert</code> function uses only a right argument and does not embed the <code>match</code> function inside <code>Assert</code>. Thus a line in a test function looks like:</p><pre><code>      Assert 4=2+2:
+</code></pre><p>This reads a little better than putting a value to the left, and in addition it leaves open the option of applying other functions besides <code>match</code> to produce a boolean without additional logic. A test function is thus a gauntlet of assertions terminated by a <code>0</code>:</p><pre><code>TestPlus←{
      Assert 4=2+2:
      Assert 2 3 4≡1 2 3+1:
      Assert 5 6≡2+3 4:
@@ -143,17 +103,5 @@
      Assert 11=2+Try'A':
      0
  }
-</code></pre>
-        <p>The <code>Try</code> operator attempts to execute a function, trapping and returning any error:</p>
-        <pre><code>       Assert 5=2 3+Try 4 5 6:
-</code></pre>
-        <p>If a code namespace is provided, code coverage is computed with <code>⎕PROFILE</code>, and functions (with an explicit list of lines) that are not executed by the  tests are displayed in the session.</p>
-        <p>What more is needed? No doubt the <code>Profile</code> function could be cleaned up a bit. A large application might have multiple test namespaces, so we might want to have a cover function to run them all, or enhance <code>Run</code> to take multiple test namespaces.  </p>
-        <p>The next step is to review Lars Stampe Villadsen's <a href="https://www.youtube.com/watch?v=2B7YE79DASY">presentation</a> from the Dyalog 2023 conference and get this stuff running automatically on Github.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>The <code>Try</code> operator attempts to execute a function, trapping and returning any error:</p><pre><code>       Assert 5=2 3+Try 4 5 6:
+</code></pre><p>If a code namespace is provided, code coverage is computed with <code>⎕PROFILE</code>, and functions (with an explicit list of lines) that are not executed by the  tests are displayed in the session.</p><p>What more is needed? No doubt the <code>Profile</code> function could be cleaned up a bit. A large application might have multiple test namespaces, so we might want to have a cover function to run them all, or enhance <code>Run</code> to take multiple test namespaces.  </p><p>The next step is to review Lars Stampe Villadsen's <a href="https://www.youtube.com/watch?v=2B7YE79DASY">presentation</a> from the Dyalog 2023 conference and get this stuff running automatically on Github.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

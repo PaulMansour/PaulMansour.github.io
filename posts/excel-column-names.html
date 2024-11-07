@@ -1,56 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/excel-column-names">Excel Column Names</a>
-          </h1>
-          <h2>May 8, 2023</h2>
-        </header>
-        <p>Phase I, problem 3, of the 2020 Dyalog Programming Contest, <strong>Excel-lent Columns</strong> is stated thus:</p>
-        <blockquote>
-          <p>A Microsoft Excel spreadsheet numbers its rows counting up from 1. However Excel's columns are labelled alphabetically — beginning with A–Z, then AA–AZ, BA– BZ, up to ZA–ZZ, then AAA–AAZ and so on. Write a function that, given a right argument which is a character scalar or nonempty vector representing a valid character Excel column identifier between A and XFD, returns the corresponding column number</p>
-          <p>Hint: The Decode function <code>X⊥Y</code>.</p>
-          <p>Examples:</p>
-          <pre><code>      (fn) 'A'
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/excel-column-names">Excel Column Names</a></h1><h2>May 8, 2023</h2></header><p>Phase I, problem 3, of the 2020 Dyalog Programming Contest, <strong>Excel-lent Columns</strong> is stated thus:</p><blockquote><p>A Microsoft Excel spreadsheet numbers its rows counting up from 1. However Excel's columns are labelled alphabetically — beginning with A–Z, then AA–AZ, BA– BZ, up to ZA–ZZ, then AAA–AAZ and so on. Write a function that, given a right argument which is a character scalar or nonempty vector representing a valid character Excel column identifier between A and XFD, returns the corresponding column number</p><p>Hint: The Decode function <code>X⊥Y</code>.</p><p>Examples:</p><pre><code>      (fn) 'A'
 1
       (fn) 'APL'
 1104
-</code></pre>
-        </blockquote>
-        <p>The solution is concise:</p>
-        <pre><code>      N2I←{26⊥⎕A⍳⍵}
+</code></pre></blockquote><p>The solution is concise:</p><pre><code>      N2I←{26⊥⎕A⍳⍵}
       N2I¨'A' 'Z' 'AA' 'AZ' 'BA'
 1 26 27 52 53
-</code></pre>
-        <p>With such a simple solution, one would think the inverse would be fairly easy. That is, given an integer, return the corresponding column name. If <code>decode</code> solves it one way, certainly <code>encode</code> should solve it the other way:</p>
-        <pre><code>      {(' ',⎕A)[1+26 26⊤⍵]}¨1 26 27 52 53 
+</code></pre><p>With such a simple solution, one would think the inverse would be fairly easy. That is, given an integer, return the corresponding column name. If <code>decode</code> solves it one way, certainly <code>encode</code> should solve it the other way:</p><pre><code>      {(' ',⎕A)[1+26 26⊤⍵]}¨1 26 27 52 53 
  A  A   AA  B   BA 
-</code></pre>
-        <p>Clearly not correct. The problem is that the column names are not plain old base-26, but rather bijective base-26, as a recent August 22, 2022 answer to an <a href="https://stackoverflow.com/questions/181596/how-to-convert-a-column-number-e-g-127-into-an-excel-column-e-g-aa">old question on Stack Overflow makes clear.</a></p>
-        <p>This is not handled well by <code>encode</code>. While it may be possible to post-process the result of <code>encode</code> to make this work, I have not found a solution in this direction. From the referenced question and answer we can use recursion to compute the correct answer: </p>
-        <pre><code>      I2N←{
+</code></pre><p>Clearly not correct. The problem is that the column names are not plain old base-26, but rather bijective base-26, as a recent August 22, 2022 answer to an <a href="https://stackoverflow.com/questions/181596/how-to-convert-a-column-number-e-g-127-into-an-excel-column-e-g-aa">old question on Stack Overflow makes clear.</a></p><p>This is not handled well by <code>encode</code>. While it may be possible to post-process the result of <code>encode</code> to make this work, I have not found a solution in this direction. From the referenced question and answer we can use recursion to compute the correct answer: </p><pre><code>      I2N←{
            ⍺←⎕A
            n←≢⍺
            i←{q←¯1+⌈⍵÷n
@@ -61,17 +19,12 @@
        }
        I2N¨1 26 27 52 53
  A  Z  AA  AZ  BA  
-</code></pre>
-        <p>Both of these functions are fairly easy to convert to work on vectors, but it does get a little messy.</p>
-        <p>The function <code>I2N</code> works for any number of digits, which is nice. But this being APL for the practical programmer, we note that Excel columns don't exceed ZZZ (in fact much less) so it is easy to generate all possible Excel column names:</p>
-        <pre><code>      n←⊃,/,¨∘.,\3⍴⊂,¨⎕A
+</code></pre><p>Both of these functions are fairly easy to convert to work on vectors, but it does get a little messy.</p><p>The function <code>I2N</code> works for any number of digits, which is nice. But this being APL for the practical programmer, we note that Excel columns don't exceed ZZZ (in fact much less) so it is easy to generate all possible Excel column names:</p><pre><code>      n←⊃,/,¨∘.,\3⍴⊂,¨⎕A
       10↑n
  A  B  C  D  E  F  G  H  I  J 
       ¯10↑n
  ZZQ  ZZR  ZZS  ZZT  ZZU  ZZV  ZZW  ZZX  ZZY  ZZZ 
-</code></pre>
-        <p>With this in hand, and precomputed if we are worried about performance, we can trivially solve both the original problem and its inverse, with a single self-inverse function:</p>
-        <pre><code>      ColumnLookup←{
+</code></pre><p>With this in hand, and precomputed if we are worried about performance, we can trivially solve both the original problem and its inverse, with a single self-inverse function:</p><pre><code>      ColumnLookup←{
           ⍝ ⍵ ←→ Column Index or Name
           ⍝ ← ←→ Column Name or Index
           ⍺←⊃,/,¨∘.,\3⍴⊂,¨⎕A
@@ -82,12 +35,4 @@
  A  Z  AA  AZ  BA 
        ColumnLookup ColumnLookup 1 26 27 52 53
 1 26 27 52 53
-</code></pre>
-        <p>If we precompute the column names, this will be the fastest and the simplest solution, though all the solutions are petty fast, even with an <code>each</code>. </p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>If we precompute the column names, this will be the fastest and the simplest solution, though all the solutions are petty fast, even with an <code>each</code>. </p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

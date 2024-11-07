@@ -1,39 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/text-to-date">Converting Text to Date</a>
-          </h1>
-          <h2>January 23, 2023</h2>
-        </header>
-        <p>Problem #6 from <a href="https://www.dyalog.com/uploads/files/student_competition/2022_problems_phase2.pdf">Phase 2 of the Dyalog 2020 APL Problem Solving Comptetition</a> is titled <strong><em>Its a Date!</em></strong> The task was to write a function <code>DDN</code> which basically does the inverse of the date format function <code>1200⌶</code>. </p>
-        <p>Apparently the problem as specified was quite difficult, and no complete or even nearly complete solutions were submitted.</p>
-        <p>This being the <strong>APL for the Practical Man</strong> blog, we are interested in how the problem  should be framed to make the solution useful in a commercial application. And of course the general problem is encountered all the time. Dates are common data elements. Data are in files. Files are often text. So here we propose a function <code>Text2Date</code>, to compare and contrast with <code>DDN</code>.</p>
-        <p>First and foremost, in the original specification, the function <code>DDN</code> is expected to operate on a single string  or character vector, converting one string to one date, one at a time. But it will not do to use the <code>each</code> operator on millions of dates.  <code>Text2Date</code> must operate on a character matrix where each row represents a date. This has the extra benefit of making the problem more array oriented - an issue that was noted  in the <a href="https://dyalog.tv/Dyalog22/?v=018ZUHrFSM8">presentation of the contest winners</a> at the recent conference in Portugal. </p>
-        <p>Second, <code>DDN</code> is expected to handle strings that do not produce a unique Dyalog Date Number, like <code>'07'</code>, <code>'Thursday'</code>, and  <code>'Feb 29th'</code>, all potential outputs from <code>1200⌶</code>. This adds complexilty but provides little to no value. We can only elide consecutive trailing elements in <code>⎕TS</code>, which default to <code>1</code> or <code>0</code> as appropriate, and no one would reasonably expect otherwise:</p>
-        <pre><code>       ¯1 1 ⎕DT⊂,2022 
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/text-to-date">Converting Text to Date</a></h1><h2>January 23, 2023</h2></header><p>Problem #6 from <a href="https://www.dyalog.com/uploads/files/student_competition/2022_problems_phase2.pdf">Phase 2 of the Dyalog 2020 APL Problem Solving Comptetition</a> is titled <strong><em>Its a Date!</em></strong> The task was to write a function <code>DDN</code> which basically does the inverse of the date format function <code>1200⌶</code>. </p><p>Apparently the problem as specified was quite difficult, and no complete or even nearly complete solutions were submitted.</p><p>This being the <strong>APL for the Practical Man</strong> blog, we are interested in how the problem  should be framed to make the solution useful in a commercial application. And of course the general problem is encountered all the time. Dates are common data elements. Data are in files. Files are often text. So here we propose a function <code>Text2Date</code>, to compare and contrast with <code>DDN</code>.</p><p>First and foremost, in the original specification, the function <code>DDN</code> is expected to operate on a single string  or character vector, converting one string to one date, one at a time. But it will not do to use the <code>each</code> operator on millions of dates.  <code>Text2Date</code> must operate on a character matrix where each row represents a date. This has the extra benefit of making the problem more array oriented - an issue that was noted  in the <a href="https://dyalog.tv/Dyalog22/?v=018ZUHrFSM8">presentation of the contest winners</a> at the recent conference in Portugal. </p><p>Second, <code>DDN</code> is expected to handle strings that do not produce a unique Dyalog Date Number, like <code>'07'</code>, <code>'Thursday'</code>, and  <code>'Feb 29th'</code>, all potential outputs from <code>1200⌶</code>. This adds complexilty but provides little to no value. We can only elide consecutive trailing elements in <code>⎕TS</code>, which default to <code>1</code> or <code>0</code> as appropriate, and no one would reasonably expect otherwise:</p><pre><code>       ¯1 1 ⎕DT⊂,2022 
 44561
        ¯1 1 ⎕DT⊂2022 28 
 DOMAIN ERROR: Invalid date-time
@@ -47,25 +13,4 @@ DOMAIN ERROR: Invalid date-time
 DOMAIN ERROR: Invalid date-time
       ¯1 1 ⎕DT⊂2022 0 28
            ∧
-</code></pre>
-        <p>Thus <code>Text2Date</code> should only be required to handle strings that produce a unique Dyalog Date Number, with the exception that 2 digit years are resolved using a fixed or sliding century window, which  may be provided as an optional argument.</p>
-        <p>Third, the spec for <code>DDN</code> states that:</p>
-        <blockquote>
-          <p>No variable length numeric fields will be placed immediately next to another numeric field.</p>
-        </blockquote>
-        <p>For example, <code>MDDYY</code>, <code>YYMD</code> and <code>MDY</code> would be disallowed. This is almost, but not quite, saying that variable length formats must be delimited. It allows, for example, <code>MMYY-D</code>. This constraint is both too restrictive and not restrictive enough.  Leading variable length elements should be allowed immediatly adjacent to a fixed element, but otherwise the elements in a variable length format must be strictly delimited.  Thus <code>Text2Date</code> should properly handle the string <code>'DMMYY'</code>, but should not handle <code>'YYMM-D'</code>.  The reason for the former is that undelimited dates in text files are often missing a leading zero due to type conversions somewhere upstream. The reason for the latter is that allowing  delimited variable length elements in the same format with undelimited fixed width elements  adds much complexity for very little if any practical gain. </p>
-        <p>If we combine the restriction that any variable length format must be fully delimited, with the further <code>DDN</code> restriction that:</p>
-        <blockquote>
-          <p>the only alphanumeric characters will be formatted elements of the date/time</p>
-        </blockquote>
-        <p>then specifying a variable length format becomes merely a matter of specifying the order in which the elements occur. That is, there is no need to specify '<code>M-YY-D</code>' when simply <code>MYD</code> will do. The string must contain three separated numbers (leaving aside months as text like Jan, Feb, etc.). The particular separator or length of separator is immaterial. </p>
-        <p>This brings up the question of whether the format specifier for <code>1200⌶</code> is really the best unformat specifier. Is a true inverse really what we need? Certainly they are related, but in a real application we would probably want <code>'12/31/2022'</code>, <code>'1-1-2023'</code>, and <code>'7/4/21'</code> to all convert properly with the same format string.</p>
-        <p>Thus there are at least two issues that make to-and-from text fundamentally different from all the other date formats.  <code>1200⌶</code> will create "invalid" dates, that is, strings that cannot be converted back to a unique Dyalog Date Number. And conversely, there are multiple strings that could only be created using multiple formats, but that should all convert back to a Dyalog Date Number using a single format. This may be an argument to keep <code>1200⌶</code> out of <code>⎕DT</code>.</p>
-        <p>A further complication is handling bad data. To be useful, <code>Text2Date</code> must not fail when it cannot yield a valid Dyalog Data Number for a string. There are then only two options: return a value that indicates failure, or take the route of <code>⎕VFI</code>, and return a Boolean mask indicating valid results. A zero might be useful for a failure value. If not, a zero is perfect for a fill value, with the Boolean mask indicating valid results, just like <code>⎕VFI</code>.  If <code>1200⌶</code> is folded in to <code>⎕DT</code>, perhaps a variant could be added that changes the result to a <code>⎕VFI</code> style result. This might be useful for numeric-to-numeric conversions as well.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>Thus <code>Text2Date</code> should only be required to handle strings that produce a unique Dyalog Date Number, with the exception that 2 digit years are resolved using a fixed or sliding century window, which  may be provided as an optional argument.</p><p>Third, the spec for <code>DDN</code> states that:</p><blockquote><p>No variable length numeric fields will be placed immediately next to another numeric field.</p></blockquote><p>For example, <code>MDDYY</code>, <code>YYMD</code> and <code>MDY</code> would be disallowed. This is almost, but not quite, saying that variable length formats must be delimited. It allows, for example, <code>MMYY-D</code>. This constraint is both too restrictive and not restrictive enough.  Leading variable length elements should be allowed immediatly adjacent to a fixed element, but otherwise the elements in a variable length format must be strictly delimited.  Thus <code>Text2Date</code> should properly handle the string <code>'DMMYY'</code>, but should not handle <code>'YYMM-D'</code>.  The reason for the former is that undelimited dates in text files are often missing a leading zero due to type conversions somewhere upstream. The reason for the latter is that allowing  delimited variable length elements in the same format with undelimited fixed width elements  adds much complexity for very little if any practical gain. </p><p>If we combine the restriction that any variable length format must be fully delimited, with the further <code>DDN</code> restriction that:</p><blockquote><p>the only alphanumeric characters will be formatted elements of the date/time</p></blockquote><p>then specifying a variable length format becomes merely a matter of specifying the order in which the elements occur. That is, there is no need to specify '<code>M-YY-D</code>' when simply <code>MYD</code> will do. The string must contain three separated numbers (leaving aside months as text like Jan, Feb, etc.). The particular separator or length of separator is immaterial. </p><p>This brings up the question of whether the format specifier for <code>1200⌶</code> is really the best unformat specifier. Is a true inverse really what we need? Certainly they are related, but in a real application we would probably want <code>'12/31/2022'</code>, <code>'1-1-2023'</code>, and <code>'7/4/21'</code> to all convert properly with the same format string.</p><p>Thus there are at least two issues that make to-and-from text fundamentally different from all the other date formats.  <code>1200⌶</code> will create "invalid" dates, that is, strings that cannot be converted back to a unique Dyalog Date Number. And conversely, there are multiple strings that could only be created using multiple formats, but that should all convert back to a Dyalog Date Number using a single format. This may be an argument to keep <code>1200⌶</code> out of <code>⎕DT</code>.</p><p>A further complication is handling bad data. To be useful, <code>Text2Date</code> must not fail when it cannot yield a valid Dyalog Data Number for a string. There are then only two options: return a value that indicates failure, or take the route of <code>⎕VFI</code>, and return a Boolean mask indicating valid results. A zero might be useful for a failure value. If not, a zero is perfect for a fill value, with the Boolean mask indicating valid results, just like <code>⎕VFI</code>.  If <code>1200⌶</code> is folded in to <code>⎕DT</code>, perhaps a variant could be added that changes the result to a <code>⎕VFI</code> style result. This might be useful for numeric-to-numeric conversions as well.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>

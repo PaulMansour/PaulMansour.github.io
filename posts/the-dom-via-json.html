@@ -1,35 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"></meta>
-    <meta content="width=device-width, initial-scale=1" name="viewport"></meta>
-    <link href="/ThorntonMelon.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <header>
-      <h1>Tool of Thought</h1>
-      <h2>APL for the Practical Man</h2>
-      <h3>"You don't know how bad your design is until you write about
-      it."</h3>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/posts">Posts</a>
-        <a href="/projects">Projects</a>
-        <a href="/donts">Don'ts</a>
-        <a href="/links">Links</a>
-        <a href="/about">About</a>
-      </nav>
-    </header>
-    <main>
-      <article>
-        <header>
-          <h1>
-            <a href="/posts/the-dom-via-json">The DOM via JSON</a>
-          </h1>
-          <h2>April 11, 2023</h2>
-        </header>
-        <p>In a <a href="/posts/a-document-object-model-in-apl">A Document Object Model in APL</a> the usefulness of  an APL DOM was discussed, and a function <code>HTML2DOM</code> demonstrated:</p>
-        <pre><code>HTML2DOM←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/the-dom-via-json">The DOM via JSON</a></h1><h2>April 11, 2023 </h2></header><p>In a <a href="/posts/a-document-object-model-in-apl">A Document Object Model in APL</a> the usefulness of  an APL DOM was discussed, and a function <code>HTML2DOM</code> demonstrated:</p><pre><code>HTML2DOM←{
      ⍝ ⍵ ←→ HTML
      ⍝ ← ←→ DOM
      0=≢⍵:⍬
@@ -42,11 +12,7 @@
          p⊣p ∇¨1↓¨b⊂[0]m
      }⎕XML ⍵
  }    
-</code></pre>
-        <p>This function takes HTML and recursively works through the <code>⎕XML</code> matrix using the <code>New</code> function, building a tree of element namespaces. The <code>New</code> function is the same function used to build up a document from scratch. All of this code is in the <a href="https://github.com/th-carlisle-group/abacus">Abacus</a> project.</p>
-        <p>In a recent discussion on <a href="https://chat.stackexchange.com/rooms/52405/the-apl-orchard">The APL Orchard</a>, it was noted that <code>⎕JSON</code> could be used to create a namespace tree from HTML. While it is no secret that <code>⎕JSON</code> creates a namespace tree from JSON (that's what it does!), it never occurred to me to use it for creating an HTML DOM. It seems it should be faster than doing it by "hand", but there is some additional overhead in going from HTML to JSON and then to a namespace tree. Let's see how to do it.</p>
-        <p>The problem boils down to converting a <code>⎕XML</code>-style matrix to a <code>⎕JSON</code>-style matrix. We know what  a <code>⎕XML</code> matrix looks like, and we know how the DOM is stuctured (which is good, as half the battle is simply knowing the destination), but what on Earth does the corresponding <code>⎕JSON</code> matrix look like? Fortunately, we can create a simple document fragment:   </p>
-        <pre><code>      A←#.Abacus.Main
+</code></pre><p>This function takes HTML and recursively works through the <code>⎕XML</code> matrix using the <code>New</code> function, building a tree of element namespaces. The <code>New</code> function is the same function used to build up a document from scratch. All of this code is in the <a href="https://github.com/th-carlisle-group/abacus">Abacus</a> project.</p><p>In a recent discussion on <a href="https://chat.stackexchange.com/rooms/52405/the-apl-orchard">The APL Orchard</a>, it was noted that <code>⎕JSON</code> could be used to create a namespace tree from HTML. While it is no secret that <code>⎕JSON</code> creates a namespace tree from JSON (that's what it does!), it never occurred to me to use it for creating an HTML DOM. It seems it should be faster than doing it by "hand", but there is some additional overhead in going from HTML to JSON and then to a namespace tree. Let's see how to do it.</p><p>The problem boils down to converting a <code>⎕XML</code>-style matrix to a <code>⎕JSON</code>-style matrix. We know what  a <code>⎕XML</code> matrix looks like, and we know how the DOM is stuctured (which is good, as half the battle is simply knowing the destination), but what on Earth does the corresponding <code>⎕JSON</code> matrix look like? Fortunately, we can create a simple document fragment:   </p><pre><code>      A←#.Abacus.Main
 SimpleDoc←{
      d←A.New'section'
      d.class←'post'
@@ -68,9 +34,7 @@ SimpleDoc←{
     &lt;li&gt;Three&lt;/li&gt;                   
   &lt;/ul&gt;                              
 &lt;/section&gt;   
-</code></pre>
-        <p>And see what the familiar source <code>⎕XML</code> matrix looks like:</p>
-        <pre><code>      ⎕XML h
+</code></pre><p>And see what the familiar source <code>⎕XML</code> matrix looks like:</p><pre><code>      ⎕XML h
 0  section               class  post        3
                          id     p20230411    
 1  h1       Simple Doc                      5
@@ -78,9 +42,7 @@ SimpleDoc←{
 2  li       One                             5
 2  li       Two                             5
 2  li       Three                           5
-</code></pre>
-        <p>And the corresponding unfamiliar target <code>⎕JSON</code> matrix:</p>
-        <pre><code>      ⎕JSON⍠'M'⊢⎕JSON d
+</code></pre><p>And the corresponding unfamiliar target <code>⎕JSON</code> matrix:</p><pre><code>      ⎕JSON⍠'M'⊢⎕JSON d
 0                       1
 1  Content              2
 2                       1
@@ -105,9 +67,7 @@ SimpleDoc←{
 1  Tag      section     4
 1  class    post        4
 1  id       p20230411   4
-</code></pre>
-        <p>The are indeed a little different. By inspection, and some trial and error, we can write a function to go directly from the <code>⎕XML</code> matrix to the <code>⎕JSON</code> matrix:</p>
-        <pre><code>XM2JM←{
+</code></pre><p>The are indeed a little different. By inspection, and some trial and error, we can write a function to go directly from the <code>⎕XML</code> matrix to the <code>⎕JSON</code> matrix:</p><pre><code>XM2JM←{
      ⍝ ⍵ ←→ ⎕XML matrix
      ⍝ ← ←→ ⎕JSON matrix
      ⊃⍪/{
@@ -122,9 +82,7 @@ SimpleDoc←{
          z,←(0&lt;≢t)/⊂(j+1)''t 4 ⍝ Text        (0 or 1 row)
          ↑z}¨↓⍵
  }
-</code></pre>
-        <p>This loops through each row of the <code>⎕XML</code> matrix, which is less than desirable (but surprisingly not particularly slow). However it provides us insight into how to take a more array oriented approach:</p>
-        <pre><code>XM2JM←{
+</code></pre><p>This loops through each row of the <code>⎕XML</code> matrix, which is less than desirable (but surprisingly not particularly slow). However it provides us insight into how to take a more array oriented approach:</p><pre><code>XM2JM←{
      ⍝ ⍵ ←→ ⎕XML matrix
      ⍝ ← ←→ ⎕JSON matrix
      (o t)←↓⍉~⍵[;1 2]∊⊂''                     ⍝ Object, text
@@ -141,13 +99,4 @@ SimpleDoc←{
      m[;0]←(n/2×⍵[;0])+(~m[;1]∊⊂'')+2×j∊⍨⍳≢m  ⍝ Depth
      m
  }
-</code></pre>
-        <p>With the exception of the depth column, the target matrix is filled in over about 6 steps. There may be a way to fill in each column in one go, as the depth is done on the penultimate line.    </p>
-        <p>In the next post we will investigate the relative performance of these various techniques.</p>
-      </article>
-    </main>
-    <footer>
-      <p>Copyright 2024 Paul S. Mansour</p>
-    </footer>
-  </body>
-</html>
+</code></pre><p>With the exception of the depth column, the target matrix is filled in over about 6 steps. There may be a way to fill in each column in one go, as the depth is done on the penultimate line.    </p><p>In the next post we will investigate the relative performance of these various techniques.</p></article></main><footer><p>Copyright 2024 Paul S. Mansour</p></footer></body></html>
