@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/version-20-goodies">Version 20 Goodies</a></h1><h2>January 31, 2025</h2></header><p>A pre-release edition of version 20 has found its way to our machine so lets look at the newly introduced <code>⎕VGET</code> and <code>⎕VSET</code>. Documentation does not seem to be at hand yet, so let's just play around and see how they work.</p><p>First, we can create a new namespace now with <code>()</code> rather than <code>⎕NS ''</code>:</p><pre><code>      s←()
+      s
+#.[Namespace]
+      s.One←1
+      s.One
+1
+</code></pre><p>Nice. Ok, lets set a variable: </p><pre><code>      s←()
+      s ⎕VSET 'One' 1
+DOMAIN ERROR
+      s ⎕VSET'One' 1
+        ∧
+</code></pre><p>Probably wants it nested:</p><pre><code>      s←()⎕VSET ⊂'One' 1
+      s.One
+1
+      s←()⎕VSET ('One' 1) ('Two' 2)
+      s.(One Two)
+1 2
+</code></pre><p>Yes indeed. Why? It seems there could be a way to disambiguate a two item vector argument as <code>Name Value</code> vs <code>(Name Value) (Name Value)</code> given the level of nesting of the first item.</p><p>How about a matrix of names and values:</p><pre><code>      s←()⎕VSET ↑('One' 1) ('Two' 2)
+RANK ERROR: Invalid right argument
+      s←()⎕VSET↑('One' 1)('Two' 2)
+</code></pre><p>Doesn't like it.  Let's extract values:</p><pre><code>      s ⎕VGET 'One'
+1
+      s ⎕VGET 'One' 'Two'
+1 2
+      s ⎕VGET ↑'One' 'Two'
+1 2
+</code></pre><p>Getting is more flexible than setting. How about with default values:</p><pre><code>      s ⎕VGET'One' 'Two'('Three' 'three')
+1 2  three 
+      s ⎕VGET ('One' 'one') ('Two' 'two') ('Three' 'three')
+1 2  three 
+      s ⎕VGET ↑('One' 'one') ('Two' 'two') ('Three' 'three')
+RANK ERROR: Invalid right argument
+      s ⎕VGET↑('One' 'one')('Two' 'two')('Three' 'three')
+        ∧
+</code></pre><p>Does not like a matrix of names values. Here though we see a problem with a two-item argument of Name and Value:</p><pre><code>      s ⎕VGET 'One' 'one'
+VALUE ERROR: Undefined name: one
+      s ⎕VGET'One' 'one'
+        ∧
+      s ⎕VGET ⊂'One' 'one'
+1
+</code></pre><p>Are we trying to get the value of two names, or one name with a default value? So if <code>⎕VGET</code> requires a single name/value pair to be enclosed, maybe <code>⎕VSET</code> should as well, even though maybe not strictly necessary. </p><p>How about an array of spaces as the left argument:</p><pre><code>      a←()()() ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
+      a.One
+1 1 1
+      a.(One Two Three)
+┌─────┬─────┬─────┐
+│1 2 3│1 2 3│1 2 3│
+└─────┴─────┴─────┘
+</code></pre><p>Oooooh. Very nice. Every name on the right is injected into every space on the left. Same as <code>a.Var←5</code>  injects <code>Var</code> into every namespace in <code>a</code>. How far can we go? How about a matrix:</p><pre><code>      m←2 3⍴()()()()()()
+      m ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
+DOMAIN ERROR: Invalid left argument
+</code></pre><p>Doh! But as namespaces are refs we can do:</p><pre><code>      (,m) ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
+      m.One
+1 1 1
+1 1 1
+</code></pre><p>Not bad, but it would be nicer if it just worked, just as <code>m.Var←5</code> works. It's not so nice going the other way, as we actual need to use the result of the function:</p><pre><code>      m ⎕VGET 'One'
+DOMAIN ERROR: Invalid left argument
+      m ⎕VGET'One'
+        ∧
+      (,m) ⎕VGET 'One'
+1 1 1 1 1 1
+</code></pre><p>Where we need something like:</p><pre><code>     m (⍴⍤⊣⍴,⍛⎕VGET) 'One'
+1 1 1
+1 1 1
+</code></pre><p>as a workaround suggested, perhaps humorously but functional none the less, over on <a href="https://chat.stackexchange.com/rooms/52405/the-apl-orchard/">the Orchard</a>.</p><p>Other notes. If no left argument is provided, it defaults to the current space or <code>⎕THIS</code>:</p><pre><code>      ⎕VSET ⊂'Hello' 'World'
+      Hello
+World 
+      ⎕VGET 'Hello'
+World
+</code></pre><p>This is all great stuff and is going to replace a lot of hokey code.  </p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
