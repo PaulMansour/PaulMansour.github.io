@@ -19,7 +19,11 @@ DOMAIN ERROR
 </code></pre><p>Yes indeed. Why? It seems there could be a way to disambiguate a two item vector argument as <code>Name Value</code> vs <code>(Name Value) (Name Value)</code> given the level of nesting of the first item.</p><p>How about a matrix of names and values:</p><pre><code>      s←()⎕VSET ↑('One' 1) ('Two' 2)
 RANK ERROR: Invalid right argument
       s←()⎕VSET↑('One' 1)('Two' 2)
-</code></pre><p>Doesn't like it.  Let's extract values:</p><pre><code>      s ⎕VGET 'One'
+</code></pre><p>Doesn't like it. Often we have a list of names and a list of values in separate arrays:</p><pre><code>      n←'one' 'two' 'three'
+      v←1 2 3
+      s←() ⎕VSET n v
+DOMAIN ERROR
+</code></pre><p>Does not like that either. Of course we can always do <code>↓⍉↑</code> first, but that seems a shame. We should not have to take clean and efficient homogenous arrays and make complex nested ones if we don't have to.</p><p>Let's extract values:</p><pre><code>      s ⎕VGET 'One'
 1
       s ⎕VGET 'One' 'Two'
 1 2
@@ -39,7 +43,12 @@ VALUE ERROR: Undefined name: one
         ∧
       s ⎕VGET ⊂'One' 'one'
 1
-</code></pre><p>Are we trying to get the value of two names, or one name with a default value? So if <code>⎕VGET</code> requires a single name/value pair to be enclosed, maybe <code>⎕VSET</code> should as well, even though maybe not strictly necessary. </p><p>How about an array of spaces as the left argument:</p><pre><code>      a←()()() ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
+</code></pre><p>Are we trying to get the value of two names, or one name with a default value? So if <code>⎕VGET</code> requires a single name/value pair to be enclosed, maybe <code>⎕VSET</code> should as well, even though maybe not strictly necessary. </p><p>And with names and values in separate arrays:</p><pre><code>       s←()⎕VSET↓⍉↑n v
+       s ⎕VGET n
+1 2 3
+       s ⎕VGET n v
+DOMAIN ERROR
+</code></pre><p>If <code>⎕VSET</code> would take <code>n</code> and <code>v</code> as is, and that last expresssion worked, this would be nice and symetrical.</p><p>How about an array of spaces as the left argument:</p><pre><code>      a←()()() ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
       a.One
 1 1 1
       a.(One Two Three)
