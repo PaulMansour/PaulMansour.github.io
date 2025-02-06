@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/rethinking-vset-and-vget">Rethinking ⎕VSET and ⎕VGET</a></h1><h2>February 5, 2025</h2></header><p>In the previous post we played around with the new system functions <code>⎕VSET</code> and <code>⎕VGET</code>, and noted a couple of unfortunate, though perhaps unavoidable, design decisions. First is having to enclose when setting or getting a single name, and second is having to provide a matrix of names when the argument is two separate arrays of names and values, rather than name and value pairs.  </p><p>What if we simplify (and sacrifice some) things by insisting the argument is always two items,  a list of names and a list of values, defining <code>⎕VSET</code> as:</p><pre><code>VSET←{
+   ⍺←⎕THIS
+   n v←⍵
+   2=|≡n:⍺ ⎕VSET(↑n)v
+   2=⍴⍴n:⍺ ⎕VSET n v
+   ⍺ ⎕VSET ⊂n v
+}
+</code></pre><p>And <code>⎕VGET</code> as:</p><pre><code>VGET←{
+   ⍺←⎕THIS
+   1=≢⊆⍵:⍺ ⎕VGET⊃⊆⍵
+   n v←⍵
+   (1=⍴⍴n)∧2&gt;|≡n:⍺ ⎕VGET ⊂⍵  
+   ⍺ ⎕VGET (↑n) v
+}
+</code></pre><p>These functions do not allow name and value pairs, and as a corrollary do not allow the provision of only some default values for <code>⎕VGET</code>. It's all or nothing with respect to default values.</p><p>However, we can do:</p><pre><code>      s←()VSET 'One' 1
+      s.One
+1
+</code></pre><p>And:</p><pre><code>      n←'One' 'two' 'Three'
+      v←1 2 3
+      s←()VSET n v
+</code></pre><p>or:</p><pre><code>      s←()VSET (↑n) v
+</code></pre><p>Similarly for getting values, we can avoid an enclose:</p><pre><code>      s VGET 'One'
+1
+      s VGET 'Four' 4
+4
+</code></pre><p>But for multiple names only we need to enclose:</p><pre><code>      s VGET ⊂'One' 'Two'
+1 2
+      s VGET ⊂n
+1 2 3
+</code></pre><p>And if providing default values, we must provide them all:</p><pre><code>     s VGET ('One' 'Five') (1 5)
+1 5
+</code></pre><p>One nice thing about this design is the simplicity of documenting it. We simply say the right argument is composed of two items, names and values. We don't need to explain that if there are two elements, and the first element is a matrix, then things are interpreted one way, but if the first element is a vector then it means somehthing else. This kind of design always makes us feel a bit uneasy.</p><p>The loss of being able to default only some values and not all for a given set of names is not much to give up. The structure:</p><pre><code>
+      (Name Value) Name (Name Value)...
+</code></pre><p>does not arise very naturally in code, though it may as a literal structure.</p><p>Regardless of all of this, it is easy enough to cover <code>⎕VGET</code> and <code>⎕VSET</code> as we do above to get the behavior we want, if indeed that is what we want, and arguably the reverse would not be true.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
