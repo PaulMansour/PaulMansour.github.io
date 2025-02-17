@@ -1,5 +1,99 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/rethinking-vset-and-vget">Rethinking ⎕VSET and ⎕VGET</a></h1><h2>February 5, 2025</h2></header><p>In the previous post we played around with the new system functions <code>⎕VSET</code> and <code>⎕VGET</code>, and noted a couple of unfortunate, though perhaps unavoidable, design decisions. First is having to enclose when setting or getting a single name, and second is having to provide a matrix of names when the argument is two separate arrays of names and values, rather than name and value pairs.  </p><p>What if we simplify (and sacrifice some) things by insisting the argument is always two items,  a list of names and a list of values, defining <code>⎕VSET</code> as:</p><pre><code>VSET←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"You don't know how bad your design is until you write about it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/html-tables-revisited">HTML Tables Revisited</a></h1><h2>February 16, 2025</h2></header><p>The <a href="/posts/html-tables-again">last time we looked at tables</a> was way back in 2021. That's a cute little function, and it's useful for relatively small tables, but to put it kindly, it is not  particularly efficient.</p><p>The Abacus DOM creates a namespace for every element. Tables have lots of elements. This is not good in space: </p><pre><code>      m←⍕¨{⍵⍴⍳×/⍵}1000 100
+      t←NewTable m
+      'CI12' ⎕FMT ⎕SIZE ,¨'mt' 
+   4,800,040
+ 242,324,696
+</code></pre><p>Yikes! </p><p>And the time to create is excessive as well. Rendering is slow too. For the <a href="/posts/a-high-performance-data-grid-in-html">Abacus DataGrid component</a> we had to write some special code to get around this as  we recreate and re-render the table on every key stroke when scrolling around. A general solution is called for. Rather than creating a namespace for every element, we can create just a few namespaces to hold content values and attribute values: </p><pre><code>NewOptiTable←{
+     t←⎕NS''
+     t.Tag←'optitable'
+     t.(Body Header Footer)←{
+         s←⎕NS''
+         s.Values←⍵⍴⍨¯2↑1,⍴⍵
+         s.Rows←⎕NS''
+         s.Cells←⎕NS''
+         s}¨3↑⍬ ⍬,⍨(⊂⍣(2=≡⍵))⍵
+     t
+ } 
+</code></pre><p>This takes hardly any space:</p><pre><code>      t2←NewOptiTable m
+      'CI12' ⎕FMT ⎕SIZE ,¨'m' 't' 't2' 
+   4,800,040
+ 242,324,696
+   4,821,416
+</code></pre><p>And no time, as it doesn't really do anything:</p><pre><code>      cmpx 'NewOptiTable m' 'NewTable m'
+  NewOptiTable m → 2.3E¯3 |      0%                                         
+* NewTable m     → 9.4E¯1 | +41822% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕     
+</code></pre><p>(Results are of course different.)</p><p>Rendering now requires special code:</p><pre><code>RenderOptiTable←{
+     ⍝ ⍵ ←→ OptiTable
+     o←⊂'Whitespace' 'Preserve'
+     o,←⊂'UnknownEntity' 'Preserve'
+     xml←⎕XML⍠o
+     a←ComposeAttributes ⍵
+     xml 0 'table' ''a⍪⊃⍪/'thead' 'tbody' 'tfoot'{
+         r c←⍴⍵.Values
+         0∊r,c:0 4⍴0
+         n←r+r×c
+         m←n 2⍴1 c⌿2 2⍴2 'tr' 3((⍺≡'tbody')⊃'th' 'td')
+         m,←,(⊂''),⍵.Values
+         a←,⊃,/r(r c){
+             d←⍺
+             n←(⎕C ⎕A)⍵.⎕NL ¯2
+             0=≢n:d⍴⊂0 2⍴⊂''
+             v←⍵⍎¨n
+             n←'-'@('_'∘=)¨n
+             b←{80=⎕DR⊃⊃⍵}¨v
+             a←{
+                 0=∨/b:d⍴⊂0 2⍴⊂''
+                 k←↑{d⍴⊆⍵}¨b/v
+                 (r q)←0 ¯1+⍴⍴k
+                 ⊂[0 r](b/n),⍤0⍤0 q⊢k ⍝ Hat tip: AB
+             }0
+             a⊣(n/⍨~b){
+                 ' '=⊃⍺:0
+                 n i v←↓⍉(⊂⍺),↑⍵
+                 0⊣a[i]←a[i]⍪¨↓⍉↑n v
+             }¨v/⍨~b
+         }¨⍵.Rows ⍵.Cells
+         t←ComposeAttributes ⍵
+         1 ⍺''t⍪m,a
+     }¨⍵.(Header Body Footer)
+ }
+</code></pre><p>But is much faster:</p><pre><code>        cmpx 'RenderOptiTable t2'  'DOM2HTML t'
+  RenderOptiTable t2 → 2.7E¯2 |     0% ⎕                                       
+  DOM2HTML t         → 1.5E0  | +5441% ⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕⎕
+</code></pre><p>The argument to <code>NewOptiTable</code> is identical to <code>NewTable</code>, but specifying attributes is done differently: </p><pre><code>      t←NewOptiTable (⍕¨3 2⍴⍳6) ('One' 'Two')
+      t.class←'table-class'
+      t.Header.class←'header-class'
+      t.Header.Cells.class←'col1' 'col2'
+      t.Body.Rows.id←'rowid1' 'rowid2' 'rowid3'
+      t.Body.Cells.class←'cell-class'
+      t.Body.Cells.id←'id'∘,¨⍕¨3 2⍴⍳6
+      t.Body.Cells.onclick←((0 0) 'foo1') ((2 1) 'foo2')
+</code></pre><p>Attributes are specified by assignment in the root for the <code>table</code> element, and in the <code>Header</code>, <code>Body</code>, and <code>Footer</code> subspaces for the <code>thead</code>, <code>tbody</code>, and <code>tfoot</code> elements respectively. Each of these 3 subspaces contain a <code>Rows</code> and <code>Cells</code> subspace for attributes for <code>tr</code> and either <code>td</code> or <code>th</code> elements as appropriate. The only purpose of the <code>Rows</code> and <code>Cells</code> subspaces is to have place to specify attributes.</p><p>Attributes are enclosed if simple, and reshaped to match the target elements in question, providing something analagous to scalar extension. (For example, to specfiy a class per column in the above example simply do <code>t.Body.Cells.class←'c1' 'c2'</code>.)      Alternatively, attributes may be specified by explicit index. So the above produces:  </p><pre><code>       RenderOptiTable t
+&lt;table class="table-class"&gt;                                
+  &lt;thead class="header-class"&gt;                             
+    &lt;tr&gt;                                                   
+      &lt;th class="col1"&gt;One&lt;/th&gt;                            
+      &lt;th class="col2"&gt;Two&lt;/th&gt;                            
+    &lt;/tr&gt;                                                  
+  &lt;/thead&gt;                                                 
+  &lt;tbody&gt;                                                  
+    &lt;tr id="rowid1"&gt;                                       
+      &lt;td class="cell-class" id="id0" onclick="foo1"&gt;0&lt;/td&gt;
+      &lt;td class="cell-class" id="id1"&gt;1&lt;/td&gt;               
+    &lt;/tr&gt;                                                  
+    &lt;tr id="rowid2"&gt;                                       
+      &lt;td class="cell-class" id="id2"&gt;2&lt;/td&gt;               
+      &lt;td class="cell-class" id="id3"&gt;3&lt;/td&gt;               
+    &lt;/tr&gt;                                                  
+    &lt;tr id="rowid3"&gt;                                       
+      &lt;td class="cell-class" id="id4"&gt;4&lt;/td&gt;               
+      &lt;td class="cell-class" id="id5" onclick="foo2"&gt;5&lt;/td&gt;
+    &lt;/tr&gt;                                                  
+  &lt;/tbody&gt;                                                 
+&lt;/table&gt;
+</code></pre><p>An <code>optitable</code> element cannot be added to the DOM like a regular element. It must be rendered first and then double enclosed. So to add as a child to some element <code>e</code>: </p><pre><code>         e.Content←⊂⊂RenderOptiTable t
+</code></pre></article><article><header><h1><a href="/posts/rethinking-vset-and-vget">Rethinking ⎕VSET and ⎕VGET</a></h1><h2>February 5, 2025</h2></header><p>In the previous post we played around with the new system functions <code>⎕VSET</code> and <code>⎕VGET</code>, and noted a couple of unfortunate, though perhaps unavoidable, design decisions. First is having to enclose when setting or getting a single name, and second is having to provide a matrix of names when the argument is two separate arrays of names and values, rather than name and value pairs.  </p><p>What if we simplify (and sacrifice some) things by insisting the argument is always two items,  a list of names and a list of values, defining <code>⎕VSET</code> as:</p><pre><code>VSET←{
    ⍺←⎕THIS
    n v←⍵
    2=|≡n:⍺ ⎕VSET(↑n)v
@@ -111,4 +205,4 @@ DOMAIN ERROR: Invalid left argument
 World 
       ⎕VGET 'Hello'
 World
-</code></pre><p>This is all great stuff and is going to replace a lot of hokey code.  </p></article><article><header><h1><a href="/posts/license-plate">Now We're Rolling!</a></h1><h2>January 30, 2025</h2></header><img alt="APL License Plate" src="/images/Plate.jpg"></img><p>And a <a href="https://www.dyalog.com/the-dyalog-duck.htm">duck reference</a> to boot!</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>This is all great stuff and is going to replace a lot of hokey code.  </p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
