@@ -1,5 +1,30 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/html-tables-revisited">HTML Tables Revisited</a></h1><h2>February 16, 2025</h2></header><p>The <a href="/posts/html-tables-again">last time we looked at tables</a> was way back in 2021. That's a cute little function, and it's useful for relatively small tables, but to put it kindly, it is not  particularly efficient.</p><p>The Abacus DOM creates a namespace for every element. Tables have lots of elements. This is not good in space: </p><pre><code>      m←⍕¨{⍵⍴⍳×/⍵}1000 100
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/grok-as-apl-interpreter">Grok as APL Interpreter</a></h1><h2>June 4, 2025</h2></header><p>So far, AI has not been great at writing APL code. But Grok appears pretty good at reading and evaluating APL code. We asked Grok to evaluate this:</p><pre><code>40 f 'Once upon a time in the west.'
+</code></pre><p>given:</p><pre><code>f←{ 
+     ⎕IO ⎕ML←0 1
+     segs←{¯1+⍵{(⍵,⍴⍺)-¯1,⍵}⍸⍵}
+     split←{((⍵|⍺)&gt;⍳⍵)+⌊⍺÷1⌈⍵}
+     lf sp←(⎕UCS 13 32)=⊂⍵
+     sizes←segs lf
+     ⍺←⌈/sizes
+     blanks←segs~(lf∨sp)/sp
+     required←blanks+⍺-sizes
+     breps←required split¨blanks
+     last←1⌈¯1+⍴sizes
+     brep←∊(last↑breps),×last↓breps
+     ((~sp)+sp\∊brep)\⍵
+ }
+</code></pre><p>Grok proceeded to analyze and simulate execution of the function line by line, in gory  detail and with voluminous output, explaining every step, all of which appeared to be correct. It got the right answer, and it knew and reported on the value of every variable along the way. It recognized the purpose of the function.</p><p>Here is a very small extract of Grok's output:</p><pre><code>apl
+sizes ← segs lf
+lf is all zeros (no line feeds).
+segs computes segment lengths:
+⍸lf is empty (no 1s).
+⍴⍺ = 29 (length of ⍵).
+(⍵,⍴⍺)-¯1,⍵ = (empty,29)-¯1,empty = 29-¯1 = 30.
+¯1+30 = 29.
+So, sizes = 29 (one segment of length 29).
+</code></pre><p>Grok claims it only used its knowledge of APL primitives and syntax to evaluate the function, and that it did not look on the internet to find if this function existed somewhere and get information about it. I think I believe it.</p><p>So then we asked Grok to evaluate the expression: </p><pre><code>      'MM-DD-YYYY' Text2Date '12-31-1999'  '02-29-2001' '01-01-2000'
+</code></pre><p>given this <a href="https://github.com/the-carlisle-group/Text2Date">code base</a>. It got almost the right answer, getting hung up in the <a href="https://github.com/the-carlisle-group/Text2Date/blob/master/APLSource/Main/Scale.aplf">Scale</a> function thinking  <code>⍺-6-⍺</code> was <code>(⍺-6)-⍺</code> rather than <code>⍺-(6-⍺)</code>, which is a rather odd error given everything else it got right. But that was its only error. Other than that one glitch, it worked though numerous functions and explicated everything in profuse detail.</p></article><article><header><h1><a href="/posts/html-tables-revisited">HTML Tables Revisited</a></h1><h2>February 16, 2025</h2></header><p>The <a href="/posts/html-tables-again">last time we looked at tables</a> was way back in 2021. That's a cute little function, and it's useful for relatively small tables, but to put it kindly, it is not  particularly efficient.</p><p>The Abacus DOM creates a namespace for every element. Tables have lots of elements. This is not good in space: </p><pre><code>      m←⍕¨{⍵⍴⍳×/⍵}1000 100
       t←NewTable m
       'CI12' ⎕FMT ⎕SIZE ,¨'mt' 
    4,800,040
@@ -126,83 +151,4 @@
 1 5
 </code></pre><p>One nice thing about this design is the simplicity of documenting it. We simply say the right argument is composed of two items, names and values. We don't need to explain that if there are two elements, and the first element is a matrix, then things are interpreted one way, but if the first element is a vector then it means somehthing else. This kind of design always makes us feel a bit uneasy.</p><p>The loss of being able to default only some values and not all for a given set of names is not much to give up. The structure:</p><pre><code>
       (Name Value) Name (Name Value)...
-</code></pre><p>does not arise very naturally in code, though it may as a literal structure.</p><p>Regardless of all of this, it is easy enough to cover <code>⎕VGET</code> and <code>⎕VSET</code> as we do above to get the behavior we want, if indeed that is what we want, and arguably the reverse would not be true.</p></article><article><header><h1><a href="/posts/version-20-goodies">Version 20 Goodies</a></h1><h2>January 31, 2025</h2></header><p>A pre-release edition of version 20 has found its way to our machine and it introduces the long-awaited <code>⎕VGET</code> and <code>⎕VSET</code>. Documentation does not seem to be at hand yet, so let's just play around and see how they work.</p><p>First, we can create a new namespace now with <code>()</code> rather than <code>⎕NS ''</code>:</p><pre><code>      s←()
-      s
-#.[Namespace]
-      s.One←1
-      s.One
-1
-</code></pre><p>Nice. Ok, lets set a variable: </p><pre><code>      s←()
-      s ⎕VSET 'One' 1
-DOMAIN ERROR
-      s ⎕VSET'One' 1
-        ∧
-</code></pre><p>Probably wants it nested:</p><pre><code>      s←()⎕VSET ⊂'One' 1
-      s.One
-1
-      s←()⎕VSET ('One' 1) ('Two' 2)
-      s.(One Two)
-1 2
-</code></pre><p>Yes indeed. Why? It seems there could be a way to disambiguate a two item vector argument as <code>Name Value</code> vs <code>(Name Value) (Name Value)</code> given the level of nesting of the first item.</p><p>How about a matrix of names and values:</p><pre><code>      s←()⎕VSET ↑('One' 1) ('Two' 2)
-RANK ERROR: Invalid right argument
-      s←()⎕VSET↑('One' 1)('Two' 2)
-</code></pre><p>Doesn't like it. Often we have a list of names and a list of values in separate arrays:</p><pre><code>      n←'one' 'two' 'three'
-      v←1 2 3
-      s←() ⎕VSET n v
-DOMAIN ERROR
-</code></pre><p>Does not like that either. This is because if allowed, then: </p><pre><code>      () ⎕VSET ('One' 'Two') ('Three' 'Four')
-</code></pre><p>would be ambiguous. However we can do:</p><pre><code>      s←()⎕VSET (↑n) v
-</code></pre><p>...providing a matrix of names. Not really happy with this but no alternative seems to present itself.</p><p>Let's extract values:</p><pre><code>      s ⎕VGET 'One'
-1
-      s ⎕VGET 'One' 'Two'
-1 2
-      s ⎕VGET ↑'One' 'Two'
-1 2
-</code></pre><p>Getting is more flexible than setting. How about with default values:</p><pre><code>      s ⎕VGET'One' 'Two'('Three' 'three')
-1 2  three 
-      s ⎕VGET ('One' 'one') ('Two' 'two') ('Three' 'three')
-1 2  three 
-      s ⎕VGET ↑('One' 'one') ('Two' 'two') ('Three' 'three')
-RANK ERROR: Invalid right argument
-      s ⎕VGET↑('One' 'one')('Two' 'two')('Three' 'three')
-        ∧
-</code></pre><p>Does not like a matrix of names values. Here though we see a problem with a two-item argument of Name and Value:</p><pre><code>      s ⎕VGET 'One' 'one'
-VALUE ERROR: Undefined name: one
-      s ⎕VGET'One' 'one'
-        ∧
-      s ⎕VGET ⊂'One' 'one'
-1
-</code></pre><p>Are we trying to get the value of two names, or one name with a default value? So if <code>⎕VGET</code> requires a single name/value pair to be enclosed, maybe <code>⎕VSET</code> should as well, even though maybe not strictly necessary. </p><p>And with names and values in separate arrays:</p><pre><code>       s←()⎕VSET↓⍉↑n v
-       s ⎕VGET n
-1 2 3
-       s ⎕VGET n v
-DOMAIN ERROR
-</code></pre><p>If <code>⎕VSET</code> would take <code>n</code> and <code>v</code> as is, and that last expresssion worked, this would be nice and symetrical.</p><p>How about an array of spaces as the left argument:</p><pre><code>      a←()()() ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
-      a.One
-1 1 1
-      a.(One Two Three)
-┌─────┬─────┬─────┐
-│1 2 3│1 2 3│1 2 3│
-└─────┴─────┴─────┘
-</code></pre><p>Oooooh. Very nice. Every name on the right is injected into every space on the left. Same as <code>a.Var←5</code>  injects <code>Var</code> into every namespace in <code>a</code>. How far can we go? How about a matrix:</p><pre><code>      m←2 3⍴()()()()()()
-      m ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
-DOMAIN ERROR: Invalid left argument
-</code></pre><p>Doh! But as namespaces are refs we can do:</p><pre><code>      (,m) ⎕VSET ('One' 1) ('Two' 2) ('Three' 3)
-      m.One
-1 1 1
-1 1 1
-</code></pre><p>Not bad, but it would be nicer if it just worked, just as <code>m.Var←5</code> works. It's not so nice going the other way, as we actual need to use the result of the function:</p><pre><code>      m ⎕VGET 'One'
-DOMAIN ERROR: Invalid left argument
-      m ⎕VGET'One'
-        ∧
-      (,m) ⎕VGET 'One'
-1 1 1 1 1 1
-</code></pre><p>Where we need something like:</p><pre><code>     m (⍴⍤⊣⍴,⍛⎕VGET) 'One'
-1 1 1
-1 1 1
-</code></pre><p>as a workaround suggested, perhaps humorously but functional none the less, over on <a href="https://chat.stackexchange.com/rooms/52405/the-apl-orchard/">the Orchard</a>.</p><p>Other notes. If no left argument is provided, it defaults to the current space or <code>⎕THIS</code>:</p><pre><code>      ⎕VSET ⊂'Hello' 'World'
-      Hello
-World 
-      ⎕VGET 'Hello'
-World
-</code></pre><p>This is all great stuff and is going to replace a lot of hokey code.  </p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>does not arise very naturally in code, though it may as a literal structure.</p><p>Regardless of all of this, it is easy enough to cover <code>⎕VGET</code> and <code>⎕VSET</code> as we do above to get the behavior we want, if indeed that is what we want, and arguably the reverse would not be true.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
