@@ -1,5 +1,85 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/input-components">Input Components</a></h1><h2>August 6, 2025</h2></header><p>(Or, How Did We Live Before <code>⎕VSET</code> and <code>⎕VGET</code>?)</p><p>We need some functions to wrap the HTML <code>&lt;input&gt;</code> element. We need inputs for text, numbers, dates check boxes, and pick lists, and thus define the following components:</p><ul><li><code>TextInput</code></li><li><code>NumberInput</code></li><li><code>DateInput</code></li><li><code>CheckBox</code></li><li><code>DropList</code></li></ul><p>Let's look at <code>TextInput.New</code>, as a representative pattern: </p><pre><code>New←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/menus-revisited">Menus Revisited</a></h1><h2>August 9, 2025</h2></header><p>Now that we have a little framework for handling arguments, and have used it for our <code>&lt;input&gt;</code> components, we should probably redesign the <code>Menu</code> component. Let's get rid of the current <code>Add</code> function:</p><pre><code> Add←{
+     m←⍺
+     9=⎕NC'⍵':m AddSubmenu ⍵
+     v←⍵,(≢⍵)↓'' '' '' 0 1 0
+     cm←(5⊃v)/⎕UCS 10004
+     c←A.New¨{'span'⍵}¨cm(0⊃v)(1⊃v)''
+     i←m A.New'li'(A.New'div'c)
+     i.(Label Shortcut Function Separator Active Checked)←v
+     i.Function←1 A.FQP i.Function
+     i.Type←'Item'
+     i.tabindex←'0'
+     i.Selected←i=⊃m.Content
+     i.class←i.Selected/'sel-item'
+     i.class,←(~i.Active)/' inactive'
+     i.class,←i.Separator/' separator'
+     i
+ }  
+</code></pre><p>This function adds a menu item or a (sub)menu to a menu. Instead, let's just have an <code>AddItem</code> function to add a menu item, essentially creating a <code>MenuItem</code> component but keeping it all under the <code>Menu</code> namespace:</p><pre><code>NewItem←{
+     i←(⍺ A.New'li')⎕NS(
+         'Label' ''
+         'Shortcut' ''
+         'Function' ''
+         'Separator' 0
+         'Active' 1
+         'Checked' 0
+     )A.InitProps ⍵
+     cm←i.Checked/⎕UCS 10004
+     c←A.New¨{'span'⍵}¨cm i.Label i.Shortcut''
+     i.Content←A.New'div'c
+     i.Function←1 A.FQP i.Function
+     i.Type←'Item'
+     i.tabindex←'0'
+     i.Selected←i=⊃⍺.Content
+     i.class←i.Selected/'sel-item'
+     i.class,←(~i.Active)/' inactive'
+     i.class,←i.Separator/' separator'
+     i
+ }
+</code></pre><p>Much nicer! Clearer to read and see the defaults, much more flexible to call. The <code>Menu.New</code> function can take over adding a (sub)menu to a menu:</p><pre><code>New←{
+     ⍺←0
+     m←(A.New'menu')⎕NS(
+         'Label' ''
+         'Separator' 0
+     )A.InitProps ⍵
+     m.Content←m.Label
+     m.class←'menu'
+     m.popover←'auto'
+     m.Toggled←0
+     0=⍺:m  ⍝ Top Level menu
+     b←'&amp;gt;'
+     c←A.New¨{'span'⍵}¨''(m.Content)''(⊂⊂b)
+     i←⍺ A.New'li'(A.New'div'(c,m))
+     i.Type←'Menu'
+     i.tabindex←0
+     i.class←m.Separator/'separator'
+     i.Selected←0
+     m.Content←''
+     m
+ }
+~~~ 
+</code></pre><p>Now we can build a menu like so:</p><pre><code>BuildMenu←{
+     NewMenu←A.Menu.New
+     NewItem←A.Menu.NewItem
+     m←NewMenu''
+     s←m NewMenu⊂'File'
+     i←s NewItem'Open' 'Ctrl+O' 'OnFileOpen'
+     i←s NewItem'Save' 'Ctrl+S' 'OnFileSave'
+     i←s NewItem'Save As...' 'Ctrl+A' 'OnFileSaveAs'
+     s←m NewMenu⊂'Edit'
+     i←s NewItem'Cut' 'Ctrl+X' 'OnCut'
+     i←s NewItem'Copy' 'Ctrl+C' 'OnCopy'
+     i←s NewItem'Paste' 'Ctrl+V' 'OnPaste'
+     s←m NewMenu⊂'View'
+     i←s NewItem'List' 'Ctrl+Q' 'OnViewList'
+     s2←s NewMenu⊂'Icons'
+     i←s2 NewItem'Small' 'Ctrl+L' 'OnViewLarge'
+     i←s2 NewItem'Medium' 'Ctrl+M' 'OnViewMedium' ('Checked' 1)  
+     i←s2 NewItem'Large' 'Ctrl+S' 'OnViewSmall' ('Active' 0)    
+     m
+ }  
+</code></pre></article><article><header><h1><a href="/posts/input-components">Input Components</a></h1><h2>August 6, 2025</h2></header><p>(Or, How Did We Live Before <code>⎕VSET</code> and <code>⎕VGET</code>?)</p><p>We need some functions to wrap the HTML <code>&lt;input&gt;</code> element. We need inputs for text, numbers, dates check boxes, and pick lists, and thus define the following components:</p><ul><li><code>TextInput</code></li><li><code>NumberInput</code></li><li><code>DateInput</code></li><li><code>CheckBox</code></li><li><code>DropList</code></li></ul><p>Let's look at <code>TextInput.New</code>, as a representative pattern: </p><pre><code>New←{
      d←(⍺ A.New'div')⎕NS(
          'Name' ''
          'Label' ''
@@ -82,29 +162,4 @@
 </code></pre><p>A popup has no permanent visual presence, so this event handler is all we need. The entire menu hierarchy is constructed every time the context menu is called for, and then deleted when the menu is dismissed.</p><p>We can take the exact same <code>Build</code> function and use it to implement a menu bar. Unlike a popup menu, a menu bar is permanently visible. We can use the <code>NewMenuBar</code> function to create the menu bar, adding to the DOM, and setting up its behavior, callbacks, etc:</p><pre><code>      mb←Parent Menu.NewMenuBar 'Build'
 </code></pre><p>The argument is the name (not the result) of the build function. <code>NewMenuBar</code> will execute this function once to extract the labels from the top level menus, and then will execute the function every time a top level menu item is clicked.</p><p>In a similar we we can create a hamburger menu, again from the same source:</p><pre><code>      hm←Parent Menu.NewHamburgerMenu 'Build'
 </code></pre><p>If the menu stucture is limited to 2 levels, we can also display it as a sort of ribbon:</p><pre><code>      r←Parent Menu.NewRibbon 'Build'
-</code></pre><p>We could add new display types if they arise.</p><p>Thus the <code>Menu</code> component provides us with a few functions to construct menus, and then display them in different ways.</p><p>A menu only exists in the DOM if the top level is visible; menus are create and deleted on demand.</p></article><article><header><h1><a href="/posts/grok-as-apl-interpreter">Grok as APL Interpreter</a></h1><h2>June 4, 2025</h2></header><p>So far, AI has not been great at writing APL code. But Grok appears pretty good at reading and evaluating APL code. We asked Grok to evaluate this:</p><pre><code>40 f 'Once upon a time in the west.'
-</code></pre><p>given:</p><pre><code>f←{ 
-     ⎕IO ⎕ML←0 1
-     segs←{¯1+⍵{(⍵,⍴⍺)-¯1,⍵}⍸⍵}
-     split←{((⍵|⍺)&gt;⍳⍵)+⌊⍺÷1⌈⍵}
-     lf sp←(⎕UCS 13 32)=⊂⍵
-     sizes←segs lf
-     ⍺←⌈/sizes
-     blanks←segs~(lf∨sp)/sp
-     required←blanks+⍺-sizes
-     breps←required split¨blanks
-     last←1⌈¯1+⍴sizes
-     brep←∊(last↑breps),×last↓breps
-     ((~sp)+sp\∊brep)\⍵
- }
-</code></pre><p>Grok proceeded to analyze and simulate execution of the function line by line, in gory  detail and with voluminous output, explaining every step, all of which appeared to be correct. It got the right answer, and it knew and reported on the value of every variable along the way. It recognized the purpose of the function.</p><p>Here is a very small extract of Grok's output:</p><pre><code>apl
-sizes ← segs lf
-lf is all zeros (no line feeds).
-segs computes segment lengths:
-⍸lf is empty (no 1s).
-⍴⍺ = 29 (length of ⍵).
-(⍵,⍴⍺)-¯1,⍵ = (empty,29)-¯1,empty = 29-¯1 = 30.
-¯1+30 = 29.
-So, sizes = 29 (one segment of length 29).
-</code></pre><p>Grok claims it only used its knowledge of APL primitives and syntax to evaluate the function, and that it did not look on the internet to find if this function existed somewhere and get information about it. I think I believe it.</p><p>So then we asked Grok to evaluate the expression: </p><pre><code>      'MM-DD-YYYY' Text2Date '12-31-1999'  '02-29-2001' '01-01-2000'
-</code></pre><p>given this <a href="https://github.com/the-carlisle-group/Text2Date">code base</a>. It got almost the right answer, getting hung up in the <a href="https://github.com/the-carlisle-group/Text2Date/blob/master/APLSource/Main/Scale.aplf">Scale</a> function thinking  <code>⍺-6-⍺</code> was <code>(⍺-6)-⍺</code> rather than <code>⍺-(6-⍺)</code>, which is a rather odd error given everything else it got right. But that was its only error. Other than that one glitch, it worked though numerous functions and explicated everything in profuse detail.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>We could add new display types if they arise.</p><p>Thus the <code>Menu</code> component provides us with a few functions to construct menus, and then display them in different ways.</p><p>A menu only exists in the DOM if the top level is visible; menus are create and deleted on demand.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>

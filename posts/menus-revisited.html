@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/menus-revisited">Menus Revisited</a></h1><h2>August 9, 2025</h2></header><p>Now that we have a little framework for handling arguments, and have used it for our <code>&lt;input&gt;</code> components, we should probably redesign the <code>Menu</code> component. Let's get rid of the current <code>Add</code> function:</p><pre><code> Add←{
+     m←⍺
+     9=⎕NC'⍵':m AddSubmenu ⍵
+     v←⍵,(≢⍵)↓'' '' '' 0 1 0
+     cm←(5⊃v)/⎕UCS 10004
+     c←A.New¨{'span'⍵}¨cm(0⊃v)(1⊃v)''
+     i←m A.New'li'(A.New'div'c)
+     i.(Label Shortcut Function Separator Active Checked)←v
+     i.Function←1 A.FQP i.Function
+     i.Type←'Item'
+     i.tabindex←'0'
+     i.Selected←i=⊃m.Content
+     i.class←i.Selected/'sel-item'
+     i.class,←(~i.Active)/' inactive'
+     i.class,←i.Separator/' separator'
+     i
+ }  
+</code></pre><p>This function adds a menu item or a (sub)menu to a menu. Instead, let's just have an <code>AddItem</code> function to add a menu item, essentially creating a <code>MenuItem</code> component but keeping it all under the <code>Menu</code> namespace:</p><pre><code>NewItem←{
+     i←(⍺ A.New'li')⎕NS(
+         'Label' ''
+         'Shortcut' ''
+         'Function' ''
+         'Separator' 0
+         'Active' 1
+         'Checked' 0
+     )A.InitProps ⍵
+     cm←i.Checked/⎕UCS 10004
+     c←A.New¨{'span'⍵}¨cm i.Label i.Shortcut''
+     i.Content←A.New'div'c
+     i.Function←1 A.FQP i.Function
+     i.Type←'Item'
+     i.tabindex←'0'
+     i.Selected←i=⊃⍺.Content
+     i.class←i.Selected/'sel-item'
+     i.class,←(~i.Active)/' inactive'
+     i.class,←i.Separator/' separator'
+     i
+ }
+</code></pre><p>Much nicer! Clearer to read and see the defaults, much more flexible to call. The <code>Menu.New</code> function can take over adding a (sub)menu to a menu:</p><pre><code>New←{
+     ⍺←0
+     m←(A.New'menu')⎕NS(
+         'Label' ''
+         'Separator' 0
+     )A.InitProps ⍵
+     m.Content←m.Label
+     m.class←'menu'
+     m.popover←'auto'
+     m.Toggled←0
+     0=⍺:m  ⍝ Top Level menu
+     b←'&amp;gt;'
+     c←A.New¨{'span'⍵}¨''(m.Content)''(⊂⊂b)
+     i←⍺ A.New'li'(A.New'div'(c,m))
+     i.Type←'Menu'
+     i.tabindex←0
+     i.class←m.Separator/'separator'
+     i.Selected←0
+     m.Content←''
+     m
+ }
+~~~ 
+</code></pre><p>Now we can build a menu like so:</p><pre><code>BuildMenu←{
+     NewMenu←A.Menu.New
+     NewItem←A.Menu.NewItem
+     m←NewMenu''
+     s←m NewMenu⊂'File'
+     i←s NewItem'Open' 'Ctrl+O' 'OnFileOpen'
+     i←s NewItem'Save' 'Ctrl+S' 'OnFileSave'
+     i←s NewItem'Save As...' 'Ctrl+A' 'OnFileSaveAs'
+     s←m NewMenu⊂'Edit'
+     i←s NewItem'Cut' 'Ctrl+X' 'OnCut'
+     i←s NewItem'Copy' 'Ctrl+C' 'OnCopy'
+     i←s NewItem'Paste' 'Ctrl+V' 'OnPaste'
+     s←m NewMenu⊂'View'
+     i←s NewItem'List' 'Ctrl+Q' 'OnViewList'
+     s2←s NewMenu⊂'Icons'
+     i←s2 NewItem'Small' 'Ctrl+L' 'OnViewLarge'
+     i←s2 NewItem'Medium' 'Ctrl+M' 'OnViewMedium' ('Checked' 1)  
+     i←s2 NewItem'Large' 'Ctrl+S' 'OnViewSmall' ('Active' 0)    
+     m
+ }  
+</code></pre></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
