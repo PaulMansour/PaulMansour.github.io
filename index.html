@@ -1,5 +1,67 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/menus-revisited">Menus Revisited</a></h1><h2>August 9, 2025</h2></header><p>Now that we have a little framework for handling arguments, and have used it for our <code>&lt;input&gt;</code> components, we should probably redesign the <code>Menu</code> component. Let's get rid of the current <code>Add</code> function:</p><pre><code> Add←{
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/on-arguments">On Arguments</a></h1><h2>August 10, 2025</h2></header><p>In APL we can have two arguments to a function, <code>⍺</code> and <code>⍵</code>, left and right.</p><p>We should strive to only have two arguments to a function, or better yet, only one. However real life gets in the way, and we often find ourselves in need of more. With nested arrays, namespaces, and simply the interpretation of, say, a simple numeric vector of length 3, the meaning of "one" is in the eye of the beholder.    </p><p>If we have an vector of expenses as the right argument to a functions that sums them up, we  say the right argument, <code>⍵</code>, is <em>a vector of expenses</em>. It's one thing. On the other hand,  if we have a function that computes the level payment of a mortgage, it takes a term, a balance, and a rate. Three things. If we pass these as the right argument <code>⍵</code>, we say the function takes three arguments. This is not strictly true. It takes one argument, a vector of three items. Informally we might often speak of 3, 4, 5 or more arguments but we really mean, usually, are distinct items of a possibly nested vector.</p><p>Let's use the word <em>parameter</em> to refer to an item of the argument when the argument consists of unique, identifible, nameable, elements.</p><p>In our hypothetical mortgage function the first line might look like:</p><pre><code>      (b r t)←⍵
+</code></pre><p>Here we have <em>unpacked</em> the argument <code>⍵</code> into 3 parameters <code>b</code>, <code>r</code> and <code>t</code>.</p><p>Often we want to have some of the less important parameters be optional and default to a given value. To make the term optional and default to 360 we might do:</p><pre><code>      (b r t)←3↑⍵,360
+</code></pre><p>With two or three parameters this technique is manageable, but with more it becomes unwieldy. First, we get a proliferation of usually ad-hoc named local variables. Second we can only default trailing parameters.</p><p>What can we do about this? </p><p>We can take a page form the design of Dyalog's venerable <code>⎕WC</code> and use named parameters. This is what we have done in Abacus for components. This technique is useful for the pulbic API of libraries that will be used by other programmers. It's probably overkill for private functions.</p><p>Ihis technique has many benefits:</p><ol><li>Parameters are formally named, yielding better documentation and clearer code.</li><li>Parameter names are optional on a paramter by parameter basis.</li><li>A namespace may be provided as the argument, containing the parameters (an improvement over <code>⎕WC</code>).     <p>        </p></li><li>Every parameter may have a default value. We can even provide no parameters at all.</li><li>Local parameter names are encapsulated in a namespace so less name clutter in the function. </li></ol><p>We take a strict approach to a vector argument: the tally is always the number of parameters provided. Therefore when providing only one parameter it usually must be enclosed, the exception being a scaler valued parameter provided with no name.  </p><p>Consider this contrived example:</p><pre><code>Sum←{
+     p←(
+         'One' 1
+         'Two' 2
+         'Three' 3
+         'Four' 4
+         'Five' 5
+     )Default ⍵
+     +/p.(One Two Three Four Five)
+ }
+</code></pre><p>First we layout all the parameters, each on its own line, in order, with their default values, using V20 array notation. It is important that we use an array rather than a namespace for the default values, as order matters. This array is passed as the left argument to our <code>DefaultParameters</code> utility function, which takes the user provided parameters as its right argument:</p><pre><code>Default←{
+     ⍝ ⍺ ←→ Default name/value pairs
+     ⍝ ⍵ ←→ Given argument
+     ⍝ ← ←→ A new space with ⍺ overiddden by ⍵
+     d←()⎕VSET ⍺
+     9=⎕NC'⍵':d ⎕NS ⍵
+     n←' '~⍨¨(≢⍵)↑⊃¨⍺
+     p←n{(2=≢⍵)∧1≠≡⍵:⍵
+         ⍺≡'':⍺
+         ⍺ ⍵}¨⍵
+     d ⎕NS()⎕VSET p~⊂''
+ }
+</code></pre><p>The first thing we do is create a new namespace <code>d</code> with all of the default name/value pairs <code>⍺</code>. This will be our result in all cases.</p><p>Then, if we are given a namespace as the right arg, we inject the user supplied names over the default names, and return the space <code>d</code>; we are done. (This uses another nice feature of V20, which finally allows a reference as the left argument to <code>⎕NS</code>.)  Otherwise <code>⍵</code> is a vector where each item is either a value or a name/value pair. If an item is only a value, we assume the name based on its position. These names are then injected into <code>d</code>, overriding defaults, and <code>d</code> is returned.</p><p>We can call the <code>Sum</code> function in all of the following ways (We have inserted  <code>⎕←⎕JSON p</code> to see what is going on):</p><pre><code>      Sum ''
+{"Five":5,"Four":4,"One":1,"Three":3,"Two":2}
+15
+      Sum 100 ('Five' 50)
+{"Five":50,"Four":4,"One":100,"Three":3,"Two":2}
+159
+      Sum  ('Three' 333)  ('DoesNot' 'Exist')
+{"DoesNot":"Exist","Five":5,"Four":4,"One":1,"Three":333,"Two":2}
+345
+      Sum  (Three:333 ⋄ Two:222)
+{"Five":5,"Four":4,"One":1,"Three":333,"Two":222}
+565
+</code></pre><p>This <code>DefaultParameters</code> function does no error checking. Mispelled names (not useful) or additional names (often useful) are happily are accepted. There is no type checking, and no checking for whether or not a parameter is optional. This is fine for the purposes of Abacus, where we assume consenting adults are using the library.</p><p>Some checking can be done from the name alone. But if we want to check for mandatory parameters or types, we need to add more items to our default vector. For example, to check for mandatory parameters we can add an optional Boolean:</p><pre><code>p←(
+         'One' 1 1
+         'Two' 2 1
+         'Three' 3
+         'Four' 4
+         'Five' 5
+     )
+</code></pre><p>Here we have specified that parameters <code>One</code> and <code>Two</code> are required.  Now we need to add some code to the default function to do some checking. We take the approach of adding a new function, rather than mucking up our existing code too much:</p><pre><code>Default←{
+     ⍝ ⍺ ←→ Default name/value pairs  (Optional 1 for required)
+     ⍝ ⍵ ←→ Given argument
+     ⍝ ← ←→ A new space with ⍺ overiddden by ⍵
+     d←()⎕VSET 2↑¨⍺
+     9=⎕NC'⍵':d ⎕NS ⍺ Verify ⍵
+     n←' '~⍨¨(≢⍵)↑⊃¨⍺
+     p←n{(2=≢⍵)∧1≠≡⍵:⍵
+         ⍺≡'':⍺
+         ⍺ ⍵}¨⍵
+     d ⎕NS ⍺ Verify()⎕VSET p~⊂''
+ }
+</code></pre><p>where the <code>Verify</code> function is:</p><pre><code>Verify←{
+     (n v r)←↓⍉↑3↑¨⍺,¨0
+     m←⍵.⎕NL ¯2
+     ~∧/m∊⍨r/n:11 ⎕SIGNAL⍨'Required parameter: ',⊃r/n
+     0≠≢m~n:11 ⎕SIGNAL⍨'Invalid parameter name: ',⊃m~n
+     ⍵
+ }
+</code></pre><p>Additional type information could be specified and checked for. Here we begin to run into meta problem of needing parameter names for our parameter specification. Ugh. Let's stay away from that.</p></article><article><header><h1><a href="/posts/menus-revisited">Menus Revisited</a></h1><h2>August 9, 2025</h2></header><p>Now that we have a little framework for handling arguments, and have used it for our <code>&lt;input&gt;</code> components, we should probably redesign the <code>Menu</code> component. Let's get rid of the current <code>Add</code> function:</p><pre><code> Add←{
      m←⍺
      9=⎕NC'⍵':m AddSubmenu ⍵
      v←⍵,(≢⍵)↓'' '' '' 0 1 0
@@ -133,33 +195,4 @@
      c←⎕VGET e[i].class
      0⊣e[i]c.SetValue v[j]
  }
-</code></pre><p>...similarly takes a DOM node as its right argument, but also a namespace of values as its left argment, and populates the inputs in the DOM with the values. <code>SetValues</code> is happy to accept more or fewer values than would be indicated by the DOM, and only set values that have correpsonding inputs. We must use the  individual <code>SetValue</code> function in each component to set the values.</p></article><article><header><h1><a href="/posts/whats-on-the-menu">What's on the Menu?</a></h1><h2>June 21, 2025</h2></header><p>We find ourselves in need of a menu. Let's noodle around with a design.</p><p>With <code>⎕WC</code>, we had a full-blown object model, and thus <code>MenuBar</code>, <code>Menu</code>, <code>MenuItem</code> and <code>Separator</code> objects with all of their attendant properties and methods. With Abacus components, we are working at a higher level than <code>⎕WC</code>, trying to make things simple and easy for our purposes. We used to write cover functions over <code>⎕WC</code> to help construct menus, here we are writing cover functions over HTML. Of course we have to accept the constraints and lack of generality these cover functions impose. We are also trying to get by on the cheap, and not implement a massive dynamic object model, with getters and setters and all that entails. </p><p>Our requirements include a classic menu bar, a hamburger menu, and a popup or context-sensitive menu. And sub-menus, checked menu items, and inactive menu items. Separators too.     Can we get by with just a <code>Menu</code> component and few functions? Maybe. Let's have a function that builds a menu component that we may then use in different circumstances:</p><pre><code>BuildMenu←{
-     New←A.Menu.New
-     Add←A.Menu.Add
-     m←New''
-     s←m Add New'File'
-     i←s Add'Open' 'Ctrl+O' 'OnFileOpen'
-     i←s Add'Save' 'Ctrl+S' 'OnFileSave'
-     i←s Add'Save As...' 'Ctrl+A' 'OnFileSaveAs'
-     s←m Add New'Edit'
-     i←s Add'Cut' 'Ctrl+X' 'OnCut'
-     i←s Add'Copy' 'Ctrl+C' 'OnCopy'
-     i←s Add'Paste' 'Ctrl+V' 'OnPaste'
-     s←m Add New'View'
-     i←s Add'List' 'Ctrl+Q' 'OnViewList'
-     s2←s Add New'Icons'
-     i←s2 Add'Small' 'Ctrl+L' 'OnViewLarge'
-     i←s2 Add'Medium' 'Ctrl+M' 'OnViewMedium' 0 0 1
-     i←s2 Add'Large' 'Ctrl+S' 'OnViewSmall' 0 0   
-     m
- }
-</code></pre><p>The <code>New</code> function of the Menu component creates and returns a new <code>&lt;menu&gt;</code> element. It takes a simple string, the name or label, as its argument.</p><p>The <code>Add</code> function adds a menu item or a sub-menu. A menu item is defined by up to 6 items in the argument to <code>Add</code>:</p><table><thead><tr><th class="left">Item</th><th class="left">Name</th><th class="left">Description</th></tr></thead><tbody><tr><td class="left">0</td><td class="left">Label</td><td class="left">The name or label of the menu item</td></tr><tr><td class="left">1</td><td class="left">Shortcut</td><td class="left">Purely decorative, must be implemented separately</td></tr><tr><td class="left">2</td><td class="left">CallBack</td><td class="left">The event handler function (a string)</td></tr><tr><td class="left">3</td><td class="left">Separator</td><td class="left">Boolean; should a divider precede this menu item, default is 0</td></tr><tr><td class="left">4</td><td class="left">Active</td><td class="left">Boolean; active/inactive flag, default is 1</td></tr><tr><td class="left">5</td><td class="left">Marker</td><td class="left">Int; 0 for no marker (default), 1 for check, 2 for radio</td></tr></tbody></table><p>Usually we eschew long lists of ordered parameters as arguments, but  we really want to keep the definition of a menu item on a single line. We can provide a namespace as well, but it will tend to add more clutter:</p><pre><code>      m Menu.Add {⍵.Label←'Save as...' ⋄ Callback←'OnSaveAs' ⋄ Active:0 ⋄ ⍵}⎕NS '' 
-</code></pre><p>even in v20 when we can do:</p><pre><code>      m Menu.Add (Label:'Save as...' ⋄ Callback:'OnSaveAs' ⋄ Active:0)
-</code></pre><p>When adding a menu item, the result is an <code>&lt;li&gt;</code> element, probably not needed most of the time. When adding a sub menu, the result is a <code>&lt;menu&gt;</code> element.  </p><p>With these two functions, <code>New</code> and <code>Add</code>, we can construct an entire menu hierarchy.  </p><p>Neither the <code>New</code> function, nor the user defined <code>Build</code> function adds the menu element and  its children to the DOM. This is handled later, on demand, by various functions in the <code>Menu</code> component.</p><p>Now that we have a function that builds a menu, we can display it as a popup by attaching a handler to the Javascript <code>contextMenu</code> event. We simply build the menu on demand, and use the <code>Show</code> method to add it to the DOM and display it: </p><pre><code>OnContextMenu←{
-    m←BuildMenu ⍵
-    A.Show m
-}
-</code></pre><p>A popup has no permanent visual presence, so this event handler is all we need. The entire menu hierarchy is constructed every time the context menu is called for, and then deleted when the menu is dismissed.</p><p>We can take the exact same <code>Build</code> function and use it to implement a menu bar. Unlike a popup menu, a menu bar is permanently visible. We can use the <code>NewMenuBar</code> function to create the menu bar, adding to the DOM, and setting up its behavior, callbacks, etc:</p><pre><code>      mb←Parent Menu.NewMenuBar 'Build'
-</code></pre><p>The argument is the name (not the result) of the build function. <code>NewMenuBar</code> will execute this function once to extract the labels from the top level menus, and then will execute the function every time a top level menu item is clicked.</p><p>In a similar we we can create a hamburger menu, again from the same source:</p><pre><code>      hm←Parent Menu.NewHamburgerMenu 'Build'
-</code></pre><p>If the menu stucture is limited to 2 levels, we can also display it as a sort of ribbon:</p><pre><code>      r←Parent Menu.NewRibbon 'Build'
-</code></pre><p>We could add new display types if they arise.</p><p>Thus the <code>Menu</code> component provides us with a few functions to construct menus, and then display them in different ways.</p><p>A menu only exists in the DOM if the top level is visible; menus are create and deleted on demand.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>...similarly takes a DOM node as its right argument, but also a namespace of values as its left argment, and populates the inputs in the DOM with the values. <code>SetValues</code> is happy to accept more or fewer values than would be indicated by the DOM, and only set values that have correpsonding inputs. We must use the  individual <code>SetValue</code> function in each component to set the values.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
