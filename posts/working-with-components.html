@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/working-with-components">Working With Components</a></h1><h2>August 29, 2025</h2></header><p>Now that we have a few components, we need some convenient ways to manipulate  them. Components are just nodes in the APL DOM with a <code>Name</code> property. Note the uppercase <code>N</code>, not to be confused with the HTML <code>name</code> attribute. Currently the existence of <code>Name</code> in an element is the only thing that identifies it as a component.</p><p>We can get a component by name, using the <code>GetComponent</code> function: </p><pre><code>GetComponent←{
+     ⍝ ⍺ ←→ APL DOM node
+     ⍝ ⍵ ←→ Component Name (or already a component (pass through)
+     9=⎕NC'⍵':⍵
+     e←⍺ GetElementsWith'Name'
+     i←e.Name⍳⊂⍵
+     i=≢e:6 ⎕SIGNAL⍨'Component "',⍵,'" not found'
+     i⊃e
+ }
+</code></pre><p>The left argument is a DOM node, perhaps the whole document, or more likely a <code>&lt;dialog&gt;</code> element. the right argument is the name of the component, or if a namespace, assumed to be a component already, and just passed though. This is a convenience for other functions that accept either a component or a component name as an argument. We simply find all the elements in the node with a <code>Name</code> property and pick the one we want.</p><p>We can get a namespace with all of the components in a node:</p><pre><code>GetComponents←{
+     ⍝ ⍵ ← APL DOM node
+     ⍝ ⍺ ←→ 0 for namespace result, 1 for array
+     ⍝ ← ←→ Namespace of components
+     ⍺←0
+     e←⍵ GetElementsWith'Name'
+     ⍺:e
+     0=≢⍵:()
+     ()⎕VSET(↑e.Name)e
+ }
+   
+This allows us to access all the components under a node by name with dot syntax
+(or get an array of components back).
+</code></pre><p>We can set the value of a component using <code>SetComponentValue</code>:</p><pre><code>SetComponentValue←{
+     ⍝ ⍺ ←→ APL DOM Node
+     ⍝ ⍵ ←→ (Name|Component) Value
+     ⍺←⊢
+     c←⍺ GetComponent 0⊃⍵
+     c(⍎c.class).SetValue 1⊃⍵
+ } 
+</code></pre><p>Here the right argument is name or component itself, and the value. If the name is provided, then the left argument must be provided. If the component is provided, the left argument should be omitted. There is no need for a corresponding <code>GetComponentValue</code> function, as the value may be directly accessed with dot syntax.</p><p>We also have <code>GetComponentValues</code> and <code>SetComponentValues</code>, which we have introduced before but now renamed to reflect that they work on components. These functions take or return a namespace of values. Finally we have <code>SetComponentDisabled</code> for making a component, in <code>⎕WC</code> terms, active or inactive:</p><pre><code>SetComponentDisabled←{
+     ⍝ ⍺ ←→ DOM node
+     ⍝ ⍵ ←→ Name or Component name, Boolean 1/0
+     ⍺←⊢
+     c←⍺ GetComponent 0⊃⍵
+     e←Elements c
+     d←e/⍨e.Tag∊'button' 'fieldset' 'optgroup' 'option' 'select' 'textarea' 'input'
+     0=≢d:0
+     0⊣d{⍺ SetBoolean'disabled'⍵}¨1⊃⍵
+ }
+</code></pre><p>The explicit list of HTML elements are those that take the <code>disabled</code> attribute.</p><p>Let's play around with the functions. Consider a dialog box with a few input fields:</p><pre><code>OnFileSettings←{
+     d←⍵.Document
+     s←A.FieldSet.New''
+     i←s A.DropList.New'Separator' 'Separator:' ''('Comma' 'Pipe' 'Tab')
+     i←s A.DropList.New'TextQualifier' 'Text qualifier:'('Options'('DoubleQuote' 'Quote')
+     i←s A.NumberInput.New'MaxRows' 'Maximum Rows:' 256 'CI15'
+     i←s A.CheckBox.New'AutoConvert' 'Auto convert'
+     _←d.FileSettings A.InitValues s
+     p←⎕NS''
+     p.Title←'CSV Import Settings'
+     p.Contents←s
+     p.OnOK←A.FQP'OnFileSettingsOK'
+     b←A.DialogBox.New p
+     d A.ShowModal b
+ }
+</code></pre><p>When the <code>OnFileSettingsOK</code> callback fires we are given the <code>&lt;dialog&gt;</code> element as an argument. Let's call this <code>d</code>. Then we can grab a component and see its value:</p><pre><code>      c←d A.GetComponent 'Separator'
+      c.Value
+Pipe
+</code></pre><p>Then set its value, updating the APL DOM and the browser:</p><pre><code>      A.SetComponentValue c 'Comma' 
+0     
+      c.Value
+Comma
+</code></pre><p>A namepsace of components:</p><pre><code>      A.GetComponents d
+      p←A.GetComponents d
+      p.MaxRows.Value
+1024
+      p.AutoConvert.Value
+1
+</code></pre><p>Get a namespace of values, make some changes, refresh the screen:</p><pre><code>      v←A.GetComponentValues d 
+      ⎕JSON v
+{"AutoConvert":1,"MaxRows":1024,"Separator":"Comma","TextQualifier":"DoubleQuote"}
+      v.(AutoConvert MaxRows)←1 1234567
+      v A.SetComponentValues d
+0
+      v←A.GetComponentValues d
+      ⎕JSON v
+{"AutoConvert":0,"MaxRows":1234567,"Separator":"Pipe","TextQualifier":"Quote"}
+</code></pre><p>An array of components:</p><pre><code>      a←1 A.GetComponents d
+      a.Name
+ Separator  TextQualifier  MaxRows  AutoConvert 
+      a.Value
+ Pipe  Quote  1234567 0
+</code></pre><p>Deactivate all the components:</p><pre><code>      A.SetComponentDisabled¨a,¨1 
+0 0 0 0
+</code></pre><p>We have used these verbose functions names, all including the word <em>component</em>, to distinguish them from the functions used to operate on plain elements, as everything sits all together in the <code>#.Abacus.Main</code> namespace. It would be nice to just use properties with real classes and dispense  with exposing all these functions, and we may do that in the future. We are going to see how many functions we will need to work with components over the coming months.  </p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>

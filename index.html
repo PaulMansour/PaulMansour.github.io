@@ -1,5 +1,88 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/on-arguments">On Arguments</a></h1><h2>August 15, 2025</h2></header><p>In APL we can have at most two arguments to a function, <code>⍺</code> and <code>⍵</code>, left and right.</p><p>This is good, because we should never have more than two argument to a function. In fact that is usually one too many. However real life gets in the way, and we often find ourselves in need of more. With nested arrays, namespaces, and simply the interpretation of, say, a simple numeric vector of length 3, the meaning of "one" is in the eye of the beholder.    </p><p>If we have a vector of expenses as the right argument to a functions that sums them up, we  say the right argument, <code>⍵</code>, is <em>a vector of expenses</em>. It's one thing. On the other hand,  if we have a function that computes the level payment of a mortgage, it takes a term, a balance, and a rate. Three things. If we pass these as the right argument <code>⍵</code>, we say the function takes three arguments. This is not strictly true. It takes one argument, a vector of three items. Informally we might often speak of 3, 4, 5 or more arguments but we really mean, usually, are distinct items of a possibly nested vector.</p><p>Let's use the word <em>parameter</em> to refer to an item of the argument when the argument consists of unique, identifible, nameable, elements.</p><p>In our hypothetical mortgage function the first line might look like:</p><pre><code>      (b r t)←⍵
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/working-with-components">Working With Components</a></h1><h2>August 29, 2025</h2></header><p>Now that we have a few components, we need some convenient ways to manipulate  them. Components are just nodes in the APL DOM with a <code>Name</code> property. Note the uppercase <code>N</code>, not to be confused with the HTML <code>name</code> attribute. Currently the existence of <code>Name</code> in an element is the only thing that identifies it as a component.</p><p>We can get a component by name, using the <code>GetComponent</code> function: </p><pre><code>GetComponent←{
+     ⍝ ⍺ ←→ APL DOM node
+     ⍝ ⍵ ←→ Component Name (or already a component (pass through)
+     9=⎕NC'⍵':⍵
+     e←⍺ GetElementsWith'Name'
+     i←e.Name⍳⊂⍵
+     i=≢e:6 ⎕SIGNAL⍨'Component "',⍵,'" not found'
+     i⊃e
+ }
+</code></pre><p>The left argument is a DOM node, perhaps the whole document, or more likely a <code>&lt;dialog&gt;</code> element. the right argument is the name of the component, or if a namespace, assumed to be a component already, and just passed though. This is a convenience for other functions that accept either a component or a component name as an argument. We simply find all the elements in the node with a <code>Name</code> property and pick the one we want.</p><p>We can get a namespace with all of the components in a node:</p><pre><code>GetComponents←{
+     ⍝ ⍵ ← APL DOM node
+     ⍝ ⍺ ←→ 0 for namespace result, 1 for array
+     ⍝ ← ←→ Namespace of components
+     ⍺←0
+     e←⍵ GetElementsWith'Name'
+     ⍺:e
+     0=≢⍵:()
+     ()⎕VSET(↑e.Name)e
+ }
+   
+This allows us to access all the components under a node by name with dot syntax
+(or get an array of components back).
+</code></pre><p>We can set the value of a component using <code>SetComponentValue</code>:</p><pre><code>SetComponentValue←{
+     ⍝ ⍺ ←→ APL DOM Node
+     ⍝ ⍵ ←→ (Name|Component) Value
+     ⍺←⊢
+     c←⍺ GetComponent 0⊃⍵
+     c(⍎c.class).SetValue 1⊃⍵
+ } 
+</code></pre><p>Here the right argument is name or component itself, and the value. If the name is provided, then the left argument must be provided. If the component is provided, the left argument should be omitted. There is no need for a corresponding <code>GetComponentValue</code> function, as the value may be directly accessed with dot syntax.</p><p>We also have <code>GetComponentValues</code> and <code>SetComponentValues</code>, which we have introduced before but now renamed to reflect that they work on components. These functions take or return a namespace of values. Finally we have <code>SetComponentDisabled</code> for making a component, in <code>⎕WC</code> terms, active or inactive:</p><pre><code>SetComponentDisabled←{
+     ⍝ ⍺ ←→ DOM node
+     ⍝ ⍵ ←→ Name or Component name, Boolean 1/0
+     ⍺←⊢
+     c←⍺ GetComponent 0⊃⍵
+     e←Elements c
+     d←e/⍨e.Tag∊'button' 'fieldset' 'optgroup' 'option' 'select' 'textarea' 'input'
+     0=≢d:0
+     0⊣d{⍺ SetBoolean'disabled'⍵}¨1⊃⍵
+ }
+</code></pre><p>The explicit list of HTML elements are those that take the <code>disabled</code> attribute.</p><p>Let's play around with the functions. Consider a dialog box with a few input fields:</p><pre><code>OnFileSettings←{
+     d←⍵.Document
+     s←A.FieldSet.New''
+     i←s A.DropList.New'Separator' 'Separator:' ''('Comma' 'Pipe' 'Tab')
+     i←s A.DropList.New'TextQualifier' 'Text qualifier:'('Options'('DoubleQuote' 'Quote')
+     i←s A.NumberInput.New'MaxRows' 'Maximum Rows:' 256 'CI15'
+     i←s A.CheckBox.New'AutoConvert' 'Auto convert'
+     _←d.FileSettings A.InitValues s
+     p←⎕NS''
+     p.Title←'CSV Import Settings'
+     p.Contents←s
+     p.OnOK←A.FQP'OnFileSettingsOK'
+     b←A.DialogBox.New p
+     d A.ShowModal b
+ }
+</code></pre><p>When the <code>OnFileSettingsOK</code> callback fires we are given the <code>&lt;dialog&gt;</code> element as an argument. Let's call this <code>d</code>. Then we can grab a component and see its value:</p><pre><code>      c←d A.GetComponent 'Separator'
+      c.Value
+Pipe
+</code></pre><p>Then set its value, updating the APL DOM and the browser:</p><pre><code>      A.SetComponentValue c 'Comma' 
+0     
+      c.Value
+Comma
+</code></pre><p>A namepsace of components:</p><pre><code>      A.GetComponents d
+      p←A.GetComponents d
+      p.MaxRows.Value
+1024
+      p.AutoConvert.Value
+1
+</code></pre><p>Get a namespace of values, make some changes, refresh the screen:</p><pre><code>      v←A.GetComponentValues d 
+      ⎕JSON v
+{"AutoConvert":1,"MaxRows":1024,"Separator":"Comma","TextQualifier":"DoubleQuote"}
+      v.(AutoConvert MaxRows)←1 1234567
+      v A.SetComponentValues d
+0
+      v←A.GetComponentValues d
+      ⎕JSON v
+{"AutoConvert":0,"MaxRows":1234567,"Separator":"Pipe","TextQualifier":"Quote"}
+</code></pre><p>An array of components:</p><pre><code>      a←1 A.GetComponents d
+      a.Name
+ Separator  TextQualifier  MaxRows  AutoConvert 
+      a.Value
+ Pipe  Quote  1234567 0
+</code></pre><p>Deactivate all the components:</p><pre><code>      A.SetComponentDisabled¨a,¨1 
+0 0 0 0
+</code></pre><p>We have used these verbose functions names, all including the word <em>component</em>, to distinguish them from the functions used to operate on plain elements, as everything sits all together in the <code>#.Abacus.Main</code> namespace. It would be nice to just use properties with real classes and dispense  with exposing all these functions, and we may do that in the future. We are going to see how many functions we will need to work with components over the coming months.  </p></article><article><header><h1><a href="/posts/on-arguments">On Arguments</a></h1><h2>August 15, 2025</h2></header><p>In APL we can have at most two arguments to a function, <code>⍺</code> and <code>⍵</code>, left and right.</p><p>This is good, because we should never have more than two argument to a function. In fact that is usually one too many. However real life gets in the way, and we often find ourselves in need of more. With nested arrays, namespaces, and simply the interpretation of, say, a simple numeric vector of length 3, the meaning of "one" is in the eye of the beholder.    </p><p>If we have a vector of expenses as the right argument to a functions that sums them up, we  say the right argument, <code>⍵</code>, is <em>a vector of expenses</em>. It's one thing. On the other hand,  if we have a function that computes the level payment of a mortgage, it takes a term, a balance, and a rate. Three things. If we pass these as the right argument <code>⍵</code>, we say the function takes three arguments. This is not strictly true. It takes one argument, a vector of three items. Informally we might often speak of 3, 4, 5 or more arguments but we really mean, usually, are distinct items of a possibly nested vector.</p><p>Let's use the word <em>parameter</em> to refer to an item of the argument when the argument consists of unique, identifible, nameable, elements.</p><p>In our hypothetical mortgage function the first line might look like:</p><pre><code>      (b r t)←⍵
 </code></pre><p>Here we have <em>unpacked</em> the argument <code>⍵</code> into 3 parameters <code>b</code>, <code>r</code> and <code>t</code>.</p><p>Often we want to have some of the less important parameters be optional and default to a given value. To make the term optional and default to 360 we might do:</p><pre><code>      (b r t)←3↑⍵,360
 </code></pre><p>With two or three parameters this technique is manageable, but with more it becomes unwieldy. First, we get a proliferation of usually ad hoc named local variables. Second we can only default trailing parameters.</p><p>What can we do about this? </p><p>We can take a page from the design of Dyalog's venerable <code>⎕WC</code> and use named parameters. This is what we have done in Abacus for components. This technique is useful for the pulbic API of libraries that will be used by other programmers. It's probably overkill for private functions.</p><p>This technique has many benefits:</p><ul><li>Parameters are formally named, yielding better documentation and clearer code.</li><li>Parameter names are optional on a parameter by parameter basis.</li><li>A namespace may be provided as the argument, containing the parameters (an improvement over <code>⎕WC</code>).     <p>        </p></li><li>Every parameter may have a default value. We can even provide no parameters at all.</li><li>Local parameter names are encapsulated in a namespace so less name clutter in the function. </li></ul><p>We take a strict approach to a vector argument: the tally is always the number of parameters provided. Therefore when providing only one parameter it usually must be enclosed, the exception being a scaler valued parameter provided with no name.  </p><p>Consider this contrived example:</p><pre><code>Sum←{
      p←(
@@ -141,58 +224,4 @@
      i←s2 NewItem'Large' 'Ctrl+S' 'OnViewSmall' ('Active' 0)    
      m
  }  
-</code></pre></article><article><header><h1><a href="/posts/input-components">Input Components</a></h1><h2>August 6, 2025</h2></header><p>(Or, How Did We Live Before <code>⎕VSET</code> and <code>⎕VGET</code>?)</p><p>We need some functions to wrap the HTML <code>&lt;input&gt;</code> element. We need inputs for text, numbers, dates check boxes, and pick lists, and thus define the following components:</p><ul><li><code>TextInput</code></li><li><code>NumberInput</code></li><li><code>DateInput</code></li><li><code>CheckBox</code></li><li><code>DropList</code></li></ul><p>Let's look at <code>TextInput.New</code>, as a representative pattern: </p><pre><code>New←{
-     d←(⍺ A.New'div')⎕NS(
-         'Name' ''
-         'Label' ''
-         'Value' ''
-         'AutocompleteItems' ''
-         'OnChange' ''
-     )A.InitProps ⍵
-     d.class←'TextInput'
-     l←d A.New'label'd.Label
-     l.for←d.Name
-     i←d A.New'input'
-     i.value←d.Value
-     i.id←d.Name
-     d.Onchange←A.FQP'OnChange'
-     d
- }
-</code></pre><p>Here we have taken advantage of V20's new array notation. This allows us to easily see and modify the supported properties and their default values, across multiple lines, without repeated catenation, enclosing, etc. The argument to <code>New</code> may be a namespace, or an array where each  item is either a name/value pair, or just a value. If only a value is provided, then its property name is inferred from its position (like <code>⎕WC</code>). For example, the following two expressions are equivalent:</p><pre><code>      TextEdit.New (Label:'First name:' ⋄ Name:'FirstName' ⋄ Value:'Paul')
-      TextEdit.New 'FirstName' ('Value' 'Paul') ('Label' 'FirstName)
-</code></pre><p>The <code>InitProps</code> function processes the argument:</p><pre><code>InitProps←{
-     ⍝ ⍺ ←→ Default name/value pairs
-     ⍝ ⍵ ←→ Given argument
-     ⍝ ← ←→ A new space with ⍺ overiddden by ⍵
-     d←()⎕VSET ⍺
-     9=⎕NC'⍵':d ⎕NS ⍵
-     n←⊃¨⍺
-     m←n↑⍨≢⍵
-     p←m{2∧.=(≢⍵),|≡⍵:⍵ ⋄ ⍺ ⍵}¨⍵
-     +d ⎕NS()⎕VSET p/⍨n∊⍨⊃¨p
- }
-</code></pre><p>Once we have a namespace with all the user set properties and default properties, all of the property names and values are injected into the root  element of the component. This means that property names must begin with an uppercase letter, to avoid conflict with element attributes like <code>class</code> or <code>onclick</code>, and that the names <code>Tag</code>, <code>Content</code>, and <code>Parent</code> are reserved.  </p><p>If a property is not referenced in the <code>New</code> function, like <code>OnChange</code>, it may also be specified by assignment after the component is created. Setting other properties after the component has been created will generally  require a setter function. For example, to set the <code>Value</code> property requires a call to <code>TextInput.SetValue</code>.</p><p>The component <code>&lt;div&gt;</code> contains a <code>&lt;label&gt;</code> element and an <code>&lt;input&gt;</code> element. They are tied together explicitly with the <code>for</code> attribute, rather than nesting, in order to provide more options for display purposes, specifically grid and flexbox.    </p><h2>Events</h2><p>For now, each component accepts an <code>OnChange</code> callback function, to allow further action to be taken after Abacus handles the change. In the case of <code>TextInput</code>, Abacus simply updates the APL DOM to reflect the change in the browser, and then calls the <code>OnChange</code> callback, if specfied by the user:</p><pre><code>OnChange←{
-     c←⍵.CurrentTarget
-     c.Value←⍵.Value
-     ⍵ A.Execute'OnChange'
- }
-</code></pre><h2>The GetValues and SetValues functions</h2><p>The main Abacus namespace contains the functions <code>GetValues</code> and <code>SetValues</code> for getting and setting multiple values, a typical task given a dialog box with a bunch of inputs. The <code>GetValues</code> function:</p><pre><code> GetValues←{
-     ⍝ ⍵ ←→ DOM node
-     ⍝ ← ←→ Namespace of Values from ⍵
-     e←⍵ GetElementsWith'Name'
-     0=≢e:()
-     +()⎕VSET(↑e.Name)e.Value
- }
-</code></pre><p>...takes an APL DOM node as its argument and returns a namespace containing the values for each input component found within.  The DOM node is searched for elements that have a <code>Name</code> property, and we assume a corresponding <code>Value</code> property. This search technique could be tightened up if necessary, but for now it's adequate.  </p><p>The <code>SetValues</code> function:</p><pre><code> SetValues←{
-     ⍝ ⍺ ←→ Namespace of values
-     ⍝ ⍵ ←→ DOM node
-     e←⍵ GetElementsWith'Name'
-     0=≢e:0
-     m←e.Name
-     n v←↓⍉↑⍵ ⎕VGET ¯2
-     i j←m n⍳¨⊂m∩n
-     0=≢i:0
-     c←⎕VGET e[i].class
-     0⊣e[i]c.SetValue v[j]
- }
-</code></pre><p>...similarly takes a DOM node as its right argument, but also a namespace of values as its left argment, and populates the inputs in the DOM with the values. <code>SetValues</code> is happy to accept more or fewer values than would be indicated by the DOM, and only set values that have correpsonding inputs. We must use the  individual <code>SetValue</code> function in each component to set the values.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
