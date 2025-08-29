@@ -18,10 +18,7 @@
      0=≢⍵:()
      ()⎕VSET(↑e.Name)e
  }
-   
-This allows us to access all the components under a node by name with dot syntax
-(or get an array of components back).
-</code></pre><p>We can set the value of a component using <code>SetComponentValue</code>:</p><pre><code>SetComponentValue←{
+</code></pre><p>This allows us to access all the components under a node by name with dot syntax (or get an array of components back).</p><p>We can set the value of a component using <code>SetComponentValue</code>:</p><pre><code>SetComponentValue←{
      ⍝ ⍺ ←→ APL DOM Node
      ⍝ ⍵ ←→ (Name|Component) Value
      ⍺←⊢
