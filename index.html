@@ -43,14 +43,7 @@ A.ProgressBar.Close''
          'UpdatePeriod' 1
          'Width' '30rem'
          'Status' 'Working...'
-         'LanguageTable'(0 2⍴⊂'')
-         'DefaultLanguageTable'[
-             'Pause' 'Pause'
-             'Cancel' 'Cancel'
-             'Resume' 'Resume'
-             'Truncate' 'Truncate'
-             'Paused' 'Paused'
-         ]
+         'LanguageTable'(LanguageTable'')
      )A.Default ⍵
      w.Iterations←(2=≡w.Status)⊃w.Iterations(≢w.Status)
      s←A.New'p'
@@ -71,9 +64,8 @@ A.ProgressBar.Close''
      d.(Iteration Result)←¯1 ⍬
      d.(Done Paused Canceled Truncated)←0
      f←2⊃d.Content
-     f.Unqueued←'click'
      f.Content.id←1 1 w.Truncate/'progress-'∘,¨'cancel' 'pause' 'truncate'
-     d.Unqueued←'close'
+     (d f).Unqueued←'close' 'click'
      d.PauseToken←⎕TID
      d
  }
