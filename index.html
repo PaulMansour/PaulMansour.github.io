@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/progressbar-component-revisited">ProgressBar Component Revisited</a></h1><h2>October 24, 2025</h2></header><p>Way back in May of 2024 we made a first attempt  at a <a href="/posts/modal-dialog-boxes-progressbar">ProgressBar component</a>.</p><p>No battle plan survives first contact with the enemy, so now that one intrepid user is attempting some real work with Abacus, it's time to make the ProgressBar actually work.</p><p>While the operator approach is interesting and indeed useful, it does not allow us to easily integrate a progress bar into an existing codebase, especially one with looping control structures like <code>:For</code>, <code>:While</code>, and <code>:Repeat</code>.  For this we need a <code>Create</code> function to create a progress bar, an <code>Update</code> function to update it inside the loop and to check for user action, and finally a <code>Close</code> function to get rid of it when done. For example if we know the number of iterations ahead of time, we might write something like:  </p><pre><code>p←d A.ProgressBar.Create ⊂'Iterations' 25
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/datagrid-sorting-and-filtering">DataGrid Sorting and Filtering</a></h1><h2>November 5, 2025</h2></header><p>Back when we first were designing the <a href="/posts/a-high-performance-data-grid-in-html">DataGrid</a>  we thought we would leave filtering and sorting up to the application. The problem with that approach is that it requires an extra copy of the data. For example, if we want the data sorted by a particular column or set of columns, we need to sort the data outside in the application and reset the DataGrid properties. This creates a whole new copy of the data. Same goes for basic filtering: if we want to select certain rows to display, we need to select the rows in the application and reset the DataGrid properties. This is not good.</p><p>It turns out the way we have implemented the grid makes it fairly easy to build in sorting and filtering. Assume the data is a matrix, <code>m</code>. Then at any given moment, the rows that are to be displayed in the available window space are given by a vector of (up till now) consecutive integers <code>i</code>:    </p><pre><code>      m[i;]
+</code></pre><p>If the user is on the bottom visible row and scrolls down one, then <code>i</code> will be effectively set to <code>i+1</code>. But there is no reason that <code>i</code> needs to be consecutive integers. We can display certain rows in a certain order by simply messing around with <code>i</code>.</p><p>In the DataGrid we now track an internal property <code>RowIndices</code>. This defaults to  <code>⍳n</code> where <code>n</code> is the number of data rows. That is, the default is to show all rows in the order given. We can pick out a subset of indices and permute them, assign this to <code>RowIndices</code> and thus display a subset of data in a different order:</p><pre><code>      m[RowIndices[i];]
+</code></pre><p>And that's all there is to built-in sorting and filtering. The entire dataset is never sorted, nor is it ever selected out or copied.    We limit built-in filtering to selecting where a column is equal to  a particular value, or set of values. We can of course filter on multiple columns. More sophisticated filtering, for example selecting rows where a column is greater than a certain value, is left up to the application.    There is a new <code>RowMask</code> property, a Boolean of the same length as the data. This allows the application to provide the entire dataset once to the DataGrid once, and then reset the visible rows. Built-in filtering can work on top of application filtering.</p><p>We only allow sorting and filtering if the property <code>InsertRows</code> is set to <code>0</code>, that is the total number of rows cannot be changed. We may relax this in the future.      </p><p>  </p><p>     </p></article><article><header><h1><a href="/posts/progressbar-component-revisited">ProgressBar Component Revisited</a></h1><h2>October 24, 2025</h2></header><p>Way back in May of 2024 we made a first attempt  at a <a href="/posts/modal-dialog-boxes-progressbar">ProgressBar component</a>.</p><p>No battle plan survives first contact with the enemy, so now that one intrepid user is attempting some real work with Abacus, it's time to make the ProgressBar actually work.</p><p>While the operator approach is interesting and indeed useful, it does not allow us to easily integrate a progress bar into an existing codebase, especially one with looping control structures like <code>:For</code>, <code>:While</code>, and <code>:Repeat</code>.  For this we need a <code>Create</code> function to create a progress bar, an <code>Update</code> function to update it inside the loop and to check for user action, and finally a <code>Close</code> function to get rid of it when done. For example if we know the number of iterations ahead of time, we might write something like:  </p><pre><code>p←d A.ProgressBar.Create ⊂'Iterations' 25
 :For i :In ⍳25
      r←p A.ProgressBar.Update'Doing iteration: ',⍕1+i
      :If r≢'Resume' ⋄ :Leave ⋄ :EndIf
@@ -150,66 +152,4 @@ Comma
  Pipe  Quote  1234567 0
 </code></pre><p>Deactivate all the components:</p><pre><code>      A.SetComponentDisabled¨a,¨1 
 0 0 0 0
-</code></pre><p>We have used these verbose functions names, all including the word <em>component</em>, to distinguish them from the functions used to operate on plain elements, as everything sits all together in the <code>#.Abacus.Main</code> namespace. It would be nice to just use properties with real classes and dispense  with exposing all these functions, and we may do that in the future. We are going to see how many functions we will need to work with components over the coming months.  </p></article><article><header><h1><a href="/posts/on-arguments">On Arguments</a></h1><h2>August 15, 2025</h2></header><p>In APL we can have at most two arguments to a function, <code>⍺</code> and <code>⍵</code>, left and right.</p><p>This is good, because we should never have more than two argument to a function. In fact that is usually one too many. However real life gets in the way, and we often find ourselves in need of more. With nested arrays, namespaces, and simply the interpretation of, say, a simple numeric vector of length 3, the meaning of "one" is in the eye of the beholder.    </p><p>If we have a vector of expenses as the right argument to a functions that sums them up, we  say the right argument, <code>⍵</code>, is <em>a vector of expenses</em>. It's one thing. On the other hand,  if we have a function that computes the level payment of a mortgage, it takes a term, a balance, and a rate. Three things. If we pass these as the right argument <code>⍵</code>, we say the function takes three arguments. This is not strictly true. It takes one argument, a vector of three items. Informally we might often speak of 3, 4, 5 or more arguments but we really mean, usually, are distinct items of a possibly nested vector.</p><p>Let's use the word <em>parameter</em> to refer to an item of the argument when the argument consists of unique, identifible, nameable, elements.</p><p>In our hypothetical mortgage function the first line might look like:</p><pre><code>      (b r t)←⍵
-</code></pre><p>Here we have <em>unpacked</em> the argument <code>⍵</code> into 3 parameters <code>b</code>, <code>r</code> and <code>t</code>.</p><p>Often we want to have some of the less important parameters be optional and default to a given value. To make the term optional and default to 360 we might do:</p><pre><code>      (b r t)←3↑⍵,360
-</code></pre><p>With two or three parameters this technique is manageable, but with more it becomes unwieldy. First, we get a proliferation of usually ad hoc named local variables. Second we can only default trailing parameters.</p><p>What can we do about this? </p><p>We can take a page from the design of Dyalog's venerable <code>⎕WC</code> and use named parameters. This is what we have done in Abacus for components. This technique is useful for the pulbic API of libraries that will be used by other programmers. It's probably overkill for private functions.</p><p>This technique has many benefits:</p><ul><li>Parameters are formally named, yielding better documentation and clearer code.</li><li>Parameter names are optional on a parameter by parameter basis.</li><li>A namespace may be provided as the argument, containing the parameters (an improvement over <code>⎕WC</code>).     <p>        </p></li><li>Every parameter may have a default value. We can even provide no parameters at all.</li><li>Local parameter names are encapsulated in a namespace so less name clutter in the function. </li></ul><p>We take a strict approach to a vector argument: the tally is always the number of parameters provided. Therefore when providing only one parameter it usually must be enclosed, the exception being a scaler valued parameter provided with no name.  </p><p>Consider this contrived example:</p><pre><code>Sum←{
-     p←(
-         'One' 1
-         'Two' 2
-         'Three' 3
-         'Four' 4
-         'Five' 5
-     )Default ⍵
-     +/p.(One Two Three Four Five)
- }
-</code></pre><p>First we layout all the parameters, each on its own line, in order, with their default values, using V20 array notation. It is important that we use an array rather than a namespace for the default values, as order matters. This array is passed as the left argument to our <code>Default</code> utility function, which takes the user provided parameters as its right argument:</p><pre><code>Default←{
-     ⍝ ⍺ ←→ Default name/value pairs
-     ⍝ ⍵ ←→ Given argument
-     ⍝ ← ←→ A new space with ⍺ overiddden by ⍵
-     d←()⎕VSET ⍺
-     9=⎕NC'⍵':d ⎕NS ⍵
-     n←' '~⍨¨(≢⍵)↑⊃¨⍺
-     p←n{(2=≢⍵)∧1≠≡⍵:⍵
-         ⍺≡'':⍺
-         ⍺ ⍵}¨⍵
-     d ⎕NS()⎕VSET p~⊂''
- }
-</code></pre><p>The first thing we do is create a new namespace <code>d</code> with all of the default name/value pairs <code>⍺</code>. This will be our result in all cases.</p><p>Then, if we are given a namespace as the right arg, we inject the user supplied names over the default names, and return the space <code>d</code>; we are done. (This uses another nice feature of V20, which finally allows a reference as the left argument to <code>⎕NS</code>.)  Otherwise <code>⍵</code> is a vector where each item is either a value or a name/value pair. If an item is only a value, we assume the name based on its position. These names are then injected into <code>d</code>, overriding defaults, and <code>d</code> is returned.</p><p>We can call the <code>Sum</code> function in all of the following ways (We have inserted  <code>⎕←⎕JSON p</code> to see what is going on):</p><pre><code>      Sum ''
-{"Five":5,"Four":4,"One":1,"Three":3,"Two":2}
-15
-      Sum 100 ('Five' 50)
-{"Five":50,"Four":4,"One":100,"Three":3,"Two":2}
-159
-      Sum  ('Three' 333)  ('DoesNot' 'Exist')
-{"DoesNot":"Exist","Five":5,"Four":4,"One":1,"Three":333,"Two":2}
-345
-      Sum  (Three:333 ⋄ Two:222)
-{"Five":5,"Four":4,"One":1,"Three":333,"Two":222}
-565
-</code></pre><p>This <code>Default</code> function does no error checking. Mispelled names (not useful) or additional names (often useful) are happily are accepted. There is no type checking, and no checking for whether or not a parameter is optional. This is fine for the purposes of Abacus, where we assume consenting adults are using the library.</p><p>Some checking can be done from the name alone. But if we want to check for mandatory parameters or types, we need to add more items to our default vector. To check for mandatory parameters we can add an optional Boolean:</p><pre><code>p←(
-         'One' 1 1
-         'Two' 2 1
-         'Three' 3
-         'Four' 4
-         'Five' 5
-     )
-</code></pre><p>Here we have specified that parameters <code>One</code> and <code>Two</code> are required.  Now we need to add some code to the default function to do some checking. We take the approach of adding a new function, rather than mucking up our existing code too much:</p><pre><code>Default←{
-     ⍝ ⍺ ←→ Default name/value pairs  (Optional 1 for required)
-     ⍝ ⍵ ←→ Given argument
-     ⍝ ← ←→ A new space with ⍺ overiddden by ⍵
-     d←()⎕VSET 2↑¨⍺
-     9=⎕NC'⍵':d ⎕NS ⍺ Verify ⍵
-     n←' '~⍨¨(≢⍵)↑⊃¨⍺
-     p←n{(2=≢⍵)∧1≠≡⍵:⍵
-         ⍺≡'':⍺
-         ⍺ ⍵}¨⍵
-     d ⎕NS ⍺ Verify()⎕VSET p~⊂''
- }
-</code></pre><p>where the <code>Verify</code> function is:</p><pre><code>Verify←{
-     (n v r)←↓⍉↑3↑¨⍺,¨0
-     m←⍵.⎕NL ¯2
-     ~∧/m∊⍨r/n:11 ⎕SIGNAL⍨'Required parameter: ',⊃r/n
-     0≠≢m~n:11 ⎕SIGNAL⍨'Invalid parameter name: ',⊃m~n
-     ⍵
- }
-</code></pre><p>Additional type information could be specified and checked for. Here we begin to run into meta problem of needing parameter names for our parameter specification. Ugh. Let's stay away from that.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>We have used these verbose functions names, all including the word <em>component</em>, to distinguish them from the functions used to operate on plain elements, as everything sits all together in the <code>#.Abacus.Main</code> namespace. It would be nice to just use properties with real classes and dispense  with exposing all these functions, and we may do that in the future. We are going to see how many functions we will need to work with components over the coming months.  </p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
