@@ -3,7 +3,7 @@
       w←'hafxd'
       a lookup w
 3 0 3 4 1
-</code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and the lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
+</code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and then lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
 abcdefgha
       (⊃,/a)⍳w
 7 0 5 9 3
@@ -19,7 +19,7 @@ INDEX ERROR
 0 0 0 1 1 3 3 3 3 4
 </code></pre><p>And now, with a little code golf to remove a set of parentheses:</p><pre><code>     (⊂w⍳⍨⊃,/a)⌷(1,⍨≢¨a)/⍳1+≢a
 3 0 3 4 1
-</code></pre><p>And bingo, we are done. Let's make it a dfn:</p><pre><code>      liota←{(⊂⍵⍳⍨⊃,/⍺)⌷(1,⍨≢¨⍺)/⍳1+≢⍺}
+</code></pre><p>Bingo, we are done. Let's make it a dfn:</p><pre><code>      liota←{(⊂⍵⍳⍨⊃,/⍺)⌷(1,⍨≢¨⍺)/⍳1+≢⍺}
 </code></pre><p>Now let's try a completely different approach. Consider the outer product of set membership <code>∊</code>:</p><pre><code>      w∘.∊a
 0 0 0 1
 1 0 0 1
@@ -41,4 +41,4 @@ INDEX ERROR
 </code></pre><p>Oh yeah! Now we can just combine into one function:</p><pre><code>    liota2←⍳∘1⍤1∘.∊⍨ 
     a liota2 w
 3 0 3 4 1
-</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster. That being said, in our use case, neither argument will ever be very large.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
