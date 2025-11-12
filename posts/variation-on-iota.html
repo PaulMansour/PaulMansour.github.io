@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/variation-on-iota">Variation on Iota</a></h1><h2>November 12, 2025</h2></header><p>We just encountered the following real-life problem, which oddly, if memory serves, we have never encountered before: Given a list of items, find the location of each item in a list of lists of items. An example will make it clear:</p><pre><code>      a← 'abc' 'de' '' 'fgha'
+      w←'hafxd'
+      a lookup w
+3 0 3 4 1
+</code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and the lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
+abcdefgha
+      (⊃,/a)⍳w
+7 0 5 9 3
+</code></pre><p>Then we need to map these indices, which index into the flattened array, back to indices apropriate for the original nested array, which are given by:</p><pre><code>        ⍳≢a
+0 1 2 3
+</code></pre><p>We can do this by counting the items in each sublist:</p><pre><code>      ≢¨a
+3 2 0 4
+</code></pre><p>And then replicating:</p><pre><code>      (≢¨a)/⍳≢a
+0 0 0 1 1 3 3 3 3
+</code></pre><p>Now we can map the first set of indices into the second set of indices to get the desired indices:</p><pre><code>      (⊂(⊃,/a)⍳w)⌷(≢¨a)/⍳≢a
+INDEX ERROR
+</code></pre><p>Oops, we need one more index for things not found:</p><pre><code>      (1,⍨≢¨a)/⍳1+≢a
+0 0 0 1 1 3 3 3 3 4
+</code></pre><p>And now, with a little code golf to remove a set of parentheses:</p><pre><code>     (⊂w⍳⍨⊃,/a)⌷(1,⍨≢¨a)/⍳1+≢a
+3 0 3 4 1
+</code></pre><p>And bingo, we are done. Let's make it a dfn:</p><pre><code>      liota←{(⊂⍵⍳⍨⊃,/⍺)⌷(1,⍨≢¨⍺)/⍳1+≢⍺}
+</code></pre><p>Now let's try a completely different approach. Consider the outer product of set membership <code>∊</code>:</p><pre><code>      w∘.∊a
+0 0 0 1
+1 0 0 1
+0 0 0 1
+0 0 0 0
+0 1 0 0
+</code></pre><p>If we look for the first occurance of a <code>1</code> in each row we get our answer:</p><pre><code>      (↓w∘.∊a)⍳¨1
+3 0 3 4 1
+</code></pre><p>And a little golf:</p><pre><code>      1⍳⍨¨↓w∘.∊a
+3 0 3 4 1
+</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the each operator by using the rank operator, un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
+3 0 3 4 1
+</code></pre><p>Maybe we can go tacit. It looks like we have a function between <code>a</code> and <code>w</code>, and then a function on the result, that is:</p><pre><code>   g a f w
+</code></pre><p>Which can be rewritten as an atop:</p><pre><code>    a (g f) w
+</code></pre><p>Where: </p><pre><code>      f←∘.∊⍨
+      g←⍳∘1⍤1
+</code></pre><p>Let's see if it works:</p><pre><code>      a (g f) w
+3 0 3 4 1
+</code></pre><p>Oh yeah! Now we can just combine into one function:</p><pre><code>    liota2←⍳∘1⍤1∘.∊⍨ 
+    a liota2 w
+3 0 3 4 1
+</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>

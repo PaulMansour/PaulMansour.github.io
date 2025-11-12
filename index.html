@@ -1,5 +1,47 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/datagrid-sorting-and-filtering">DataGrid Sorting and Filtering</a></h1><h2>November 5, 2025</h2></header><p>Back when we first were designing the <a href="/posts/a-high-performance-data-grid-in-html">DataGrid</a>  we thought we would leave filtering and sorting up to the application. The problem with that approach is that it requires an extra copy of the data. For example, if we want the data sorted by a particular column or set of columns, we need to sort the data outside in the application and reset the DataGrid properties. This creates a whole new copy of the data. Same goes for basic filtering: if we want to select certain rows to display, we need to select the rows in the application and reset the DataGrid properties. This is not good.</p><p>It turns out the way we have implemented the grid makes it fairly easy to build in sorting and filtering. Assume the data is a matrix, <code>m</code>. Then at any given moment, the rows that are to be displayed in the available window space are given by a vector of (up till now) consecutive integers <code>i</code>:    </p><pre><code>      m[i;]
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Vibe coding since 1987"</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/variation-on-iota">Variation on Iota</a></h1><h2>November 12, 2025</h2></header><p>We just encountered the following real-life problem, which oddly, if memory serves, we have never encountered before: Given a list of items, find the location of each item in a list of lists of items. An example will make it clear:</p><pre><code>      a← 'abc' 'de' '' 'fgha'
+      w←'hafxd'
+      a lookup w
+3 0 3 4 1
+</code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and the lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
+abcdefgha
+      (⊃,/a)⍳w
+7 0 5 9 3
+</code></pre><p>Then we need to map these indices, which index into the flattened array, back to indices apropriate for the original nested array, which are given by:</p><pre><code>        ⍳≢a
+0 1 2 3
+</code></pre><p>We can do this by counting the items in each sublist:</p><pre><code>      ≢¨a
+3 2 0 4
+</code></pre><p>And then replicating:</p><pre><code>      (≢¨a)/⍳≢a
+0 0 0 1 1 3 3 3 3
+</code></pre><p>Now we can map the first set of indices into the second set of indices to get the desired indices:</p><pre><code>      (⊂(⊃,/a)⍳w)⌷(≢¨a)/⍳≢a
+INDEX ERROR
+</code></pre><p>Oops, we need one more index for things not found:</p><pre><code>      (1,⍨≢¨a)/⍳1+≢a
+0 0 0 1 1 3 3 3 3 4
+</code></pre><p>And now, with a little code golf to remove a set of parentheses:</p><pre><code>     (⊂w⍳⍨⊃,/a)⌷(1,⍨≢¨a)/⍳1+≢a
+3 0 3 4 1
+</code></pre><p>And bingo, we are done. Let's make it a dfn:</p><pre><code>      liota←{(⊂⍵⍳⍨⊃,/⍺)⌷(1,⍨≢¨⍺)/⍳1+≢⍺}
+</code></pre><p>Now let's try a completely different approach. Consider the outer product of set membership <code>∊</code>:</p><pre><code>      w∘.∊a
+0 0 0 1
+1 0 0 1
+0 0 0 1
+0 0 0 0
+0 1 0 0
+</code></pre><p>If we look for the first occurance of a <code>1</code> in each row we get our answer:</p><pre><code>      (↓w∘.∊a)⍳¨1
+3 0 3 4 1
+</code></pre><p>And a little golf:</p><pre><code>      1⍳⍨¨↓w∘.∊a
+3 0 3 4 1
+</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the each operator by using the rank operator, un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
+3 0 3 4 1
+</code></pre><p>Maybe we can go tacit. It looks like we have a function between <code>a</code> and <code>w</code>, and then a function on the result, that is:</p><pre><code>   g a f w
+</code></pre><p>Which can be rewritten as an atop:</p><pre><code>    a (g f) w
+</code></pre><p>Where: </p><pre><code>      f←∘.∊⍨
+      g←⍳∘1⍤1
+</code></pre><p>Let's see if it works:</p><pre><code>      a (g f) w
+3 0 3 4 1
+</code></pre><p>Oh yeah! Now we can just combine into one function:</p><pre><code>    liota2←⍳∘1⍤1∘.∊⍨ 
+    a liota2 w
+3 0 3 4 1
+</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster.</p></article><article><header><h1><a href="/posts/datagrid-sorting-and-filtering">DataGrid Sorting and Filtering</a></h1><h2>November 5, 2025</h2></header><p>Back when we first were designing the <a href="/posts/a-high-performance-data-grid-in-html">DataGrid</a>  we thought we would leave filtering and sorting up to the application. The problem with that approach is that it requires an extra copy of the data. For example, if we want the data sorted by a particular column or set of columns, we need to sort the data outside in the application and reset the DataGrid properties. This creates a whole new copy of the data. Same goes for basic filtering: if we want to select certain rows to display, we need to select the rows in the application and reset the DataGrid properties. This is not good.</p><p>It turns out the way we have implemented the grid makes it fairly easy to build in sorting and filtering. Assume the data is a matrix, <code>m</code>. Then at any given moment, the rows that are to be displayed in the available window space are given by a vector of (up till now) consecutive integers <code>i</code>:    </p><pre><code>      m[i;]
 </code></pre><p>If the user is on the bottom visible row and scrolls down one, then <code>i</code> will be effectively set to <code>i+1</code>. But there is no reason that <code>i</code> needs to be consecutive integers. We can display certain rows in a certain order by simply messing around with <code>i</code>.</p><p>In the DataGrid we now track an internal property <code>RowIndices</code>. This defaults to  <code>⍳n</code> where <code>n</code> is the number of data rows. That is, the default is to show all rows in the order given. We can pick out a subset of indices and permute them, assign this to <code>RowIndices</code> and thus display a subset of data in a different order:</p><pre><code>      m[RowIndices[i];]
 </code></pre><p>And that's all there is to built-in sorting and filtering. The entire dataset is never sorted, nor is it ever selected out or copied.    We limit built-in filtering to selecting where a column is equal to  a particular value, or set of values. We can of course filter on multiple columns. More sophisticated filtering, for example selecting rows where a column is greater than a certain value, is left up to the application.    There is a new <code>RowMask</code> property, a Boolean of the same length as the data. This allows the application to provide the entire dataset once to the DataGrid once, and then reset the visible rows. Built-in filtering can work on top of application filtering.</p><p>We only allow sorting and filtering if the property <code>InsertRows</code> is set to <code>0</code>, that is the total number of rows cannot be changed. We may relax this in the future.      </p><p>  </p><p>     </p></article><article><header><h1><a href="/posts/progressbar-component-revisited">ProgressBar Component Revisited</a></h1><h2>October 24, 2025</h2></header><p>Way back in May of 2024 we made a first attempt  at a <a href="/posts/modal-dialog-boxes-progressbar">ProgressBar component</a>.</p><p>No battle plan survives first contact with the enemy, so now that one intrepid user is attempting some real work with Abacus, it's time to make the ProgressBar actually work.</p><p>While the operator approach is interesting and indeed useful, it does not allow us to easily integrate a progress bar into an existing codebase, especially one with looping control structures like <code>:For</code>, <code>:While</code>, and <code>:Repeat</code>.  For this we need a <code>Create</code> function to create a progress bar, an <code>Update</code> function to update it inside the loop and to check for user action, and finally a <code>Close</code> function to get rid of it when done. For example if we know the number of iterations ahead of time, we might write something like:  </p><pre><code>p←d A.ProgressBar.Create ⊂'Iterations' 25
 :For i :In ⍳25
@@ -72,84 +114,4 @@ A.ProgressBar.Close''
      d
  }
 </code></pre><p>Here we can see the various options. The <code>Iterations</code> property defaults to 0, which indicates that we don't know the number of iterations ahead of time. If 0, then no actual graphical bar is displayed, only a status message. </p><p>The <code>Truncate</code> property indicates whether or not a Truncate option is offered in addition to Cancel and Resume when the work is paused.</p><p>The <code>UpdatePeriod</code> property determines how often the progress bar should be updated. It defaults to 1, meaning at every iteration. For loops with large numbers of iterations and small amounts of work in each iteration, it may make sense to set this higher.</p><p>The <code>Status</code> property is either a simple character vector or a vector of vectors. This property is only applicable when the <code>Run</code> operator is used, as in the case of <code>Create</code> and <code>Close</code>, the <code>Update</code> function is called explicitly by the programmer and passed the status as its argument. More on this below.</p><p>Let's look a little closer at the <code>Run</code> operator, which has changed significantly. It is called like so:</p><pre><code>      rc rv←d f ProgressBar.Run s p 
-</code></pre><p>Here <code>f</code> is the iteration function, <code>s</code> is an appropriate right argument to <code>f</code>, and <code>p</code> is an appropriate right argument to <code>ProgressBar.New</code>, and <code>d</code> is just a reference to the document. The result <code>rc</code> is a return code of 0 for complete, 1 for cancel, and 2 for truncate. The result <code>rv</code> is a vector of the results of <code>f</code>, one item for each iteration.</p><p>The iteration function <code>f</code> is passed a reference to the progress bar as its left argument. This lets <code>f</code> do and access a few important things. First, for the indeterminate case, allows <code>f</code> to set the <code>Done</code> property to 1, to indicate that no more iterations are necessary, and end the process. Second, it allows <code>f</code> to set the <code>Status</code> property to update the progress bar text. Finally, it allows <code>f</code> to reference the current iteration number.</p><p>The right argument to <code>f</code> may be anything, It might be a simple file tie number, or it could be a namespace. If the latter, in addition to providing a nice way for many named inputs to <code>f</code>, it provides storage for accumulating or aggregating results between iterations. Note that the progress bar itself, the left argument, can also provide storage that survives iterations.</p><p>The iteration function <code>f</code> must have a result. This explicit result may or may not be significant or useful, as the important result may be implicitly available in <code>s</code>.     </p><p>As noted, the <code>Status</code> property may be set by <code>f</code> on each iteration. However, when the number of iterations is known, the status property may be set at startup to a vector of vectors, one item for each iteration. This defines the number of iterations and overrides the value of the <code>Iterations</code> property. The <code>Run</code> operator then automatically updates the status on each iteration.</p><p>There is an additional major change to the UI. Instead of a single <code>Pause</code> button that then presents a <code>ConfirmBox</code> with 'Cancel', 'Resume', and Truncate buttons, we provide <code>Cancel</code>, <code>Pause</code>, and <code>Truncate</code> buttons on the main progress element, avoiding the additional modal element. This means that <code>Cancel</code> and <code>Truncate</code> are always available and execute without additional confirmation. (Note that if using <code>Create/Update/Close</code> rather than <code>Run</code>, the programmer is in complete control of the loop and can add confirmation boxes when desired.) The <code>Pause</code> button switches to <code>Resume</code> and back as necessary. We generally don't like buttons that change captions, and we may change this, but in this case it seems reasonable.        </p><p>Finally, with this version of the ProgressBar component, we introduce the <code>LanguageTable</code> property. This provides a way for the programmer to specify any or all of the visible text elements of the component. This may be used for language support, or simply to change the label of a particular element to something more appropriate for the task at hand.</p><p>You can see many examples of the ProgressBar component in the <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/CSVEditor">CSVEditor application</a>.</p></article><article><header><h1><a href="/posts/working-with-components">Working With Components</a></h1><h2>August 29, 2025</h2></header><p>Now that we have a few components, we need some convenient ways to manipulate  them. Components are just nodes in the APL DOM with a <code>Name</code> property. Note the uppercase <code>N</code>, not to be confused with the HTML <code>name</code> attribute. Currently the existence of <code>Name</code> in an element is the only thing that identifies it as a component.</p><p>We can get a component by name, using the <code>GetComponent</code> function: </p><pre><code>GetComponent←{
-     ⍝ ⍺ ←→ APL DOM node
-     ⍝ ⍵ ←→ Component Name (or already a component (pass through)
-     9=⎕NC'⍵':⍵
-     e←⍺ GetElementsWith'Name'
-     i←e.Name⍳⊂⍵
-     i=≢e:6 ⎕SIGNAL⍨'Component "',⍵,'" not found'
-     i⊃e
- }
-</code></pre><p>The left argument is a DOM node, perhaps the whole document, or more likely a <code>&lt;dialog&gt;</code> element. the right argument is the name of the component, or if a namespace, assumed to be a component already, and just passed though. This is a convenience for other functions that accept either a component or a component name as an argument. We simply find all the elements in the node with a <code>Name</code> property and pick the one we want.</p><p>We can get a namespace with all of the components in a node:</p><pre><code>GetComponents←{
-     ⍝ ⍵ ← APL DOM node
-     ⍝ ⍺ ←→ 0 for namespace result, 1 for array
-     ⍝ ← ←→ Namespace of components
-     ⍺←0
-     e←⍵ GetElementsWith'Name'
-     ⍺:e
-     0=≢⍵:()
-     ()⎕VSET(↑e.Name)e
- }
-</code></pre><p>This allows us to access all the components under a node by name with dot syntax (or get an array of components back).</p><p>We can set the value of a component using <code>SetComponentValue</code>:</p><pre><code>SetComponentValue←{
-     ⍝ ⍺ ←→ APL DOM Node
-     ⍝ ⍵ ←→ (Name|Component) Value
-     ⍺←⊢
-     c←⍺ GetComponent 0⊃⍵
-     c(⍎c.class).SetValue 1⊃⍵
- } 
-</code></pre><p>Here the right argument is name or component itself, and the value. If the name is provided, then the left argument must be provided. If the component is provided, the left argument should be omitted. There is no need for a corresponding <code>GetComponentValue</code> function, as the value may be directly accessed with dot syntax.</p><p>We also have <code>GetComponentValues</code> and <code>SetComponentValues</code>, which we have introduced before but now renamed to reflect that they work on components. These functions take or return a namespace of values. Finally we have <code>SetComponentDisabled</code> for making a component, in <code>⎕WC</code> terms, active or inactive:</p><pre><code>SetComponentDisabled←{
-     ⍝ ⍺ ←→ DOM node
-     ⍝ ⍵ ←→ Name or Component name, Boolean 1/0
-     ⍺←⊢
-     c←⍺ GetComponent 0⊃⍵
-     e←Elements c
-     d←e/⍨e.Tag∊'button' 'fieldset' 'optgroup' 'option' 'select' 'textarea' 'input'
-     0=≢d:0
-     0⊣d{⍺ SetBoolean'disabled'⍵}¨1⊃⍵
- }
-</code></pre><p>The explicit list of HTML elements are those that take the <code>disabled</code> attribute.</p><p>Let's play around with the functions. Consider a dialog box with a few input fields:</p><pre><code>OnFileSettings←{
-     d←⍵.Document
-     s←A.FieldSet.New''
-     i←s A.DropList.New'Separator' 'Separator:' ''('Comma' 'Pipe' 'Tab')
-     i←s A.DropList.New'TextQualifier' 'Text qualifier:'('Options'('DoubleQuote' 'Quote')
-     i←s A.NumberInput.New'MaxRows' 'Maximum Rows:' 256 'CI15'
-     i←s A.CheckBox.New'AutoConvert' 'Auto convert'
-     _←d.FileSettings A.InitValues s
-     p←⎕NS''
-     p.Title←'CSV Import Settings'
-     p.Contents←s
-     p.OnOK←A.FQP'OnFileSettingsOK'
-     b←A.DialogBox.New p
-     d A.ShowModal b
- }
-</code></pre><p>When the <code>OnFileSettingsOK</code> callback fires we are given the <code>&lt;dialog&gt;</code> element as an argument. Let's call this <code>d</code>. Then we can grab a component and see its value:</p><pre><code>      c←d A.GetComponent 'Separator'
-      c.Value
-Pipe
-</code></pre><p>Then set its value, updating the APL DOM and the browser:</p><pre><code>      A.SetComponentValue c 'Comma' 
-0     
-      c.Value
-Comma
-</code></pre><p>A namepsace of components:</p><pre><code>      A.GetComponents d
-      p←A.GetComponents d
-      p.MaxRows.Value
-1024
-      p.AutoConvert.Value
-1
-</code></pre><p>Get a namespace of values, make some changes, refresh the screen:</p><pre><code>      v←A.GetComponentValues d 
-      ⎕JSON v
-{"AutoConvert":1,"MaxRows":1024,"Separator":"Comma","TextQualifier":"DoubleQuote"}
-      v.(AutoConvert MaxRows)←1 1234567
-      v A.SetComponentValues d
-0
-      v←A.GetComponentValues d
-      ⎕JSON v
-{"AutoConvert":0,"MaxRows":1234567,"Separator":"Pipe","TextQualifier":"Quote"}
-</code></pre><p>An array of components:</p><pre><code>      a←1 A.GetComponents d
-      a.Name
- Separator  TextQualifier  MaxRows  AutoConvert 
-      a.Value
- Pipe  Quote  1234567 0
-</code></pre><p>Deactivate all the components:</p><pre><code>      A.SetComponentDisabled¨a,¨1 
-0 0 0 0
-</code></pre><p>We have used these verbose functions names, all including the word <em>component</em>, to distinguish them from the functions used to operate on plain elements, as everything sits all together in the <code>#.Abacus.Main</code> namespace. It would be nice to just use properties with real classes and dispense  with exposing all these functions, and we may do that in the future. We are going to see how many functions we will need to work with components over the coming months.  </p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>Here <code>f</code> is the iteration function, <code>s</code> is an appropriate right argument to <code>f</code>, and <code>p</code> is an appropriate right argument to <code>ProgressBar.New</code>, and <code>d</code> is just a reference to the document. The result <code>rc</code> is a return code of 0 for complete, 1 for cancel, and 2 for truncate. The result <code>rv</code> is a vector of the results of <code>f</code>, one item for each iteration.</p><p>The iteration function <code>f</code> is passed a reference to the progress bar as its left argument. This lets <code>f</code> do and access a few important things. First, for the indeterminate case, allows <code>f</code> to set the <code>Done</code> property to 1, to indicate that no more iterations are necessary, and end the process. Second, it allows <code>f</code> to set the <code>Status</code> property to update the progress bar text. Finally, it allows <code>f</code> to reference the current iteration number.</p><p>The right argument to <code>f</code> may be anything, It might be a simple file tie number, or it could be a namespace. If the latter, in addition to providing a nice way for many named inputs to <code>f</code>, it provides storage for accumulating or aggregating results between iterations. Note that the progress bar itself, the left argument, can also provide storage that survives iterations.</p><p>The iteration function <code>f</code> must have a result. This explicit result may or may not be significant or useful, as the important result may be implicitly available in <code>s</code>.     </p><p>As noted, the <code>Status</code> property may be set by <code>f</code> on each iteration. However, when the number of iterations is known, the status property may be set at startup to a vector of vectors, one item for each iteration. This defines the number of iterations and overrides the value of the <code>Iterations</code> property. The <code>Run</code> operator then automatically updates the status on each iteration.</p><p>There is an additional major change to the UI. Instead of a single <code>Pause</code> button that then presents a <code>ConfirmBox</code> with 'Cancel', 'Resume', and Truncate buttons, we provide <code>Cancel</code>, <code>Pause</code>, and <code>Truncate</code> buttons on the main progress element, avoiding the additional modal element. This means that <code>Cancel</code> and <code>Truncate</code> are always available and execute without additional confirmation. (Note that if using <code>Create/Update/Close</code> rather than <code>Run</code>, the programmer is in complete control of the loop and can add confirmation boxes when desired.) The <code>Pause</code> button switches to <code>Resume</code> and back as necessary. We generally don't like buttons that change captions, and we may change this, but in this case it seems reasonable.        </p><p>Finally, with this version of the ProgressBar component, we introduce the <code>LanguageTable</code> property. This provides a way for the programmer to specify any or all of the visible text elements of the component. This may be used for language support, or simply to change the label of a particular element to something more appropriate for the task at hand.</p><p>You can see many examples of the ProgressBar component in the <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/CSVEditor">CSVEditor application</a>.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
