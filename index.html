@@ -3,7 +3,7 @@
       w←'hafxd'
       a {...} w
 3 0 3 4 1
-</code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and then lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
+</code></pre><p>So, it's just like <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-functions/index-of/">Index Of</a> (<code>⍳</code>), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and then lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
 abcdefgha
       (⊃,/a)⍳w
 7 0 5 9 3
@@ -20,7 +20,7 @@ INDEX ERROR
 </code></pre><p>And now, with a little code golf to remove a set of parentheses:</p><pre><code>     (⊂w⍳⍨⊃,/a)⌷(1,⍨≢¨a)/⍳1+≢a
 3 0 3 4 1
 </code></pre><p>Bingo, we are done. Let's make it a dfn:</p><pre><code>      liota←{(⊂⍵⍳⍨⊃,/⍺)⌷(1,⍨≢¨⍺)/⍳1+≢⍺}
-</code></pre><p>Now let's try a completely different approach. Consider the outer product of set membership <code>∊</code>:</p><pre><code>      w∘.∊a
+</code></pre><p>Now let's try a completely different approach. Consider the <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-operators/outer-product/">outer product</a>  of <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-functions/membership/">membership</a> (<code>∊</code>):</p><pre><code>      w∘.∊a
 0 0 0 1
 1 0 0 1
 0 0 0 1
@@ -33,7 +33,7 @@ INDEX ERROR
 </code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the each operator by using the rank operator, un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
 3 0 3 4 1
 </code></pre><p>Maybe we can go tacit. It looks like we have a function between <code>a</code> and <code>w</code>, and then a function on the result, that is:</p><pre><code>   g a f w
-</code></pre><p>Which can be rewritten as an atop:</p><pre><code>    a (g f) w
+</code></pre><p>Which can be rewritten as an <a href="https://docs.dyalog.com/20.0/programming-reference-guide/introduction/trains/#forks-and-atops">atop</a>:</p><pre><code>    a (g f) w
 </code></pre><p>Where: </p><pre><code>      f←∘.∊⍨
       g←⍳∘1⍤1
 </code></pre><p>Let's see if it works:</p><pre><code>      a (g f) w
