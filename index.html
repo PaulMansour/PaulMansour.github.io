@@ -1,5 +1,23 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/variation-on-iota">Variation on Iota</a></h1><h2>November 12, 2025</h2></header><p>We just encountered the following real-life problem, which oddly, if memory serves, we have never encountered before: Given a list of items, find the location of each item in a list of lists of items. An example will make it clear:</p><pre><code>      a← 'abc' 'de' '' 'fgha'
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/the-panels-component">The Panels Component</a></h1><h2>November 14, 2025</h2></header><p>The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/Panels">Panels component</a> provides a way to layout content. We have two main goals for this component. First, we want to easily layout multiple components or elements with a minimum of fuss. For example, we may want to neatly place 3 components, one on the top and two below. Second, we may want to have a primary component (or two) that is always visible and then a side panel (or two, or three) that can be visible or invisble. Most UI frameworks that have a panels component allow only two panels, but each panel can of course be divided again into two panels. This is sort of the way splitters work in <code>⎕WC</code>. We have taken a different approach.</p><p>We use <a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Grids">CSS grid</a> and one look at the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/grid-template-areas">grid-template-areas</a> property should tell you how nice a fit it is for the new <a href="https://docs.dyalog.com/20.0/programming-reference-guide/introduction/arrays/array-notation/">array notation</a> in Dyalog v20.</p><p>For example: </p><pre><code>     ...
+     l←[
+         0 0
+         1 2
+         3 3
+     ]
+     p←A.Panels.New ('Content' c) ('GridTemplateRows' l)        
+</code></pre><p>There are four components or elements in the content <code>c</code>. This instructs Abacus to layout the first element across the entire parent component, the place the next two elements below that, in equal proportion, and finally the last component all the way across the bottom.</p><p>The values in <code>l</code> are simply indices into <code>c</code>, but we could use HTML ids as well. We can change the proportions of the components by changing <code>l</code>:</p><pre><code>     l←[
+         0 0 0 0
+         1 1 1 2
+         3 3 3 3
+     ]
+</code></pre><p>Consider a case of two components, a main component and a right-hand sidebar that should only be visible on demand.  On startup the <code>GridTemplateAreas</code> is:</p><pre><code>      [
+        0
+      ]
+</code></pre><p>(or simply <code>⍪0</code>) a 1 by 1 matrix. This indicates that the main component should take up all of the space. When the side bar is reqested we reset it to:</p><pre><code>      [
+        0 0 0 1
+      ]
+</code></pre><p>This makes the sidebar visible, and gives it 25% of the available space, shrinking the main component to 75% of the available space.</p><p>Panels can be resized, if desired and applicable, using keyboard shortcuts for now. At some point we will allow resizing via the mouse.</p></article><article><header><h1><a href="/posts/variation-on-iota">Variation on Iota</a></h1><h2>November 12, 2025</h2></header><p>We just encountered the following real-life problem, which oddly, if memory serves, we have never encountered before: Given a list of items, find the location of each item in a list of lists of items. An example will make it clear:</p><pre><code>      a← 'abc' 'de' '' 'fgha'
       w←'hafxd'
       a {...} w
 3 0 3 4 1
@@ -30,7 +48,7 @@ INDEX ERROR
 3 0 3 4 1
 </code></pre><p>And a little golf:</p><pre><code>      1⍳⍨¨↓w∘.∊a
 3 0 3 4 1
-</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the each operator by using the rank operator, un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
+</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the  <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-operators/each/each-with-monadic-operand/">each operator</a> by using the <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-operators/rank/">rank operator</a> , un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
 3 0 3 4 1
 </code></pre><p>Maybe we can go tacit. It looks like we have a function between <code>a</code> and <code>w</code>, and then a function on the result, that is:</p><pre><code>   g a f w
 </code></pre><p>Which can be rewritten as an <a href="https://docs.dyalog.com/20.0/programming-reference-guide/introduction/trains/#forks-and-atops">atop</a>:</p><pre><code>    a (g f) w
@@ -43,75 +61,4 @@ INDEX ERROR
 3 0 3 4 1
 </code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster. That being said, in our use case, neither argument will ever be very large.</p></article><article><header><h1><a href="/posts/datagrid-sorting-and-filtering">DataGrid Sorting and Filtering</a></h1><h2>November 5, 2025</h2></header><p>Back when we first were designing the <a href="/posts/a-high-performance-data-grid-in-html">DataGrid</a>  we thought we would leave filtering and sorting up to the application. The problem with that approach is that it requires an extra copy of the data. For example, if we want the data sorted by a particular column or set of columns, we need to sort the data outside in the application and reset the DataGrid properties. This creates a whole new copy of the data. Same goes for basic filtering: if we want to select certain rows to display, we need to select the rows in the application and reset the DataGrid properties. This is not good.</p><p>It turns out the way we have implemented the grid makes it fairly easy to build in sorting and filtering. Assume the data is a matrix, <code>m</code>. Then at any given moment, the rows that are to be displayed in the available window space are given by a vector of (up till now) consecutive integers <code>i</code>:    </p><pre><code>      m[i;]
 </code></pre><p>If the user is on the bottom visible row and scrolls down one, then <code>i</code> will be effectively set to <code>i+1</code>. But there is no reason that <code>i</code> needs to be consecutive integers. We can display certain rows in a certain order by simply messing around with <code>i</code>.</p><p>In the DataGrid we now track an internal property <code>RowIndices</code>. This defaults to  <code>⍳n</code> where <code>n</code> is the number of data rows. That is, the default is to show all rows in the order given. We can pick out a subset of indices and permute them, assign this to <code>RowIndices</code> and thus display a subset of data in a different order:</p><pre><code>      m[RowIndices[i];]
-</code></pre><p>And that's all there is to built-in sorting and filtering. The entire dataset is never sorted, nor is it ever selected out or copied.    We limit built-in filtering to selecting where a column is equal to  a particular value, or set of values. We can of course filter on multiple columns. More sophisticated filtering, for example selecting rows where a column is greater than a certain value, is left up to the application.    There is a new <code>RowMask</code> property, a Boolean of the same length as the data. This allows the application to provide the entire dataset once to the DataGrid once, and then reset the visible rows. Built-in filtering can work on top of application filtering.</p><p>We only allow sorting and filtering if the property <code>InsertRows</code> is set to <code>0</code>, that is the total number of rows cannot be changed. We may relax this in the future.      </p><p>  </p><p>     </p></article><article><header><h1><a href="/posts/progressbar-component-revisited">ProgressBar Component Revisited</a></h1><h2>October 24, 2025</h2></header><p>Way back in May of 2024 we made a first attempt  at a <a href="/posts/modal-dialog-boxes-progressbar">ProgressBar component</a>.</p><p>No battle plan survives first contact with the enemy, so now that one intrepid user is attempting some real work with Abacus, it's time to make the ProgressBar actually work.</p><p>While the operator approach is interesting and indeed useful, it does not allow us to easily integrate a progress bar into an existing codebase, especially one with looping control structures like <code>:For</code>, <code>:While</code>, and <code>:Repeat</code>.  For this we need a <code>Create</code> function to create a progress bar, an <code>Update</code> function to update it inside the loop and to check for user action, and finally a <code>Close</code> function to get rid of it when done. For example if we know the number of iterations ahead of time, we might write something like:  </p><pre><code>p←d A.ProgressBar.Create ⊂'Iterations' 25
-:For i :In ⍳25
-     r←p A.ProgressBar.Update'Doing iteration: ',⍕1+i
-     :If r≢'Resume' ⋄ :Leave ⋄ :EndIf
-     ⎕DL 0.2
-:EndFor
-p A.ProgressBar.Close''
-:Select r
-:Case 'Cancel'
-     z←d A.Alert'You canceled the operation.'
-:Case 'Resume'
-     z←d A.Alert'The operation completed.'
-:EndSelect
-</code></pre><p>Here the looping and logic is exposed and explicit. The result of <code>Update</code> is examined inside the loop on each iteration to  determine if we should continue or not, and again after the loop to determine the final action. Of course this logic can be implemented many different ways.</p><p>If we don't know the number of iterations, we might write code like:</p><pre><code>d A.ProgressBar.Create ''
-t←0
-:Repeat
-    r←A.ProgressBar.Update'Total time in seconds elapsed: ',⍕t
-    :If r≢'Resume' ⋄ :Leave ⋄ :EndIf
-t+←⎕DL 0.2
-:Until t&gt;20
-A.ProgressBar.Close''
-</code></pre><p>We still provide the <code>Run</code> operator which has been significantly simplified, with one operator covering both the determinate and indeterminate cases:</p><pre><code>Run←{
-     p←New 1⊃⍵
-     _←⍺ A.ShowModal p
-     r←p ⍺⍺{
-         s←((2=≡⍺.Status)/1+⍺.Iteration)⊃⍺.Status
-         c←⍺ Update s
-         c≡'Cancel':1 ⍺.Result
-         c≡'Truncate':2 ⍺.Result
-         ⍺.Result,←⊂⍺ ⍺⍺ ⍵
-         ⍺.Done:0 ⍺.Result
-         ⍺.Iteration=⍺.Iterations-1:0 ⍺.Result
-         ⍺ ∇ ⍵
-     }0⊃⍵
-     r⊣A.DeleteElement p
- }
-</code></pre><p>Both <code>Create</code> and <code>Run</code> cover the <code>New</code> function (passing through the right argument) :</p><pre><code>New←{
-     w←(
-         'Title' 'Progress'
-         'Iterations' 0
-         'Truncate' 0
-         'UpdatePeriod' 1
-         'Width' '30rem'
-         'Status' 'Working...'
-         'LanguageTable'(LanguageTable'')
-     )A.Default ⍵
-     w.Iterations←(2=≡w.Status)⊃w.Iterations(≢w.Status)
-     s←A.New'p'
-     s.id←'progress-bar-status'
-     p←A.New'progress'
-     p.id←'progress'
-     p.max←w.Iterations
-     p.value←'0'
-     fp←A.New'p'(w A.Translate'Paused')
-     fp.id←'progress-paused-indicator'
-     fp.class←'pulse invisible'
-     w.BodyContent←s,((0&lt;w.Iterations)/p),fp
-     w.Buttons←1 1 w.Truncate/w A.Translate'Cancel' 'Pause' 'Truncate'
-     w.OnClose←A.FQP'OnClose'
-     w.OnClick←A.FQP¨1 1 w.Truncate/'OnCancel' 'OnPause' 'OnTruncate'
-     d←A.DialogBox.New w
-     d.id←'progress-bar'
-     d.(Iteration Result)←¯1 ⍬
-     d.(Done Paused Canceled Truncated)←0
-     f←2⊃d.Content
-     f.Content.id←1 1 w.Truncate/'progress-'∘,¨'cancel' 'pause' 'truncate'
-     (d f).Unqueued←'close' 'click'
-     d.PauseToken←⎕TID
-     d
- }
-</code></pre><p>Here we can see the various options. The <code>Iterations</code> property defaults to 0, which indicates that we don't know the number of iterations ahead of time. If 0, then no actual graphical bar is displayed, only a status message. </p><p>The <code>Truncate</code> property indicates whether or not a Truncate option is offered in addition to Cancel and Resume when the work is paused.</p><p>The <code>UpdatePeriod</code> property determines how often the progress bar should be updated. It defaults to 1, meaning at every iteration. For loops with large numbers of iterations and small amounts of work in each iteration, it may make sense to set this higher.</p><p>The <code>Status</code> property is either a simple character vector or a vector of vectors. This property is only applicable when the <code>Run</code> operator is used, as in the case of <code>Create</code> and <code>Close</code>, the <code>Update</code> function is called explicitly by the programmer and passed the status as its argument. More on this below.</p><p>Let's look a little closer at the <code>Run</code> operator, which has changed significantly. It is called like so:</p><pre><code>      rc rv←d f ProgressBar.Run s p 
-</code></pre><p>Here <code>f</code> is the iteration function, <code>s</code> is an appropriate right argument to <code>f</code>, and <code>p</code> is an appropriate right argument to <code>ProgressBar.New</code>, and <code>d</code> is just a reference to the document. The result <code>rc</code> is a return code of 0 for complete, 1 for cancel, and 2 for truncate. The result <code>rv</code> is a vector of the results of <code>f</code>, one item for each iteration.</p><p>The iteration function <code>f</code> is passed a reference to the progress bar as its left argument. This lets <code>f</code> do and access a few important things. First, for the indeterminate case, allows <code>f</code> to set the <code>Done</code> property to 1, to indicate that no more iterations are necessary, and end the process. Second, it allows <code>f</code> to set the <code>Status</code> property to update the progress bar text. Finally, it allows <code>f</code> to reference the current iteration number.</p><p>The right argument to <code>f</code> may be anything, It might be a simple file tie number, or it could be a namespace. If the latter, in addition to providing a nice way for many named inputs to <code>f</code>, it provides storage for accumulating or aggregating results between iterations. Note that the progress bar itself, the left argument, can also provide storage that survives iterations.</p><p>The iteration function <code>f</code> must have a result. This explicit result may or may not be significant or useful, as the important result may be implicitly available in <code>s</code>.     </p><p>As noted, the <code>Status</code> property may be set by <code>f</code> on each iteration. However, when the number of iterations is known, the status property may be set at startup to a vector of vectors, one item for each iteration. This defines the number of iterations and overrides the value of the <code>Iterations</code> property. The <code>Run</code> operator then automatically updates the status on each iteration.</p><p>There is an additional major change to the UI. Instead of a single <code>Pause</code> button that then presents a <code>ConfirmBox</code> with 'Cancel', 'Resume', and Truncate buttons, we provide <code>Cancel</code>, <code>Pause</code>, and <code>Truncate</code> buttons on the main progress element, avoiding the additional modal element. This means that <code>Cancel</code> and <code>Truncate</code> are always available and execute without additional confirmation. (Note that if using <code>Create/Update/Close</code> rather than <code>Run</code>, the programmer is in complete control of the loop and can add confirmation boxes when desired.) The <code>Pause</code> button switches to <code>Resume</code> and back as necessary. We generally don't like buttons that change captions, and we may change this, but in this case it seems reasonable.        </p><p>Finally, with this version of the ProgressBar component, we introduce the <code>LanguageTable</code> property. This provides a way for the programmer to specify any or all of the visible text elements of the component. This may be used for language support, or simply to change the label of a particular element to something more appropriate for the task at hand.</p><p>You can see many examples of the ProgressBar component in the <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/CSVEditor">CSVEditor application</a>.</p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>And that's all there is to built-in sorting and filtering. The entire dataset is never sorted, nor is it ever selected out or copied.    We limit built-in filtering to selecting where a column is equal to  a particular value, or set of values. We can of course filter on multiple columns. More sophisticated filtering, for example selecting rows where a column is greater than a certain value, is left up to the application.    There is a new <code>RowMask</code> property, a Boolean of the same length as the data. This allows the application to provide the entire dataset once to the DataGrid once, and then reset the visible rows. Built-in filtering can work on top of application filtering.</p><p>We only allow sorting and filtering if the property <code>InsertRows</code> is set to <code>0</code>, that is the total number of rows cannot be changed. We may relax this in the future.      </p><p>  </p><p>     </p></article><h2><a href="/posts">More posts...</a></h2></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>

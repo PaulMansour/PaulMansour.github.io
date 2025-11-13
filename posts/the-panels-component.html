@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/the-panels-component">The Panels Component</a></h1><h2>November 14, 2025</h2></header><p>The Abacus <a href="https://github.com/the-carlisle-group/Abacus/tree/master/APLSource/Main/Panels">Panels component</a> provides a way to layout content. We have two main goals for this component. First, we want to easily layout multiple components or elements with a minimum of fuss. For example, we may want to neatly place 3 components, one on the top and two below. Second, we may want to have a primary component (or two) that is always visible and then a side panel (or two, or three) that can be visible or invisble. Most UI frameworks that have a panels component allow only two panels, but each panel can of course be divided again into two panels. This is sort of the way splitters work in <code>⎕WC</code>. We have taken a different approach.</p><p>We use <a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Grids">CSS grid</a> and one look at the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/grid-template-areas">grid-template-areas</a> property should tell you how nice a fit it is for the new <a href="https://docs.dyalog.com/20.0/programming-reference-guide/introduction/arrays/array-notation/">array notation</a> in Dyalog v20.</p><p>For example: </p><pre><code>     ...
+     l←[
+         0 0
+         1 2
+         3 3
+     ]
+     p←A.Panels.New ('Content' c) ('GridTemplateRows' l)        
+</code></pre><p>There are four components or elements in the content <code>c</code>. This instructs Abacus to layout the first element across the entire parent component, the place the next two elements below that, in equal proportion, and finally the last component all the way across the bottom.</p><p>The values in <code>l</code> are simply indices into <code>c</code>, but we could use HTML ids as well. We can change the proportions of the components by changing <code>l</code>:</p><pre><code>     l←[
+         0 0 0 0
+         1 1 1 2
+         3 3 3 3
+     ]
+</code></pre><p>Consider a case of two components, a main component and a right-hand sidebar that should only be visible on demand.  On startup the <code>GridTemplateAreas</code> is:</p><pre><code>      [
+        0
+      ]
+</code></pre><p>(or simply <code>⍪0</code>) a 1 by 1 matrix. This indicates that the main component should take up all of the space. When the side bar is reqested we reset it to:</p><pre><code>      [
+        0 0 0 1
+      ]
+</code></pre><p>This makes the sidebar visible, and gives it 25% of the available space, shrinking the main component to 75% of the available space.</p><p>Panels can be resized, if desired and applicable, using keyboard shortcuts for now. At some point we will allow resizing via the mouse.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>

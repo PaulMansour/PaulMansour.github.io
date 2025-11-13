@@ -30,7 +30,7 @@ INDEX ERROR
 3 0 3 4 1
 </code></pre><p>And a little golf:</p><pre><code>      1⍳⍨¨↓w∘.∊a
 3 0 3 4 1
-</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the each operator by using the rank operator, un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
+</code></pre><p>For what it is worth, we can get rid of nesting the Boolean matrix and the  <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-operators/each/each-with-monadic-operand/">each operator</a> by using the <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-operators/rank/">rank operator</a> , un-golfing in the process:  </p><pre><code>      1⍳⍨(⍤1)w∘.∊a
 3 0 3 4 1
 </code></pre><p>Maybe we can go tacit. It looks like we have a function between <code>a</code> and <code>w</code>, and then a function on the result, that is:</p><pre><code>   g a f w
 </code></pre><p>Which can be rewritten as an <a href="https://docs.dyalog.com/20.0/programming-reference-guide/introduction/trains/#forks-and-atops">atop</a>:</p><pre><code>    a (g f) w
