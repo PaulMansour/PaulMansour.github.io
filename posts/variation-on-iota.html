@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/variation-on-iota">Variation on Iota</a></h1><h2>November 12, 2025</h2></header><p>We just encountered the following real-life problem, which oddly, if memory serves, we have never encountered before: Given a list of items, find the location of each item in a list of lists of items. An example will make it clear:</p><pre><code>      a← 'abc' 'de' '' 'fgha'
       w←'hafxd'
-      a lookup w
+      a {...} w
 3 0 3 4 1
 </code></pre><p>So, it's just like <code>⍳</code> (index of), only we are looking a level deeper on the left for the  existence of an item on the right. We are not concerned where in the sublist on the left the item on the right is found. It is simply the location of the sublist (where the item is found) within the main list.   </p><p>Our first inclination is to flatten out <code>a</code>, and then lookup items in <code>w</code> in the new flat array:</p><pre><code>      ⊃,/a
 abcdefgha
