@@ -41,4 +41,5 @@ INDEX ERROR
 </code></pre><p>Oh yeah! Now we can just combine into one function:</p><pre><code>    liota2←⍳∘1⍤1∘.∊⍨ 
     a liota2 w
 3 0 3 4 1
-</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster. That being said, in our use case, neither argument will ever be very large.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>We can guess that while the tacit version is short and sweet, it's going to be a dog in terms of time and space due to the outer product when both arguments get large, and indeed the flat version is almost infinitely faster. That being said, in our use case, neither argument will ever be very large.</p><h2>Update</h2><p>Josh David provides a much nicer flat array solution using <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-functions/interval-index/">interval index</a> that is both shorter and faster:</p><pre><code>      {1+(+\≢¨⍺)⍸⍵⍳⍨⊃,/⍺}
+</code></pre><p>It's amazing the various uses of <code>⍸</code>.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
