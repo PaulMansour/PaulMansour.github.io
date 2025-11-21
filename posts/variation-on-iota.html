@@ -45,4 +45,15 @@ INDEX ERROR
 </code></pre><p>It's amazing the various uses of <code>⍸</code>.</p><h2>Another Update</h2><p><a href="https://www.sacrideo.us/">Aaron Hsu</a> writes in with another solution using <code>⍸</code>, but in its monadic form <a href="https://docs.dyalog.com/20.0/language-reference-guide/primitive-functions/where/">Where</a>, which we had completely forgotten or maybe never knew can take an argument of non-negative integers, as well as the more typical Boolean: </p><pre><code>      {((⍸≢¨⍺),≢⍺)[(∊⍺)⍳⍵]}
 </code></pre><p>The Dyalog docs state that the model for <code>Where</code> can be expressed as <code>{(,⍵)/,⍳⍴⍵}</code>, which is exactly what we where doing in our first solution above.</p><p>We should have mentioned in the original post that our use case is not scaler integer or character items,  but vectors of vectors representing names. So replacing <code>∊</code> with <code>⊃,/</code>, and a little golf yields:</p><pre><code>      {(⍸≢¨⍺,1)[⍵⍳⍨⊃,/⍺]} 
 </code></pre><p>I was happy to discover that <code>(⍸≢¨⍺),≢⍺</code> can be replaced by <code>⍳≢¨⍺,1</code>.</p><p>Aaron also sent a tacit version (for scaler items only) with the new behind operator which is not even on my keyboard:</p><pre><code>      (⊂∊⍛⍳)⌷((⍸≢¨),≢)⍤⊣
-</code></pre><p>I wonder if this can be simplified a bit, given the golf above.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
+</code></pre><p>I wonder if this can be simplified a bit, given the golf above.</p><h2>Yet Another Update</h2><p>No discussion of <code>⍸</code> should conclude without a thank you to the late Roger Hui. Thank you Roger! </p><p>We have a function, still in use, that is probably close to 40 years old, originally a trad fn, but now a dnf:</p><pre><code>ComputeRange←{                   ⍝ ⍺ breaks, ⍵ Values
+     v←⍺,⍵                       ⍝ Gary Berquist Page 70
+     g←⍋v                        ⍝ Sort
+     l←⍴⍺                        ⍝ First
+     s←⍴⍵
+     f←+\((l⍴1),s⍴0)[g]          ⍝ Slighly faster than:  f←+\((⍴v)↑l⍴1)[g]
+     i←(⍴f)⍴0                    ⍝ Init
+     i[g]←f                      ⍝ Index
+     s⍴l↓i                       ⍝ Drop breaks points, enforce vec/scalar
+ }
+</code></pre><p>Note the reference to the legendary Gary Berquist, from whom we probably stole the entire function. This was used for one purpose only: grouping a numeric database column.</p><p>This is equivalent to the atop:</p><pre><code>      1∘+⍸
+</code></pre><p>It never would have occurred to us the many uses of this algorithm, and we never would have thought to apply this function in other situations.</p><p>Thank you Roger!</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
