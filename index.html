@@ -25,7 +25,7 @@
 abcdefgha
       (⊃,/a)⍳w
 7 0 5 9 3
-</code></pre><p> &gt; Update: We should have noted that the items that we are dealing with might not be    scaler, thus we must use <code>⊃,/' rather than simply </code>∊`.    </p><p>Then we need to map these indices, which index into the flattened array, back to indices apropriate for the original nested array, which are given by:</p><pre><code>        ⍳≢a
+</code></pre><blockquote><p>Update: We should have noted that the items that we are dealing with might not be scaler, thus we must use <code>⊃,/</code> rather than simply <code>∊</code>.    </p></blockquote><p>Then we need to map these indices, which index into the flattened array, back to indices apropriate for the original nested array, which are given by:</p><pre><code>        ⍳≢a
 0 1 2 3
 </code></pre><p>We can do this by counting the items in each sublist:</p><pre><code>      ≢¨a
 3 2 0 4
