@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/charting-and-tidy-data">Charting and Tidy Data</a></h1><h2>September 28, 2023</h2></header><p><a href="https://vita.had.co.nz/papers/tidy-data.pdf">Tidy data</a> is mostly just an informal term for what in database theory is called 3rd (or there abouts) normal form. If data is not <em>tidy</em>, it is considered <em>messy</em>. Another pair of terms for the same concept, but less judgmental, is <em>long-form</em> and <em>wide-form</em>.  Often wide-form or messy data is simply report data or secondary data. That is, it is the result of some report generated from the primary data in a DBMS. "Messy" in this case is in the eye of the beholder. Long-form data can also be composed of secondary data; it can be the result of a grouped query for example.</p><p><a href="https://altair-viz.github.io/user_guide/data.html#long-form-vs-wide-form-data">Altair</a> strongly prefers long-form data, while <a href="https://plotly.com/python/wide-form/">plotly</a> is happy to handle either format. </p><p>To explore this issue with SharpPlot we will use the well known 1930's barley experiment data set, beloved by statisticians. The data ranges over 6 farms, 10 varieties of barley, and 2 years, for a total of 120 observations on yields. Here are the first 10 rows:</p><table><thead><tr><th class="right">Year  </th><th class="left">Farm             </th><th class="left">Variety           </th><th class="right">Yield  </th></tr></thead><tbody><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>27.00</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>48.87</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>27.43</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>39.93</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>32.97</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Duluth</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>28.97</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="left"><code>Glabron</code>         </td><td class="right"><code>43.07</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>55.20</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>28.77</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>38.13</code></td></tr></tbody></table><p>Consider now aggregating the yield for farm and year, effectively eliminating the variety column. We can compute and display this as a multi-level grouping, grouping by the unique combinations of year and farm, and summing the yields: </p><table><thead><tr><th class="right">Year  </th><th class="left">Farm             </th><th class="right">Yield   </th></tr></thead><tbody><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="right"><code>358.28</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="right"><code>543.47</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="right"><code>292.88</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="right"><code>436.60</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>290.54</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Duluth</code>         </td><td class="right"><code>302.94</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>University Farm</code></td><td class="right"><code>295.07</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Waseca</code>         </td><td class="right"><code>418.70</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Morris</code>         </td><td class="right"><code>415.12</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Crookston</code>      </td><td class="right"><code>311.79</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>208.09</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Duluth</code>         </td><td class="right"><code>257.01</code></td></tr></tbody></table><p>This is long-form data (despite being the result of a query). We can also compute and present the same data as a crosstab of yields by farm and year:</p><table><thead><tr><th class="left">Farm             </th><th class="right">1931    </th><th class="right">1932    </th></tr></thead><tbody><tr><td class="left"><code>University Farm</code></td><td class="right"><code>358.28</code></td><td class="right"><code>295.07</code></td></tr><tr><td class="left"><code>Waseca</code>         </td><td class="right"><code>543.47</code></td><td class="right"><code>418.70</code></td></tr><tr><td class="left"><code>Morris</code>         </td><td class="right"><code>292.88</code></td><td class="right"><code>415.12</code></td></tr><tr><td class="left"><code>Crookston</code>      </td><td class="right"><code>436.60</code></td><td class="right"><code>311.79</code></td></tr><tr><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>290.54</code></td><td class="right"><code>208.09</code></td></tr><tr><td class="left"><code>Duluth</code>         </td><td class="right"><code>302.94</code></td><td class="right"><code>257.01</code></td></tr></tbody></table><p>This is wide-form data. In this particular case, we have the same number of columns, but if we had more years of data, the crosstab would get wider, and of course the multi-level grouping in long-form would get longer.</p><p>In the case of a bar chart, SharpPlot accepts the wide form data with a minimum of fuss. The <a href="https://sharpplot.com/SharpPlot-DrawBarChart.htm">DrawBarChart</a> method accepts a vector of vectors (in this case, one for year 1931 and one for the year 1932).    Playfair assumes the first column of data is the category and all remaining columns are  <code>y</code> axis or quantitative values so the chart definition for the wide-form data above is simply: </p><pre><code>     p←##.Main.New''
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"We make software the old-fashioned way, we write it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/charting-and-tidy-data">Charting and Tidy Data</a></h1><h2>September 28, 2023</h2></header><p><a href="https://vita.had.co.nz/papers/tidy-data.pdf">Tidy data</a> is mostly just an informal term for what in database theory is called 3rd (or there abouts) normal form. If data is not <em>tidy</em>, it is considered <em>messy</em>. Another pair of terms for the same concept, but less judgmental, is <em>long-form</em> and <em>wide-form</em>.  Often wide-form or messy data is simply report data or secondary data. That is, it is the result of some report generated from the primary data in a DBMS. "Messy" in this case is in the eye of the beholder. Long-form data can also be composed of secondary data; it can be the result of a grouped query for example.</p><p><a href="https://altair-viz.github.io/user_guide/data.html#long-form-vs-wide-form-data">Altair</a> strongly prefers long-form data, while <a href="https://plotly.com/python/wide-form/">plotly</a> is happy to handle either format. </p><p>To explore this issue with SharpPlot we will use the well known 1930's barley experiment data set, beloved by statisticians. The data ranges over 6 farms, 10 varieties of barley, and 2 years, for a total of 120 observations on yields. Here are the first 10 rows:</p><table><thead><tr><th class="right">Year  </th><th class="left">Farm             </th><th class="left">Variety           </th><th class="right">Yield  </th></tr></thead><tbody><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>27.00</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>48.87</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>27.43</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>39.93</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>32.97</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Duluth</code>         </td><td class="left"><code>Manchuria</code>       </td><td class="right"><code>28.97</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="left"><code>Glabron</code>         </td><td class="right"><code>43.07</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>55.20</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>28.77</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="left"><code>Glabron</code>         </td><td class="right"><code>38.13</code></td></tr></tbody></table><p>Consider now aggregating the yield for farm and year, effectively eliminating the variety column. We can compute and display this as a multi-level grouping, grouping by the unique combinations of year and farm, and summing the yields: </p><table><thead><tr><th class="right">Year  </th><th class="left">Farm             </th><th class="right">Yield   </th></tr></thead><tbody><tr><td class="right"><code>1931</code></td><td class="left"><code>University Farm</code></td><td class="right"><code>358.28</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Waseca</code>         </td><td class="right"><code>543.47</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Morris</code>         </td><td class="right"><code>292.88</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Crookston</code>      </td><td class="right"><code>436.60</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>290.54</code></td></tr><tr><td class="right"><code>1931</code></td><td class="left"><code>Duluth</code>         </td><td class="right"><code>302.94</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>University Farm</code></td><td class="right"><code>295.07</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Waseca</code>         </td><td class="right"><code>418.70</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Morris</code>         </td><td class="right"><code>415.12</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Crookston</code>      </td><td class="right"><code>311.79</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>208.09</code></td></tr><tr><td class="right"><code>1932</code></td><td class="left"><code>Duluth</code>         </td><td class="right"><code>257.01</code></td></tr></tbody></table><p>This is long-form data (despite being the result of a query). We can also compute and present the same data as a crosstab of yields by farm and year:</p><table><thead><tr><th class="left">Farm             </th><th class="right">1931    </th><th class="right">1932    </th></tr></thead><tbody><tr><td class="left"><code>University Farm</code></td><td class="right"><code>358.28</code></td><td class="right"><code>295.07</code></td></tr><tr><td class="left"><code>Waseca</code>         </td><td class="right"><code>543.47</code></td><td class="right"><code>418.70</code></td></tr><tr><td class="left"><code>Morris</code>         </td><td class="right"><code>292.88</code></td><td class="right"><code>415.12</code></td></tr><tr><td class="left"><code>Crookston</code>      </td><td class="right"><code>436.60</code></td><td class="right"><code>311.79</code></td></tr><tr><td class="left"><code>Grand Rapids</code>   </td><td class="right"><code>290.54</code></td><td class="right"><code>208.09</code></td></tr><tr><td class="left"><code>Duluth</code>         </td><td class="right"><code>302.94</code></td><td class="right"><code>257.01</code></td></tr></tbody></table><p>This is wide-form data. In this particular case, we have the same number of columns, but if we had more years of data, the crosstab would get wider, and of course the multi-level grouping in long-form would get longer.</p><p>In the case of a bar chart, SharpPlot accepts the wide form data with a minimum of fuss. The <a href="https://sharpplot.com/SharpPlot-DrawBarChart.htm">DrawBarChart</a> method accepts a vector of vectors (in this case, one for year 1931 and one for the year 1932).    Playfair assumes the first column of data is the category and all remaining columns are  <code>y</code> axis or quantitative values so the chart definition for the wide-form data above is simply: </p><pre><code>     p←##.Main.New''
      p.ChartType←'BarChart'
      p.Heading←'Barley Yields from Wide-Form Data'
      p
-</code></pre><p>and the result is:</p><svg baseProfile="full" ev="http://www.w3.org/2001/xml-events" height="361.33" version="1.1" viewBox="0 0 4050 2710" width="540" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+</code></pre><p>and the result is:</p><svg version="1.1" baseProfile="full" width="540" height="361.33" viewBox="0 0 4050 2710" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">
  <title>Barley Yields from Wide-Form Data</title>
 <desc>Created by Causeway SVG engine - SharpPlot v3.71.0</desc>
 <g stroke-miterlimit="100">
- <rect fill="silver" height="2650" width="3970" x="80" y="60"></rect>
- <rect fill="white" height="2645" stroke="black" stroke-width="5" width="3965" x="43" y="33"></rect>
+ <rect x="80" y="60" width="3970" height="2650" fill="silver"></rect>
+ <rect x="43" y="33" width="3965" height="2645" fill="white" stroke-width="5" stroke="black"></rect>
 <desc>Paint the paper =====</desc>
  <g fill="White">
-  <rect height="2640" width="3960" x="45" y="35"></rect>
+  <rect x="45" y="35" width="3960" height="2640"></rect>
  </g>
 <desc>Border =====</desc>
 <desc>Y-axis labels</desc>
@@ -46,39 +46,39 @@
  </g>
 <desc>X-Axis Ticks =====</desc>
 <desc>X-Axis tickmarks</desc>
- <path d="M718 2238L718 2281M1273 2238L1273 2281M1831 2238L1831 2281M2389 2238L2389 2281M2948 2238L2948 2281M3506 2238L3506 2281" fill="none" stroke="DarkGray" stroke-width="6.83"></path>
+ <path fill="none" stroke-width="6.83" stroke="DarkGray" d="M718 2238L718 2281M1273 2238L1273 2281M1831 2238L1831 2281M2389 2238L2389 2281M2948 2238L2948 2281M3506 2238L3506 2281"></path>
 <desc>Y-Axis Ticks =====</desc>
 <desc>Y grid</desc>
- <path d="M435 2182L3785 2182M435 2030L3785 2030M435 1874L3785 1874M435 1719L3785 1719M435 1563L3785 1563M435 1408L3785 1408M435 1252L3785 1252M435 1097L3785 1097M435 941L3785 941M435 786L3785 786M435 630L3785 630M435 475L3785 475" fill="none" stroke="Silver" stroke-width="1.72"></path>
+ <path fill="none" stroke-width="1.72" stroke="Silver" d="M435 2182L3785 2182M435 2030L3785 2030M435 1874L3785 1874M435 1719L3785 1719M435 1563L3785 1563M435 1408L3785 1408M435 1252L3785 1252M435 1097L3785 1097M435 941L3785 941M435 786L3785 786M435 630L3785 630M435 475L3785 475"></path>
 <desc>Y-Axis tickmarks</desc>
- <path d="M382 2182L350 2182M382 2030L350 2030M382 1874L350 1874M382 1719L350 1719M382 1563L350 1563M382 1408L350 1408M382 1252L350 1252M382 1097L350 1097M382 941L350 941M382 786L350 786M382 630L350 630M382 475L350 475" fill="none" stroke="DarkGray" stroke-width="6.83"></path>
+ <path fill="none" stroke-width="6.83" stroke="DarkGray" d="M382 2182L350 2182M382 2030L350 2030M382 1874L350 1874M382 1719L350 1719M382 1563L350 1563M382 1408L350 1408M382 1252L350 1252M382 1097L350 1097M382 941L350 941M382 786L350 786M382 630L350 630M382 475L350 475"></path>
 <desc>Start of Barchart ===========</desc>
- <g fill="SteelBlue" stroke="Black" stroke-width="4">
-  <rect height="1114" width="154" x="560" y="1071"></rect>
-  <rect height="1690" width="154" x="1118" y="495"></rect>
-  <rect height="911" width="154" x="1677" y="1274"></rect>
-  <rect height="1357" width="154" x="2235" y="828"></rect>
-  <rect height="903" width="154" x="2793" y="1282"></rect>
-  <rect height="942" width="154" x="3352" y="1243"></rect>
+ <g stroke-width="4" stroke="Black" fill="SteelBlue">
+  <rect x="560" y="1071" width="154" height="1114"></rect>
+  <rect x="1118" y="495" width="154" height="1690"></rect>
+  <rect x="1677" y="1274" width="154" height="911"></rect>
+  <rect x="2235" y="828" width="154" height="1357"></rect>
+  <rect x="2793" y="1282" width="154" height="903"></rect>
+  <rect x="3352" y="1243" width="154" height="942"></rect>
  </g>
- <g fill="DarkOrange" stroke="Black" stroke-width="4">
-  <rect height="917" width="154" x="714" y="1268"></rect>
-  <rect height="1302" width="154" x="1273" y="883"></rect>
-  <rect height="1291" width="154" x="1831" y="894"></rect>
-  <rect height="969" width="154" x="2389" y="1216"></rect>
-  <rect height="647" width="154" x="2948" y="1538"></rect>
-  <rect height="799" width="154" x="3506" y="1386"></rect>
+ <g stroke-width="4" stroke="Black" fill="DarkOrange">
+  <rect x="714" y="1268" width="154" height="917"></rect>
+  <rect x="1273" y="883" width="154" height="1302"></rect>
+  <rect x="1831" y="894" width="154" height="1291"></rect>
+  <rect x="2389" y="1216" width="154" height="969"></rect>
+  <rect x="2948" y="1538" width="154" height="647"></rect>
+  <rect x="3506" y="1386" width="154" height="799"></rect>
  </g>
 <desc>Axes =====</desc>
- <path d="M382 2185L382 469M435 2238L3791 2238" fill="none" stroke="DarkGray" stroke-width="11.4"></path>
+ <path fill="none" stroke-width="11.4" stroke="DarkGray" d="M382 2185L382 469M435 2238L3791 2238"></path>
 <desc>Key =====</desc>
 <desc>Block key</desc>
- <g fill="SteelBlue" stroke="Black" stroke-width="4">
-  <rect height="63" width="153" x="525" y="2433"></rect>
+ <g stroke-width="4" stroke="Black" fill="SteelBlue">
+  <rect x="525" y="2433" width="153" height="63"></rect>
  </g>
 <desc>Block key</desc>
- <g fill="DarkOrange" stroke="Black" stroke-width="4">
-  <rect height="63" width="153" x="984" y="2433"></rect>
+ <g stroke-width="4" stroke="Black" fill="DarkOrange">
+  <rect x="984" y="2433" width="153" height="63"></rect>
  </g>
  <g fill="Navy" font-family="Times New Roman" font-size="90">
   <text x="723" y="2496">1931</text>
@@ -94,15 +94,15 @@
      p.Select←'Farm,Yield'
      p.GroupBy←'Farm'
      p.SplitBy←'Year'
-</code></pre><p>Note that in Playfair we must set a <code>Select</code> property to specify the columns for the axes, if the the table has more columns or the columns are not in the proper order for the default behavior. </p><p>And this produces the exact same chart as the wide-form example:</p><svg baseProfile="full" ev="http://www.w3.org/2001/xml-events" height="361.33" version="1.1" viewBox="0 0 4050 2710" width="540" xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+</code></pre><p>Note that in Playfair we must set a <code>Select</code> property to specify the columns for the axes, if the the table has more columns or the columns are not in the proper order for the default behavior. </p><p>And this produces the exact same chart as the wide-form example:</p><svg version="1.1" baseProfile="full" width="540" height="361.33" viewBox="0 0 4050 2710" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">
  <title>Barley Yields from Long-Form Data</title>
 <desc>Created by Causeway SVG engine - SharpPlot v3.71.0</desc>
 <g stroke-miterlimit="100">
- <rect fill="silver" height="2650" width="3970" x="80" y="60"></rect>
- <rect fill="white" height="2645" stroke="black" stroke-width="5" width="3965" x="43" y="33"></rect>
+ <rect x="80" y="60" width="3970" height="2650" fill="silver"></rect>
+ <rect x="43" y="33" width="3965" height="2645" fill="white" stroke-width="5" stroke="black"></rect>
 <desc>Paint the paper =====</desc>
  <g fill="White">
-  <rect height="2640" width="3960" x="45" y="35"></rect>
+  <rect x="45" y="35" width="3960" height="2640"></rect>
  </g>
 <desc>Border =====</desc>
 <desc>Y-axis labels</desc>
@@ -137,39 +137,39 @@
  </g>
 <desc>X-Axis Ticks =====</desc>
 <desc>X-Axis tickmarks</desc>
- <path d="M718 2238L718 2281M1273 2238L1273 2281M1831 2238L1831 2281M2389 2238L2389 2281M2948 2238L2948 2281M3506 2238L3506 2281" fill="none" stroke="DarkGray" stroke-width="6.83"></path>
+ <path fill="none" stroke-width="6.83" stroke="DarkGray" d="M718 2238L718 2281M1273 2238L1273 2281M1831 2238L1831 2281M2389 2238L2389 2281M2948 2238L2948 2281M3506 2238L3506 2281"></path>
 <desc>Y-Axis Ticks =====</desc>
 <desc>Y grid</desc>
- <path d="M435 2182L3785 2182M435 2030L3785 2030M435 1874L3785 1874M435 1719L3785 1719M435 1563L3785 1563M435 1408L3785 1408M435 1252L3785 1252M435 1097L3785 1097M435 941L3785 941M435 786L3785 786M435 630L3785 630M435 475L3785 475" fill="none" stroke="Silver" stroke-width="1.72"></path>
+ <path fill="none" stroke-width="1.72" stroke="Silver" d="M435 2182L3785 2182M435 2030L3785 2030M435 1874L3785 1874M435 1719L3785 1719M435 1563L3785 1563M435 1408L3785 1408M435 1252L3785 1252M435 1097L3785 1097M435 941L3785 941M435 786L3785 786M435 630L3785 630M435 475L3785 475"></path>
 <desc>Y-Axis tickmarks</desc>
- <path d="M382 2182L350 2182M382 2030L350 2030M382 1874L350 1874M382 1719L350 1719M382 1563L350 1563M382 1408L350 1408M382 1252L350 1252M382 1097L350 1097M382 941L350 941M382 786L350 786M382 630L350 630M382 475L350 475" fill="none" stroke="DarkGray" stroke-width="6.83"></path>
+ <path fill="none" stroke-width="6.83" stroke="DarkGray" d="M382 2182L350 2182M382 2030L350 2030M382 1874L350 1874M382 1719L350 1719M382 1563L350 1563M382 1408L350 1408M382 1252L350 1252M382 1097L350 1097M382 941L350 941M382 786L350 786M382 630L350 630M382 475L350 475"></path>
 <desc>Start of Barchart ===========</desc>
- <g fill="SteelBlue" stroke="Black" stroke-width="4">
-  <rect height="1114" width="154" x="560" y="1071"></rect>
-  <rect height="1690" width="154" x="1118" y="495"></rect>
-  <rect height="911" width="154" x="1677" y="1274"></rect>
-  <rect height="1357" width="154" x="2235" y="828"></rect>
-  <rect height="903" width="154" x="2793" y="1282"></rect>
-  <rect height="942" width="154" x="3352" y="1243"></rect>
+ <g stroke-width="4" stroke="Black" fill="SteelBlue">
+  <rect x="560" y="1071" width="154" height="1114"></rect>
+  <rect x="1118" y="495" width="154" height="1690"></rect>
+  <rect x="1677" y="1274" width="154" height="911"></rect>
+  <rect x="2235" y="828" width="154" height="1357"></rect>
+  <rect x="2793" y="1282" width="154" height="903"></rect>
+  <rect x="3352" y="1243" width="154" height="942"></rect>
  </g>
- <g fill="DarkOrange" stroke="Black" stroke-width="4">
-  <rect height="917" width="154" x="714" y="1268"></rect>
-  <rect height="1302" width="154" x="1273" y="883"></rect>
-  <rect height="1291" width="154" x="1831" y="894"></rect>
-  <rect height="969" width="154" x="2389" y="1216"></rect>
-  <rect height="647" width="154" x="2948" y="1538"></rect>
-  <rect height="799" width="154" x="3506" y="1386"></rect>
+ <g stroke-width="4" stroke="Black" fill="DarkOrange">
+  <rect x="714" y="1268" width="154" height="917"></rect>
+  <rect x="1273" y="883" width="154" height="1302"></rect>
+  <rect x="1831" y="894" width="154" height="1291"></rect>
+  <rect x="2389" y="1216" width="154" height="969"></rect>
+  <rect x="2948" y="1538" width="154" height="647"></rect>
+  <rect x="3506" y="1386" width="154" height="799"></rect>
  </g>
 <desc>Axes =====</desc>
- <path d="M382 2185L382 469M435 2238L3791 2238" fill="none" stroke="DarkGray" stroke-width="11.4"></path>
+ <path fill="none" stroke-width="11.4" stroke="DarkGray" d="M382 2185L382 469M435 2238L3791 2238"></path>
 <desc>Key =====</desc>
 <desc>Block key</desc>
- <g fill="SteelBlue" stroke="Black" stroke-width="4">
-  <rect height="63" width="153" x="525" y="2433"></rect>
+ <g stroke-width="4" stroke="Black" fill="SteelBlue">
+  <rect x="525" y="2433" width="153" height="63"></rect>
  </g>
 <desc>Block key</desc>
- <g fill="DarkOrange" stroke="Black" stroke-width="4">
-  <rect height="63" width="153" x="984" y="2433"></rect>
+ <g stroke-width="4" stroke="Black" fill="DarkOrange">
+  <rect x="984" y="2433" width="153" height="63"></rect>
  </g>
  <g fill="Navy" font-family="Times New Roman" font-size="90">
   <text x="723" y="2496">1931</text>

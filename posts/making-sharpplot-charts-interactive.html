@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"Don't chase tech. Chase fun." - Gunpei Yokoi</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/making-sharpplot-charts-interactive">Making SharpPlot Charts Interactive</a></h1><h2>December 21, 2023</h2></header><p>Now that we know how to make attractive charts in <a href="https://sharpplot.com">SharpPlot</a>, the next step is add interactivity. SharpPlot has a <a href="https://sharpplot.com/Links.htm">brief tutorial</a> on this topic, and provides various methods for making charts interactive.  The <a href="https://sharpplot.com/SharpPlot-AddHyperlinks.htm">AddHyperlinks</a> method will add a hyperlink to any bar or point in a chart.  The <a href="https://sharpplot.com/SharpPlot-AddAttributes.htm">AddAttributes</a> method allows an arbitrary attribute and value to be inserted into  <a href="https://sharpplot.com/ScriptTarget.htm">various elements</a></p><p>However, much of the techniques used are outdated given where CSS and SVG are  now and the existence of the HTMLRenderer. In addition, using SharpPlot itself to add interactivity might be useful if we were to rely on different output formats but our only concern is SVG. All we need to do is to be able to identify and address the elements of interest. One option to accomplish this is to use the <code>AddAttributes</code>  method to add an id to the elements. Unfortunately, <code>AddAttributes</code> adds an additional  <code>&lt;rect&gt;</code> element for every <code>&lt;text&gt;</code> element, (and then adds it own id as well).  For example, here is a snippet of SVG from a basic bar chart: </p><pre><code>&lt;desc&gt;for X-axis labels&lt;/desc&gt;
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"We make software the old-fashioned way, we write it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/making-sharpplot-charts-interactive">Making SharpPlot Charts Interactive</a></h1><h2>December 21, 2023</h2></header><p>Now that we know how to make attractive charts in <a href="https://sharpplot.com">SharpPlot</a>, the next step is add interactivity. SharpPlot has a <a href="https://sharpplot.com/Links.htm">brief tutorial</a> on this topic, and provides various methods for making charts interactive.  The <a href="https://sharpplot.com/SharpPlot-AddHyperlinks.htm">AddHyperlinks</a> method will add a hyperlink to any bar or point in a chart.  The <a href="https://sharpplot.com/SharpPlot-AddAttributes.htm">AddAttributes</a> method allows an arbitrary attribute and value to be inserted into  <a href="https://sharpplot.com/ScriptTarget.htm">various elements</a></p><p>However, much of the techniques used are outdated given where CSS and SVG are  now and the existence of the HTMLRenderer. In addition, using SharpPlot itself to add interactivity might be useful if we were to rely on different output formats but our only concern is SVG. All we need to do is to be able to identify and address the elements of interest. One option to accomplish this is to use the <code>AddAttributes</code>  method to add an id to the elements. Unfortunately, <code>AddAttributes</code> adds an additional  <code>&lt;rect&gt;</code> element for every <code>&lt;text&gt;</code> element, (and then adds it own id as well).  For example, here is a snippet of SVG from a basic bar chart: </p><pre><code>&lt;desc&gt;for X-axis labels&lt;/desc&gt;
  &lt;g font-family="Times New Roman" font-size="80" text-anchor="middle" &gt;
   &lt;text x="793" y="2096" &gt;North&lt;/text&gt;
   &lt;text x="1548" y="2096" &gt;South&lt;/text&gt;
@@ -68,7 +68,7 @@
     <desc>Y-axis labels</desc>
     <g font-family="Times New Roman" font-size="140" text-anchor="end">
       <text class="unselectedlabel" id="ylabel0" onclick="sendAPLRequest(event)" x="1013" y="1265">Cash-Out</text>
-      <text class="selectedlabel" id="ylabel1" onclick="sendAPLRequest(event)" style="font-weight:bold;font-size:larger" x="1013" y="925">Refinance</text>
+      <text style="font-weight:bold;font-size:larger" class="selectedlabel" id="ylabel1" onclick="sendAPLRequest(event)" x="1013" y="925">Refinance</text>
       <text class="unselectedlabel" id="ylabel2" onclick="sendAPLRequest(event)" x="1013" y="585">Purchase</text>
     </g>
     <desc>X-Axis Ticks =====</desc>
@@ -80,7 +80,7 @@
     <desc>Start of Horizontal Barchart ===========</desc>
     <g fill="SteelBlue" stroke="SteelBlue" stroke-width="20">
       <rect class="unselectedbar" height="272" id="point0" onclick="sendAPLRequest(event)" ondblclick="sendAPLRequest(event)" width="508" x="1145" y="1089"></rect>
-      <rect class="selectedbar" height="272" id="point1" onclick="sendAPLRequest(event)" ondblclick="sendAPLRequest(event)" style="stroke:orange" width="558" x="1145" y="749"></rect>
+      <rect style="stroke:orange" class="selectedbar" height="272" id="point1" onclick="sendAPLRequest(event)" ondblclick="sendAPLRequest(event)" width="558" x="1145" y="749"></rect>
       <rect class="unselectedbar" height="272" id="point2" onclick="sendAPLRequest(event)" ondblclick="sendAPLRequest(event)" width="4009" x="1145" y="409"></rect>
     </g>
     <desc>Axes =====</desc>
@@ -88,7 +88,7 @@
     <desc>Data value labels ...</desc>
     <g fill="Gray" font-family="Times New Roman" font-size="140">
       <text class="unselectedlabel" id="value0" onclick="sendAPLRequest(event)" x="1709" y="1281">1,000</text>
-      <text class="selectedlabel" id="value1" onclick="sendAPLRequest(event)" style="font-weight:bold ;font-size:larger" x="1760" y="941">1,100</text>
+      <text style="font-weight:bold ;font-size:larger" class="selectedlabel" id="value1" onclick="sendAPLRequest(event)" x="1760" y="941">1,100</text>
       <text class="unselectedlabel" id="value2" onclick="sendAPLRequest(event)" x="5211" y="601">7,900</text>
     </g>
     <desc>Reset to original origin</desc>
