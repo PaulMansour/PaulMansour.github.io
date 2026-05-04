@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"We make software the old-fashioned way, we write it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/debouncing">Debouncing</a></h1><h2>May 3, 2026</h2></header><p>Consider a treeview and a corresponding panel on its right, as in a file explorer. If we click on an item in the treeview, a select event is generated which, typically, fires a callback function to update the panel on the right. We can be Olympic mouse champions but we can only move the mouse and click on another item so fast. Generally no matter how adept we are with the mouse, the system will  be able to refresh the right-hand panel with no apparent lag.</p><p>Now consider using the down cursor key to scroll through the items of the tree. It takes no special skill to scroll through hundreds of items at lightning speed. Your cat can do this stepping on your keyboard. Each keypress yields a select event and a subsequent execution of the callback function to refresh the right-hand panel. If the refresh operation takes any significant time, the response will be sluggish, the user experience bad.</p><p>The solution to this problem is known as <em>debouncing</em>.  Typically on each keypress a timer is created or reset, and only when the timer goes off is the callback executed. So if we hold down a key the timer is constantly being reset, and only when we release the key and pause for a moment does the timer have an opportunity to go off. Instead of running a hundred times, the callback executes only once, when we pause scrolling.</p><p>As far as we know, no UI frameworks build debouncing into components. Debouncing must be implemented by hand, on a case-by-case basis.  </p><p>We attempt to build this functionality right into the Abacus <a href="https://the-carlisle-group.github.io/Abacus/ObjectReference/TreeView/">TreeView</a> component, and to make it a general solution for any event that needs debouncing.</p><p>This first problem we encounter is that a <code>⎕WC</code> timer will not help us because we are multithreading and <code>⎕WC</code> objects do not like to interact with different threads.</p><p>Fortunately the architecture of Abacus provides another way. Abacus has a wait loop where the document is waiting for a token with <a href="https://docs.dyalog.com/20.0/language-reference-guide/system-functions/tget/">⎕TGET</a> from the main thread, signifying the user has taken some action in the browser. Previously we had not taken advantage of the left argument of <code>⎕TGET</code> which allows for a timeout. If we want to debounce some event, we can  signal to the system that we want a delay.  We can set a timeout, exit <code>⎕TGET</code> when the user pauses, and then handle the event.    First, we add a few new system properties to the Document object:</p><pre><code>     d.Debounce←⍬
+     d.DefaultTimeout←2147483
+     d.Timeout←d.DefaultTimeout
+</code></pre><p>These are system properties; the programmer does not set them. The <code>Debounce</code> property tracks if there is an event being debounced. It is either an empty array, or a two element array containing the callback function and its argument.  The <code>DefaultTimeout</code> property effectively specifies no timeout. The <code>Timeout</code> property will be used by <code>⎕TGET</code> in the event loop.   The TreeView <code>OnSelect</code> property (and potentially any event callback on any component) may be set to either a simple string with the name of the callback,  or a namespace containing the callback function and a debounce delay: </p><pre><code>    (CallbackFunction:'MyCallBack' ⋄ DebounceDelay:100)
+</code></pre><p>That's all the programmer needs to do. </p><p>In the TreeView component, when a cursor key is pressed, we run <code>DebounceSelect</code> as a cover over <code>FireSelect</code> which actually fires the select event:</p><pre><code>DebounceSelect←{
+     ⍝ ⍺←TreeView
+     d←⍺.Document
+     l←⍺.OnSelect.DebounceDelay
+     l=0:FireSelect ⍺
+     d.Timeout←l÷1000
+     d.Debounce←(A.FQP'FireSelect')⍺
+     0
+ }
+</code></pre><p>This checks the value of <code>DebounceDelay</code>. If <code>0</code>, the select event is fired immediately. Otherwise, the document <code>Timeout</code> property is set to the delay and the callback with its argument are assigned to the <code>Debounce</code> property, where they await execution when the <code>⎕TGET</code> times out:</p><pre><code>ThreadQueue←{
+     ⍝ Queued Event Loop for Session/Document
+     r←⍺.Timeout ⎕TGET ⎕TID
+     0=≢r:⍺ ∇ ⍵⊣Debounce ⍺
+     c←⊃r
+     _←LogBrowserEvent c
+     _←(⍎c.CurrentTarget⍎'On',c.Event)c
+     _←PutDoneToken c
+     ⍺ ∇ ⍵
+ }
+</code></pre><p>When a timeout occurs, <code>Debounce</code> is called, which executes a pending debounced event if there is one: </p><pre><code>Debounce←{
+     ⍝ ⍵ ←→ Document
+     0=≢⍵.Debounce:0
+     f a←⍵.Debounce
+     ⍵.Debounce←⍬
+     ⍵.Timeout←⍵.DefaultTimeout
+     (⍎f)a
+ }
+</code></pre><h2>What Could Go Wrong  </h2><p>At least two things can go wrong with this technique. A debounced event might not fire when it should,  and a debounced event might fire when it should not.</p><p>For the first case, consider two treeviews (and associated panels),  and a user scrolling through the first treeview. If the debounce delay is long enough, or the user quick enough, the user could tab to the second treeview and start scrolling there. The timeout on the first debounce would not happen, and then the next debounce would overwrite the first debounce, which would thus be lost. The first treeview would not update.</p><p>For the second case, again with a debounce delay long enough or a nimble user, the treeview could be deleted by some user action, and then the timeout occurs and the debounced event fires on a nonexistant element.</p><p>We can probably code around both of these problems, but as the delay should always be set as short as possible, they are not likely to occur.</p></article></main><footer><p>Copyright 2021-2025 Paul S. Mansour</p></footer></body></html>
