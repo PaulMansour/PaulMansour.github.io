@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></meta><meta content="width=device-width, initial-scale=1" name="viewport"></meta><link href="/ThorntonMelon.css" rel="stylesheet"></link></head><body><header><h1>Tool of Thought</h1><h2>APL for the Practical Man</h2><h3>"We make software the old-fashioned way, we write it."</h3><nav><a href="/">Home</a><a href="/posts">Posts</a><a href="/projects">Projects</a><a href="/donts">Don'ts</a><a href="/ai">AI</a><a href="/links">Links</a><a href="/about">About</a></nav></header><main><article><header><h1><a href="/posts/apl-makes-us-smile">APL Makes Us Smile</a></h1><h2>May 21, 2026</h2></header><p>In Abacus we have a function for setting the value of a component:</p><pre><code>SetComponentValue←{
+     ⍝ ⍺ ←→ Component
+     ⍝ ⍵ ←→ Value
+     ⍺ ⍺.Class.SetValue ⍵
+ }
+</code></pre><p>The left argument is the component, so we need to have the component in hand before calling this function. </p><blockquote><p>Abacus does not use Dyalog classes, but the "instance" <code>⍺</code> has a reference to the component namespace that contains the <code>SetValue</code> function.</p></blockquote><p>The component is often retrieved via its name from the document or a node using <code>GetComponent</code>, which takes a node as the left argument and the name as the right argument, so this pattern is common: </p><pre><code>    C←D GetComponent 'MyComponentName' 
+    C SetComponentValue 'MyValue'
+</code></pre><p>It was suggested that <code>SetComponentValue</code>  should be able to take a component name as its argument to avoid calling <code>GetComponent</code>. Of course it would also need know about the document or node. A first pass produced:</p><pre><code>SetComponentValue←{
+     ⍝ ⍺ ←→ Component|Node and Name
+     ⍝ ⍵ ←→ Value
+     1=≢⍺:⍺ ⍺.Class.SetValue ⍵
+     c←(0⊃⍺) GetComponent 1⊃⍺
+     c c.Class.SetValue ⍵
+ }
+</code></pre><p>But we noticed <code>GetComponent</code> could be called with a reduction:</p><pre><code>     c←GetComponent/⍺
+</code></pre><p>and then why have the guard? As reduction on single item returns that item, we can just write: </p><pre><code>SetComponentValue←{
+     ⍝ ⍺ ←→ Component|Node and Name
+     ⍝ ⍵ ←→ Value
+     c←GetComponent/⍺
+     c c.Class.SetValue ⍵
+ }
+</code></pre><p>Little things like this are nice.</p></article></main><footer><p>Copyright 2021-2026 Paul S. Mansour</p></footer></body></html>
